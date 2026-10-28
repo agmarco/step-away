@@ -38,6 +38,13 @@ _Avoid_: check-in, completion
 The history of Responses: the app's record of whether the user moved.
 _Avoid_: workout history
 
+**Floor Exercise**:
+An Exercise done on the floor (lying, kneeling, plank). Excluded unless the user switches them on.
+
+**Equipment**:
+A light piece of kit an Exercise needs: dumbbells, kettlebell, resistance bands, medicine ball, exercise ball or foam roller. An Exercise is only suggested if the user has said they own its Equipment.
+_Avoid_: gear
+
 ## Relationships
 
 - A **Reminder** carries one **Suggestion**
