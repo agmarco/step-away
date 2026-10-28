@@ -18,17 +18,29 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
 });
 
-async function setupNotifications() {
-  await Notifications.requestPermissionsAsync();
-  await Notifications.setNotificationChannelAsync('reminders', { name: 'Reminders', importance: Notifications.AndroidImportance.HIGH });
-  for (const v of VARIANTS) {
-    const actions = (snooze: boolean) =>
-      v.notificationActions
-        .filter((a) => snooze || a.id !== 'snooze')
-        .map((a) => ({ identifier: a.id, buttonTitle: a.title, options: { opensAppToForeground: !!a.foreground } }));
-    await Notifications.setNotificationCategoryAsync(`rem${v.key}`, actions(true));
-    await Notifications.setNotificationCategoryAsync(`rem${v.key}_ns`, actions(false));
-  }
+// Expo Go rejects custom channels (NPE), so the channel is optional; every step reports
+// into the log so we can see on-device what Expo Go actually supports.
+let channelId: string | undefined;
+async function setupNotifications(report: (what: string, detail?: string) => void) {
+  try {
+    await Notifications.requestPermissionsAsync();
+  } catch (e) { report('Setup', `permissions failed: ${e}`); }
+  try {
+    await Notifications.setNotificationChannelAsync('reminders', { name: 'Reminders', importance: Notifications.AndroidImportance.HIGH });
+    channelId = 'reminders';
+  } catch { channelId = undefined; report('Setup', 'custom channel rejected, using default'); }
+  try {
+    for (const v of VARIANTS) {
+      const actions = (snooze: boolean) =>
+        v.notificationActions
+          .filter((a) => snooze || a.id !== 'snooze')
+          .map((a) => ({ identifier: a.id, buttonTitle: a.title, options: { opensAppToForeground: !!a.foreground } }));
+      await Notifications.setNotificationCategoryAsync(`rem${v.key}`, actions(true));
+      await Notifications.setNotificationCategoryAsync(`rem${v.key}_ns`, actions(false));
+    }
+    const cats = await Notifications.getNotificationCategoriesAsync();
+    report('Setup', `categories registered: ${cats.length}`);
+  } catch (e) { report('Setup', `categories failed: ${e}`); }
 }
 
 export default function App() {
@@ -59,7 +71,7 @@ export default function App() {
         categoryIdentifier: r.snoozes >= 2 ? `rem${v.key}_ns` : `rem${v.key}`,
         data: { reminderId: r.id },
       },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds, channelId: 'reminders' },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds, channelId },
     });
   };
 
@@ -120,7 +132,7 @@ export default function App() {
   handlers.current = { onDone, onSkip, onSnooze };
 
   useEffect(() => {
-    setupNotifications();
+    setupNotifications((w, d) => { log(w, d); bump((n) => n + 1); });
     const sub = Notifications.addNotificationResponseReceivedListener((res) => {
       const a = res.actionIdentifier;
       const r = store.current.reminder;
@@ -133,9 +145,6 @@ export default function App() {
     });
     return () => sub.remove();
   }, []);
-
-  // Categories depend on the variant, so re-register when it changes.
-  useEffect(() => { setupNotifications(); }, [variantIdx]);
 
   const r = store.current.reminder;
   const Screen = variant.Screen;
