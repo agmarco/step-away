@@ -1,0 +1,12 @@
+# Fixture: the dumbbells group.
+Hammer_Curls:
+  position: Either
+  energetic: false
+  difficulty: Beginner
+  dose:
+    reps: 10
+  cue: Palms in, elbows pinned to your sides
+  steps:
+    - Hold a dumbbell in each hand, palms facing your body.
+    - Curl the weights up, keeping your upper arms still.
+    - Lower slowly.

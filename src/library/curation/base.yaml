@@ -1,0 +1,78 @@
+# Base group: no Equipment, never Floor. Format: README.md; how to fill each field: DRAFTING.md.
+# Calibration set (#19): five drafts, one per calibration role, reviewed and accepted by the owner on 2026-10-29 (see DRAFTING.md, Owner corrections).
+
+# Calibration role: Strength move.
+Isometric_Chest_Squeezes:
+  name: Chest Squeeze
+  # Override: the source category is "plyometrics", but this is a static
+  # isometric press (source force: static); nothing jumps or rebounds.
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 15
+  cue: Press palms together hard, keep breathing
+  steps:
+    - Sit or stand tall.
+    - Bend your arms and press your palms together in front of your chest, fingers pointing forward.
+    - Push your hands into each other, building the squeeze slowly.
+    - Keep breathing normally while you squeeze.
+    - Release the tension slowly.
+
+# Calibration role: one-sided move (Each Side).
+Side_Neck_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Ear to shoulder, shoulders stay down
+  steps:
+    - Sit or stand tall with your shoulders relaxed.
+    - Gently tilt your head towards one shoulder.
+    - For a deeper stretch, rest that hand on the side of your head and pull gently.
+    - Come back to centre slowly, then switch sides.
+
+# Calibration role: Energetic.
+Star_Jump:
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Squat, jump up, spread arms and legs
+  steps:
+    - Stand with your feet shoulder-width apart and your arms by your sides.
+    - Squat down halfway.
+    - Jump up, spreading your arms and legs wide.
+    - Bring your arms and legs back in as you land, with soft knees.
+
+# Calibration role: Stretch.
+Upper_Back_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Clasp hands, reach forward, round your back
+  steps:
+    - Sit or stand tall.
+    - Clasp your fingers together with your thumbs pointing down.
+    - Reach your hands forward, rounding your shoulders and upper back.
+    - Let your head drop slightly and breathe.
+
+# Calibration role: Either (Position).
+Wrist_Circles:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms out wide, circle both wrists
+  steps:
+    - Sit or stand tall.
+    - Hold your arms out to your sides, palms down.
+    - Keeping your arms still, circle both wrists forwards 10 times.
+    - Then circle them backwards 10 times.

@@ -1,0 +1,14 @@
+# Fixture: the kettlebell group. The source entry has no images.
+
+# No difficulty: the build falls back to the source level (intermediate).
+Kettlebell_Windmill:
+  position: Standing
+  energetic: false
+  dose:
+    reps: 5
+    eachSide: true
+  cue: Eyes on the bell, hips out, reach down slowly
+  steps:
+    - Press a kettlebell overhead with one arm.
+    - Push your hip out and lower your free hand towards your foot.
+    - Return to standing.

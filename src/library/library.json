@@ -1,0 +1,175 @@
+[
+  {
+    "id": "Isometric_Chest_Squeezes",
+    "source": "free-exercise-db",
+    "name": "Chest Squeeze",
+    "targetMuscles": [
+      "chest"
+    ],
+    "bodyArea": "Chest & Arms",
+    "exerciseType": "Strength",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 15,
+      "eachSide": false
+    },
+    "cue": "Press palms together hard, keep breathing",
+    "steps": [
+      "Sit or stand tall.",
+      "Bend your arms and press your palms together in front of your chest, fingers pointing forward.",
+      "Push your hands into each other, building the squeeze slowly.",
+      "Keep breathing normally while you squeeze.",
+      "Release the tension slowly."
+    ],
+    "photos": {
+      "start": "Isometric_Chest_Squeezes/0.jpg",
+      "end": "Isometric_Chest_Squeezes/1.jpg"
+    },
+    "secondaryMuscles": [
+      "shoulders",
+      "triceps"
+    ],
+    "force": "static",
+    "mechanic": "compound"
+  },
+  {
+    "id": "Side_Neck_Stretch",
+    "source": "free-exercise-db",
+    "name": "Side Neck Stretch",
+    "targetMuscles": [
+      "neck"
+    ],
+    "bodyArea": "Neck",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 20,
+      "eachSide": true
+    },
+    "cue": "Ear to shoulder, shoulders stay down",
+    "steps": [
+      "Sit or stand tall with your shoulders relaxed.",
+      "Gently tilt your head towards one shoulder.",
+      "For a deeper stretch, rest that hand on the side of your head and pull gently.",
+      "Come back to centre slowly, then switch sides."
+    ],
+    "photos": {
+      "start": "Side_Neck_Stretch/0.jpg",
+      "end": "Side_Neck_Stretch/1.jpg"
+    },
+    "force": "static",
+    "mechanic": "isolation"
+  },
+  {
+    "id": "Star_Jump",
+    "source": "free-exercise-db",
+    "name": "Star Jump",
+    "targetMuscles": [
+      "quadriceps"
+    ],
+    "bodyArea": "Hips & Legs",
+    "exerciseType": "Plyometric",
+    "difficulty": "Intermediate",
+    "position": "Standing",
+    "equipment": null,
+    "energetic": true,
+    "dose": {
+      "kind": "reps",
+      "amount": 10,
+      "eachSide": false
+    },
+    "cue": "Squat, jump up, spread arms and legs",
+    "steps": [
+      "Stand with your feet shoulder-width apart and your arms by your sides.",
+      "Squat down halfway.",
+      "Jump up, spreading your arms and legs wide.",
+      "Bring your arms and legs back in as you land, with soft knees."
+    ],
+    "photos": {
+      "start": "Star_Jump/0.jpg",
+      "end": "Star_Jump/1.jpg"
+    },
+    "secondaryMuscles": [
+      "calves",
+      "glutes",
+      "hamstrings",
+      "shoulders"
+    ],
+    "force": "push",
+    "mechanic": "compound"
+  },
+  {
+    "id": "Upper_Back_Stretch",
+    "source": "free-exercise-db",
+    "name": "Upper Back Stretch",
+    "targetMuscles": [
+      "middle back"
+    ],
+    "bodyArea": "Shoulders & Upper Back",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 20,
+      "eachSide": false
+    },
+    "cue": "Clasp hands, reach forward, round your back",
+    "steps": [
+      "Sit or stand tall.",
+      "Clasp your fingers together with your thumbs pointing down.",
+      "Reach your hands forward, rounding your shoulders and upper back.",
+      "Let your head drop slightly and breathe."
+    ],
+    "photos": {
+      "start": "Upper_Back_Stretch/0.jpg",
+      "end": "Upper_Back_Stretch/1.jpg"
+    },
+    "secondaryMuscles": [
+      "middle back"
+    ],
+    "force": "static"
+  },
+  {
+    "id": "Wrist_Circles",
+    "source": "free-exercise-db",
+    "name": "Wrist Circles",
+    "targetMuscles": [
+      "forearms"
+    ],
+    "bodyArea": "Wrists & Forearms",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "reps",
+      "amount": 10,
+      "eachSide": false
+    },
+    "cue": "Arms out wide, circle both wrists",
+    "steps": [
+      "Sit or stand tall.",
+      "Hold your arms out to your sides, palms down.",
+      "Keeping your arms still, circle both wrists forwards 10 times.",
+      "Then circle them backwards 10 times."
+    ],
+    "photos": {
+      "start": "Wrist_Circles/0.jpg",
+      "end": "Wrist_Circles/1.jpg"
+    },
+    "force": "pull",
+    "mechanic": "isolation"
+  }
+]
