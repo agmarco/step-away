@@ -1,8 +1,8 @@
-import type { BodyArea, Difficulty, Equipment, ExerciseType, TargetMuscle } from '../../core';
+import type { BodyArea, Difficulty, Equipment, Exercise, ExerciseType, TargetMuscle } from '../../core';
 import type { LibraryGroup, SourceCategory, SourceEquipment, SourceExercise } from './types';
 
 /** Every curation group, in the order the build reads them. */
-export const LIBRARY_GROUPS: readonly LibraryGroup[] = [
+export const LIBRARY_GROUPS = [
   'base',
   'floor',
   'dumbbells',
@@ -11,7 +11,12 @@ export const LIBRARY_GROUPS: readonly LibraryGroup[] = [
   'medicine-ball',
   'exercise-ball',
   'foam-roller',
-];
+] as const;
+
+/** Whether a name (e.g. a curation file name or a CLI argument) is one of the groups. */
+export function isLibraryGroup(name: string): name is LibraryGroup {
+  return (LIBRARY_GROUPS as readonly string[]).includes(name);
+}
 
 /** The Equipment each group holds; `null` for the no-equipment groups. */
 export const GROUP_EQUIPMENT: Record<LibraryGroup, Equipment | null> = {
@@ -26,7 +31,7 @@ export const GROUP_EQUIPMENT: Record<LibraryGroup, Equipment | null> = {
 };
 
 /** Body Area per Target Muscle: the six-area table of issue #7. */
-export const BODY_AREA: Record<TargetMuscle, BodyArea> = {
+export const BODY_AREA_BY_MUSCLE: Record<TargetMuscle, BodyArea> = {
   neck: 'Neck',
   shoulders: 'Shoulders & Upper Back',
   traps: 'Shoulders & Upper Back',
@@ -46,7 +51,7 @@ export const BODY_AREA: Record<TargetMuscle, BodyArea> = {
   calves: 'Hips & Legs',
 };
 
-export const EXERCISE_TYPE: Record<SourceCategory, ExerciseType> = {
+export const EXERCISE_TYPE_BY_CATEGORY: Record<SourceCategory, ExerciseType> = {
   stretching: 'Stretch',
   plyometrics: 'Plyometric',
   cardio: 'Cardio',
@@ -56,7 +61,7 @@ export const EXERCISE_TYPE: Record<SourceCategory, ExerciseType> = {
   strongman: 'Strength',
 };
 
-export const DIFFICULTY: Record<SourceExercise['level'], Difficulty> = {
+export const DIFFICULTY_BY_LEVEL: Record<SourceExercise['level'], Difficulty> = {
   beginner: 'Beginner',
   intermediate: 'Intermediate',
   expert: 'Expert',
@@ -81,6 +86,11 @@ const SOURCE_EQUIPMENT: Record<SourceEquipment, Equipment | null | undefined> = 
 /** The app Equipment for a source entry, or `undefined` when its equipment is ineligible. */
 export function mapEquipment(source: SourceExercise): Equipment | null | undefined {
   return source.equipment === null ? null : SOURCE_EQUIPMENT[source.equipment];
+}
+
+/** Every photo key of the Exercises, start before end, in their order. */
+export function photoKeys(exercises: readonly Exercise[]): string[] {
+  return exercises.flatMap((e) => (e.photos ? [e.photos.start, e.photos.end] : []));
 }
 
 /** A stable sort key: plain code-unit order, the same on every machine. */

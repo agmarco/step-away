@@ -1,6 +1,13 @@
 import { stringify } from 'yaml';
 import type { BodyArea, Difficulty, Equipment, ExerciseType } from '../../core';
-import { BODY_AREA, byId, DIFFICULTY, EXERCISE_TYPE, GROUP_EQUIPMENT, mapEquipment } from './mapping';
+import {
+  BODY_AREA_BY_MUSCLE,
+  byId,
+  DIFFICULTY_BY_LEVEL,
+  EXERCISE_TYPE_BY_CATEGORY,
+  GROUP_EQUIPMENT,
+  mapEquipment,
+} from './mapping';
 import type { LibraryGroup, SourceExercise } from './types';
 
 /** A candidate for a group, with the fields the script can fill from the source. */
@@ -37,10 +44,10 @@ export function draftCandidates(input: DraftInput): DraftEntry[] {
       (s): DraftEntry => ({
         id: s.id,
         name: s.name,
-        exerciseType: EXERCISE_TYPE[s.category],
-        bodyArea: BODY_AREA[s.primaryMuscles[0]],
+        exerciseType: EXERCISE_TYPE_BY_CATEGORY[s.category],
+        bodyArea: BODY_AREA_BY_MUSCLE[s.primaryMuscles[0]],
         equipment: groupEquipment,
-        difficulty: DIFFICULTY[s.level],
+        difficulty: DIFFICULTY_BY_LEVEL[s.level],
       }),
     )
     .sort(byId);

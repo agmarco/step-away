@@ -32,30 +32,29 @@ function Photo({ photoKey, colors }: { photoKey: string; colors: Palette }) {
 }
 
 function ExerciseCard({ exercise, colors }: { exercise: Exercise; colors: Palette }) {
-  const e = exercise;
   const facts = [
-    e.bodyArea,
-    e.exerciseType,
-    e.difficulty,
-    e.position,
-    e.equipment ?? 'no equipment',
-    e.energetic ? 'Energetic' : 'not energetic',
+    exercise.bodyArea,
+    exercise.exerciseType,
+    exercise.difficulty,
+    exercise.position,
+    exercise.equipment ?? 'no equipment',
+    exercise.energetic ? 'Energetic' : 'not energetic',
   ].join(' · ');
 
   return (
     <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
-      {e.photos && (
+      {exercise.photos && (
         <View style={styles.photos}>
-          <Photo photoKey={e.photos.start} colors={colors} />
-          <Photo photoKey={e.photos.end} colors={colors} />
+          <Photo photoKey={exercise.photos.start} colors={colors} />
+          <Photo photoKey={exercise.photos.end} colors={colors} />
         </View>
       )}
-      <Text style={[styles.name, { color: colors.text.primary }]}>{e.name}</Text>
-      <Text style={[styles.small, { color: colors.text.secondary }]}>{e.id}</Text>
+      <Text style={[styles.name, { color: colors.text.primary }]}>{exercise.name}</Text>
+      <Text style={[styles.small, { color: colors.text.secondary }]}>{exercise.id}</Text>
       <Text style={[styles.body, { color: colors.text.secondary }]}>{facts}</Text>
-      <Text style={[styles.dose, { color: colors.accent.hero }]}>{doseText(e.dose)}</Text>
-      <Text style={[styles.cue, { color: colors.text.primary }]}>{e.cue}</Text>
-      {e.steps.map((step, i) => (
+      <Text style={[styles.dose, { color: colors.accent.hero }]}>{doseText(exercise.dose)}</Text>
+      <Text style={[styles.cue, { color: colors.text.primary }]}>{exercise.cue}</Text>
+      {exercise.steps.map((step, i) => (
         <Text key={i} style={[styles.body, { color: colors.text.primary }]}>
           {i + 1}. {step}
         </Text>
@@ -79,7 +78,7 @@ export default function LibraryDebug() {
           <Link href="/" style={[styles.small, { color: colors.accent.hero }]}>
             ‹ Today
           </Link>
-          <Text style={[styles.title, { color: colors.text.primary }]}>Library (debug)</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Exercise Library (debug)</Text>
           <Text style={[styles.body, { color: colors.text.secondary }]}>{exercises.length} Exercises bundled</Text>
         </View>
       }

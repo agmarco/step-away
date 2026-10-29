@@ -1,16 +1,28 @@
 import { parse } from 'yaml';
-import type {
-  BodyArea,
-  Difficulty,
-  Dose,
-  Equipment,
-  Exercise,
-  ExercisePhotos,
-  ExerciseType,
-  Position,
-  TargetMuscle,
+import {
+  BODY_AREAS,
+  DIFFICULTIES,
+  type Dose,
+  EQUIPMENT,
+  type Equipment,
+  type Exercise,
+  EXERCISE_TYPES,
+  type ExercisePhotos,
+  POSITIONS,
+  TARGET_MUSCLES,
+  type TargetMuscle,
 } from '../../core';
-import { BODY_AREA, byId, DIFFICULTY, EXERCISE_TYPE, GROUP_EQUIPMENT, LIBRARY_GROUPS, mapEquipment } from './mapping';
+import {
+  BODY_AREA_BY_MUSCLE,
+  byId,
+  DIFFICULTY_BY_LEVEL,
+  EXERCISE_TYPE_BY_CATEGORY,
+  GROUP_EQUIPMENT,
+  isLibraryGroup,
+  LIBRARY_GROUPS,
+  mapEquipment,
+  photoKeys,
+} from './mapping';
 import type { LibraryGroup, SourceExercise } from './types';
 
 /** A fatal problem in the source or the curation files. The build stops. */
@@ -47,21 +59,6 @@ export interface BuildResult {
 
 /** Ids of self-authored Exercises start with this. */
 const CUSTOM_PREFIX = 'custom/';
-
-const POSITIONS: readonly Position[] = ['Seated', 'Standing', 'Either', 'Floor'];
-const DIFFICULTIES: readonly Difficulty[] = ['Beginner', 'Intermediate', 'Expert'];
-const EXERCISE_TYPES: readonly ExerciseType[] = ['Strength', 'Stretch', 'Plyometric', 'Cardio'];
-const BODY_AREAS: readonly BodyArea[] = [...new Set(Object.values(BODY_AREA))];
-/** The 17 source `primaryMuscles`, the keys of the Body Area table. */
-const TARGET_MUSCLES = Object.keys(BODY_AREA) as TargetMuscle[];
-const EQUIPMENT: readonly Equipment[] = [
-  'dumbbells',
-  'kettlebell',
-  'resistance bands',
-  'medicine ball',
-  'exercise ball',
-  'foam roller',
-];
 
 type Entry = Record<string, unknown>;
 
@@ -119,14 +116,14 @@ export function buildLibrary(input: BuildInput): BuildResult {
     })
     .sort(byId);
 
-  const photoKeys = exercises.flatMap((e) => (e.photos ? [e.photos.start, e.photos.end] : []));
-  for (const key of photoKeys) {
+  const keys = photoKeys(exercises);
+  for (const key of keys) {
     if (!input.photoExists(key)) {
       throw new LibraryBuildError(`Missing photo ${key}: run \`npm run library:photos\`.`);
     }
   }
 
-  return { exercises, photoIndex: renderPhotoIndex(photoKeys), warnings };
+  return { exercises, photoIndex: renderPhotoIndex(keys), warnings };
 }
 
 /** An Exercise must belong in the group whose file it is in. */
@@ -158,7 +155,7 @@ function readCuration(curation: BuildInput['curation']): Curated[] {
   const groupOf = new Map<string, LibraryGroup>();
   const all: Curated[] = [];
 
-  const unknown = Object.keys(curation).filter((name) => !(LIBRARY_GROUPS as readonly string[]).includes(name));
+  const unknown = Object.keys(curation).filter((name) => !isLibraryGroup(name));
   if (unknown.length > 0) {
     throw new LibraryBuildError(
       `Unknown curation group ${unknown.join(', ')}: the groups are ${LIBRARY_GROUPS.join(', ')}.`,
@@ -224,9 +221,9 @@ function sourceBacked(
     source: 'free-exercise-db',
     name: field.optional('name', isText) ?? source.name,
     targetMuscles,
-    bodyArea: field.optional('bodyArea', isOneOf(BODY_AREAS)) ?? BODY_AREA[targetMuscles[0]],
-    exerciseType: field.optional('exerciseType', isOneOf(EXERCISE_TYPES)) ?? EXERCISE_TYPE[source.category],
-    difficulty: field.optional('difficulty', isOneOf(DIFFICULTIES)) ?? DIFFICULTY[source.level],
+    bodyArea: field.optional('bodyArea', isOneOf(BODY_AREAS)) ?? BODY_AREA_BY_MUSCLE[targetMuscles[0]],
+    exerciseType: field.optional('exerciseType', isOneOf(EXERCISE_TYPES)) ?? EXERCISE_TYPE_BY_CATEGORY[source.category],
+    difficulty: field.optional('difficulty', isOneOf(DIFFICULTIES)) ?? DIFFICULTY_BY_LEVEL[source.level],
     position: field.required('position', isOneOf(POSITIONS)),
     equipment,
     energetic: field.required('energetic', isBoolean),

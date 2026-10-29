@@ -24,6 +24,8 @@ Side_Neck_Stretch:
   # equipment: …              # optional; must equal the source mapping (Equipment comes from the source)
 ```
 
+The format allows leaving `difficulty` out, in which case it falls back to the source level, but the drafting guide requires writing it on every entry.
+
 A self-authored entry has an Id starting `custom/` and writes every field above except `sourceId`, including `equipment` (`null` for none). It has no photos.
 
 Group rules: `floor` entries have `position: Floor` and no Equipment (a floor move that needs Equipment, such as a dumbbell floor press, goes in that Equipment's file with `position: Floor`); `base` entries are never Floor and have no Equipment; each Equipment file holds only that Equipment. Unknown keys fail the build.

@@ -1,4 +1,5 @@
-import type { TargetMuscle } from '../../core';
+import type { Force, Mechanic, TargetMuscle } from '../../core';
+import type { LIBRARY_GROUPS } from './mapping';
 
 /**
  * One entry of free-exercise-db's `dist/exercises.json`, exactly as vendored.
@@ -7,9 +8,9 @@ import type { TargetMuscle } from '../../core';
 export interface SourceExercise {
   id: string;
   name: string;
-  force: 'pull' | 'push' | 'static' | null;
+  force: Force | null;
   level: 'beginner' | 'intermediate' | 'expert';
-  mechanic: 'compound' | 'isolation' | null;
+  mechanic: Mechanic | null;
   equipment: SourceEquipment | null;
   primaryMuscles: TargetMuscle[];
   secondaryMuscles: TargetMuscle[];
@@ -43,12 +44,4 @@ export type SourceEquipment =
   | 'e-z curl bar';
 
 /** A curation group: one YAML file each (`<group>.yaml`). */
-export type LibraryGroup =
-  | 'base'
-  | 'floor'
-  | 'dumbbells'
-  | 'kettlebell'
-  | 'resistance-bands'
-  | 'medicine-ball'
-  | 'exercise-ball'
-  | 'foam-roller';
+export type LibraryGroup = (typeof LIBRARY_GROUPS)[number];

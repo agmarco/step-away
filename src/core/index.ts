@@ -20,6 +20,9 @@ export type {
   ExercisePhotos,
   ExerciseSource,
   ExerciseType,
+  Force,
+  Mechanic,
   Position,
   TargetMuscle,
 } from './exercise';
+export { BODY_AREAS, DIFFICULTIES, EQUIPMENT, EXERCISE_TYPES, POSITIONS, TARGET_MUSCLES } from './exercise';

@@ -22,8 +22,7 @@ import {
   SOURCE_COMMIT,
   SOURCE_REPO,
 } from './files';
-import { LIBRARY_GROUPS } from './mapping';
-import type { LibraryGroup } from './types';
+import { isLibraryGroup, LIBRARY_GROUPS, photoKeys } from './mapping';
 
 function build() {
   const { exercises, photoIndex, warnings } = buildLibrary(readBuildInput());
@@ -44,16 +43,16 @@ function curatedIds(): Set<string> {
 }
 
 function draft(group: string | undefined) {
-  if (!group || !(LIBRARY_GROUPS as readonly string[]).includes(group)) {
+  if (!group || !isLibraryGroup(group)) {
     throw new LibraryBuildError(`Usage: npm run library:draft -- <group>, one of ${LIBRARY_GROUPS.join(', ')}.`);
   }
-  const entries = draftCandidates({ source: readSource(), group: group as LibraryGroup, curatedIds: curatedIds() });
+  const entries = draftCandidates({ source: readSource(), group, curatedIds: curatedIds() });
   process.stdout.write(renderDraftYaml(entries));
 }
 
 async function photos() {
   const { exercises } = buildLibrary({ ...readBuildInput(), photoExists: () => true });
-  const keys = exercises.flatMap((e) => (e.photos ? [e.photos.start, e.photos.end] : []));
+  const keys = photoKeys(exercises);
   let fetched = 0;
   for (const key of keys) {
     const target = join(PHOTOS_DIR, key);

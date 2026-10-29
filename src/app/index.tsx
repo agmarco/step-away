@@ -19,7 +19,7 @@ export default function Today() {
       <Text style={[styles.date, { color: colors.text.secondary }]}>{date}</Text>
       {/* TEMPORARY (#19): link to the Exercise Library debug list; remove with app/debug/library.tsx. */}
       <Link href="/debug/library" style={[styles.debugLink, { color: colors.accent.hero }]}>
-        Library (debug)
+        Exercise Library (debug)
       </Link>
     </View>
   );

@@ -11,7 +11,7 @@ Keep a candidate only if all of these hold:
 - It can be done in a minute or two with no warm-up, in ordinary clothes.
 - It is explainable in a short Cue and a few plain Steps (not "too technical for a quick break").
 - It is safe done cold: no maximal effort, no ballistic stretching, no balance risk.
-- It doesn't need anything the Equipment list lacks (a bench, a bar, a partner, a wall is fine).
+- It needs nothing the Equipment list lacks: no bench, bar, box or partner. A wall, desk or chair is fine.
 - It isn't a near-duplicate of an Exercise already kept.
 
 Drop sprint drills, Olympic-style technique drills, partner stretches and anything whose photos don't make the move clear. Dropped candidates get no entry; nothing records them.
