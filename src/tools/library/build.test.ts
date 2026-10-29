@@ -289,3 +289,134 @@ describe('buildLibrary: validation', () => {
     );
   });
 });
+
+describe('buildLibrary: strict curation', () => {
+  it('rejects an unknown key in a curation entry, naming the Id and the key', () => {
+    expectBuildError(
+      () => build({ curation: { ...curation, base: curation.base + entryYaml('Arm_Circles_Standing', '\n  cues: A typo') } }),
+      'Arm_Circles_Standing',
+      'cues',
+    );
+  });
+});
+
+describe('buildLibrary: Target Muscles', () => {
+  it('rejects a Target Muscle outside the 17 source muscles, naming the Id and the value', () => {
+    const bad = curation.base.replace('targetMuscles: [chest, shoulders]', 'targetMuscles: [chest, pecs]');
+
+    expectBuildError(() => build({ curation: { ...curation, base: bad } }), 'Chair_Upper_Body_Stretch', 'targetMuscles', 'pecs');
+  });
+});
+
+describe('buildLibrary: unknown groups', () => {
+  it('rejects a curation group that is not one of the eight, naming the group', () => {
+    const withStray: Record<string, string> = { ...curation, stretches: entryYaml('Arm_Circles_Standing') };
+
+    expectBuildError(() => build({ curation: withStray as BuildInput['curation'] }), 'stretches');
+  });
+});
+
+describe('buildLibrary: group consistency', () => {
+  it('rejects a floor entry whose Position is not Floor, naming the Id and the group', () => {
+    expectBuildError(
+      () => build({ curation: { ...curation, floor: curation.floor + entryYaml('Calf_Stretch_Hands_Against_Wall') } }),
+      'Calf_Stretch_Hands_Against_Wall',
+      'floor',
+    );
+  });
+});
+
+describe('buildLibrary: group consistency, base', () => {
+  it('rejects a base entry with Position Floor, naming the Id and the group', () => {
+    const floorInBase = entryYaml('Calf_Stretch_Hands_Against_Wall').replace('position: Standing', 'position: Floor');
+
+    expectBuildError(
+      () => build({ curation: { ...curation, base: curation.base + floorInBase } }),
+      'Calf_Stretch_Hands_Against_Wall',
+      'base',
+    );
+  });
+});
+
+describe('buildLibrary: group consistency, base Equipment', () => {
+  it('rejects a base entry whose source maps to Equipment, naming the Id and the group', () => {
+    const withoutDumbbells = { ...curation, dumbbells: '' };
+
+    expectBuildError(
+      () => build({ curation: { ...withoutDumbbells, base: curation.base + entryYaml('Hammer_Curls') } }),
+      'Hammer_Curls',
+      'base',
+    );
+  });
+
+  it('rejects a self-authored base entry written with Equipment, naming the Id and the group', () => {
+    const bad = curation.base.replace('  equipment: null\n', '  equipment: foam roller\n');
+
+    expectBuildError(() => build({ curation: { ...curation, base: bad } }), 'custom/chin_tuck', 'base');
+  });
+});
+
+describe('buildLibrary: group consistency, Equipment groups', () => {
+  const chinTuckIn = (equipment: string) => `
+custom/band_chin_tuck:
+  name: Band Chin Tuck
+  targetMuscles: [neck]
+  bodyArea: Neck
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Either
+  equipment: ${equipment}
+  energetic: false
+  dose:
+    reps: 10
+  cue: Press back into the band
+  steps:
+    - Loop a band behind your head and hold the ends in front.
+`;
+
+  it('rejects a source entry in an Equipment group whose source Equipment differs, naming the Id and the group', () => {
+    expectBuildError(
+      () => build({ curation: { ...curation, dumbbells: '', kettlebell: curation.kettlebell + entryYaml('Hammer_Curls') } }),
+      'Hammer_Curls',
+      'kettlebell',
+    );
+  });
+
+  it('rejects a no-equipment source entry in an Equipment group, naming the Id and the group', () => {
+    expectBuildError(
+      () => build({ curation: { ...curation, dumbbells: curation.dumbbells + entryYaml('Calf_Stretch_Hands_Against_Wall') } }),
+      'Calf_Stretch_Hands_Against_Wall',
+      'dumbbells',
+    );
+  });
+
+  it('rejects a self-authored entry written with another Equipment than its group, naming the Id and the group', () => {
+    expectBuildError(
+      () => build({ curation: { ...curation, 'resistance-bands': chinTuckIn('null') } }),
+      'custom/band_chin_tuck',
+      'resistance-bands',
+    );
+  });
+
+  it('builds a self-authored entry written with its group Equipment', () => {
+    const { exercises } = build({ curation: { ...curation, 'resistance-bands': chinTuckIn('resistance bands') } });
+
+    expect(byId(exercises, 'custom/band_chin_tuck').equipment).toBe('resistance bands');
+  });
+});
+
+describe('buildLibrary: Equipment on a source-backed entry', () => {
+  it('accepts an equipment field that matches the source mapping, as the draft script writes it', () => {
+    const drafted = curation.dumbbells.replace('  position: Either\n', '  position: Either\n  equipment: dumbbells\n');
+
+    expect(byId(build({ curation: { ...curation, dumbbells: drafted } }).exercises, 'Hammer_Curls').equipment).toBe(
+      'dumbbells',
+    );
+  });
+
+  it('rejects an equipment field that differs from the source mapping, naming the Id and the field', () => {
+    const bad = curation.dumbbells.replace('  position: Either\n', '  position: Either\n  equipment: kettlebell\n');
+
+    expectBuildError(() => build({ curation: { ...curation, dumbbells: bad } }), 'Hammer_Curls', 'equipment');
+  });
+});

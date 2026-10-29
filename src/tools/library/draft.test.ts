@@ -235,3 +235,27 @@ describe('renderDraftYaml', () => {
     expect(parse(renderDraftYaml([])) ?? {}).toEqual({});
   });
 });
+
+describe('draftCandidates: the instruction filter matches whole words', () => {
+  const candidates = (instructions: string[]) =>
+    ids(draftCandidates({ source: [entry('Move', { instructions })], group: 'base', curatedIds: none }));
+
+  it('drops an entry that mentions bars, in the plural', () => {
+    expect(candidates(['Hold the parallel bars and lift yourself up.'])).toEqual([]);
+  });
+
+  it.each(['Sit between two Benches.', 'Use the machines.', 'Step between the boxes.', 'Hold the RACKS.'])(
+    'drops an entry that mentions gym kit in the plural: %s',
+    (line) => {
+      expect(candidates([line])).toEqual([]);
+    },
+  );
+
+  it('keeps an entry that mentions track, which is not rack', () => {
+    expect(candidates(['Keep your knees on track over your toes.'])).toEqual(['Move']);
+  });
+
+  it('keeps an entry that mentions tracking or a barbell, which are not rack or bar', () => {
+    expect(candidates(['Keep tracking your breath.', 'Hold your arms as if gripping a barbell.'])).toEqual(['Move']);
+  });
+});

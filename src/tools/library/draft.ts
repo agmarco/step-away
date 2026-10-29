@@ -22,7 +22,7 @@ export interface DraftInput {
 }
 
 /** Gym kit a desk break doesn't have, as whole words in the instructions. */
-const GYM_KIT = /\b(bench|bar|machine|box|rack)\b/i;
+const GYM_KIT = /\b(bench(es)?|bars?|machines?|box(es)?|racks?)\b/i;
 
 /** The candidate list for one group, sorted by Id. Pure. */
 export function draftCandidates(input: DraftInput): DraftEntry[] {

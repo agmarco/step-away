@@ -10,7 +10,7 @@ import type {
   Position,
   TargetMuscle,
 } from '../../core';
-import { BODY_AREA, byId, DIFFICULTY, EXERCISE_TYPE, LIBRARY_GROUPS, mapEquipment } from './mapping';
+import { BODY_AREA, byId, DIFFICULTY, EXERCISE_TYPE, GROUP_EQUIPMENT, LIBRARY_GROUPS, mapEquipment } from './mapping';
 import type { LibraryGroup, SourceExercise } from './types';
 
 /** A fatal problem in the source or the curation files. The build stops. */
@@ -52,6 +52,8 @@ const POSITIONS: readonly Position[] = ['Seated', 'Standing', 'Either', 'Floor']
 const DIFFICULTIES: readonly Difficulty[] = ['Beginner', 'Intermediate', 'Expert'];
 const EXERCISE_TYPES: readonly ExerciseType[] = ['Strength', 'Stretch', 'Plyometric', 'Cardio'];
 const BODY_AREAS: readonly BodyArea[] = [...new Set(Object.values(BODY_AREA))];
+/** The 17 source `primaryMuscles`, the keys of the Body Area table. */
+const TARGET_MUSCLES = Object.keys(BODY_AREA) as TargetMuscle[];
 const EQUIPMENT: readonly Equipment[] = [
   'dumbbells',
   'kettlebell',
@@ -62,6 +64,30 @@ const EQUIPMENT: readonly Equipment[] = [
 ];
 
 type Entry = Record<string, unknown>;
+
+/** The fields every entry may hold. Source-backed entries may also name a `sourceId`. */
+const CURATED_KEYS = [
+  'name',
+  'targetMuscles',
+  'bodyArea',
+  'exerciseType',
+  'difficulty',
+  'position',
+  'equipment',
+  'energetic',
+  'dose',
+  'cue',
+  'steps',
+] as const;
+const SOURCE_BACKED_KEYS: readonly string[] = [...CURATED_KEYS, 'sourceId'];
+const SELF_AUTHORED_KEYS: readonly string[] = CURATED_KEYS;
+
+function rejectUnknownKeys({ id, group, entry }: Curated, allowed: readonly string[]) {
+  const unknown = Object.keys(entry).filter((key) => !allowed.includes(key));
+  if (unknown.length > 0) {
+    throw new LibraryBuildError(`${id} (${group}): unknown key ${unknown.join(', ')}.`);
+  }
+}
 
 /** One curation entry with where it came from, for error messages. */
 interface Curated {
@@ -80,9 +106,15 @@ export function buildLibrary(input: BuildInput): BuildResult {
 
   const exercises = readCuration(input.curation)
     .map((curated) => {
-      if (curated.id.startsWith(CUSTOM_PREFIX)) return selfAuthored(curated);
-      const { exercise, warning } = sourceBacked(curated, sourceById);
-      if (warning) warnings.push(warning);
+      let exercise: Exercise;
+      if (curated.id.startsWith(CUSTOM_PREFIX)) {
+        exercise = selfAuthored(curated);
+      } else {
+        const built = sourceBacked(curated, sourceById);
+        if (built.warning) warnings.push(built.warning);
+        exercise = built.exercise;
+      }
+      checkGroup(exercise, curated.group);
       return exercise;
     })
     .sort(byId);
@@ -97,10 +129,36 @@ export function buildLibrary(input: BuildInput): BuildResult {
   return { exercises, photoIndex: renderPhotoIndex(photoKeys), warnings };
 }
 
+/** An Exercise must belong in the group whose file it is in. */
+function checkGroup({ id, position, equipment }: Exercise, group: LibraryGroup) {
+  if (group === 'floor' && position !== 'Floor') {
+    throw new LibraryBuildError(`${id} (floor): a floor entry needs position Floor, got ${position}.`);
+  }
+  if (group === 'base' && position === 'Floor') {
+    throw new LibraryBuildError(`${id} (base): a base entry can't have position Floor; move it to floor.yaml.`);
+  }
+  if (group === 'base' && equipment !== null) {
+    throw new LibraryBuildError(`${id} (base): a base entry needs no Equipment, got ${equipment}.`);
+  }
+  const groupEquipment = GROUP_EQUIPMENT[group];
+  if (groupEquipment !== null && equipment !== groupEquipment) {
+    throw new LibraryBuildError(
+      `${id} (${group}): a ${group} entry needs Equipment ${groupEquipment}, got ${equipment ?? 'none'}.`,
+    );
+  }
+}
+
 /** Every entry of every group, in canonical group order. Fails on an Id curated twice. */
 function readCuration(curation: BuildInput['curation']): Curated[] {
   const groupOf = new Map<string, LibraryGroup>();
   const all: Curated[] = [];
+
+  const unknown = Object.keys(curation).filter((name) => !(LIBRARY_GROUPS as readonly string[]).includes(name));
+  if (unknown.length > 0) {
+    throw new LibraryBuildError(
+      `Unknown curation group ${unknown.join(', ')}: the groups are ${LIBRARY_GROUPS.join(', ')}.`,
+    );
+  }
 
   for (const group of LIBRARY_GROUPS) {
     const text = curation[group];
@@ -131,6 +189,7 @@ function sourceBacked(
   sourceById: Map<string, SourceExercise>,
 ): { exercise: Exercise; warning?: string } {
   const { id, group } = curated;
+  rejectUnknownKeys(curated, SOURCE_BACKED_KEYS);
   const field = fieldReader(curated);
 
   const sourceId = field.optional('sourceId', isString);
@@ -146,6 +205,12 @@ function sourceBacked(
   const equipment = mapEquipment(source);
   if (equipment === undefined) {
     throw new LibraryBuildError(`${id} (${group}): source equipment "${source.equipment}" is ineligible.`);
+  }
+  const writtenEquipment = field.optional('equipment', isEquipmentOrNone);
+  if (writtenEquipment !== undefined && writtenEquipment !== equipment) {
+    throw new LibraryBuildError(
+      `${id} (${group}): equipment ${String(writtenEquipment)} differs from the source mapping ${String(equipment)}; Equipment comes from the source.`,
+    );
   }
 
   const targetMuscles = field.optional('targetMuscles', isMuscleList) ?? source.primaryMuscles;
@@ -177,6 +242,7 @@ function sourceBacked(
 }
 
 function selfAuthored(curated: Curated): Exercise {
+  rejectUnknownKeys(curated, SELF_AUTHORED_KEYS);
   const field = fieldReader(curated);
   return {
     id: curated.id,
@@ -187,7 +253,7 @@ function selfAuthored(curated: Curated): Exercise {
     exerciseType: field.required('exerciseType', isOneOf(EXERCISE_TYPES)),
     difficulty: field.required('difficulty', isOneOf(DIFFICULTIES)),
     position: field.required('position', isOneOf(POSITIONS)),
-    equipment: field.required('equipment', (v): v is Equipment | null => v === null || isOneOf(EQUIPMENT)(v)),
+    equipment: field.required('equipment', isEquipmentOrNone),
     energetic: field.required('energetic', isBoolean),
     dose: readDose(curated),
     cue: field.required('cue', isText),
@@ -275,7 +341,10 @@ function isTextList(value: unknown): value is string[] {
   return Array.isArray(value) && value.length > 0 && value.every(isText);
 }
 function isMuscleList(value: unknown): value is TargetMuscle[] {
-  return Array.isArray(value) && value.length > 0 && value.every(isString);
+  return Array.isArray(value) && value.length > 0 && value.every(isOneOf(TARGET_MUSCLES));
+}
+function isEquipmentOrNone(value: unknown): value is Equipment | null {
+  return value === null || isOneOf(EQUIPMENT)(value);
 }
 function isOneOf<T extends string>(allowed: readonly T[]) {
   return (value: unknown): value is T => typeof value === 'string' && (allowed as readonly string[]).includes(value);
