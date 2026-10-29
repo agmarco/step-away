@@ -117,7 +117,12 @@ function RootA({ api }: { api: Api }) {
 }
 
 // ───────────────────────────── B — Today is the hub; everything else is pushed on top
-function TodayB({ api, go }: { api: Api; go: (p: PageB) => void }) {
+// How Settings is reached from the hub: the original bare gear, a labelled pill in the
+// hero, a third link card, or a 3-up tile row under the hero replacing the link cards.
+type SettingsEntry = 'gear' | 'pill' | 'card' | 'tiles';
+const settingsSummary = '9 am–6 pm · every 45 min · 1 Exercise';
+
+function TodayB({ api, go, entry }: { api: Api; go: (p: PageB) => void; entry: SettingsEntry }) {
   const d = api.day;
   const t = tally(d);
   const st = status(d);
@@ -127,7 +132,8 @@ function TodayB({ api, go }: { api: Api; go: (p: PageB) => void }) {
       <View style={s.heroB}>
         <View style={s.rowCenter}>
           <Text style={{ color: '#c7d2fe', flex: 1 }}>Thursday, 29 October</Text>
-          <Pressable onPress={() => go('settings')} hitSlop={12}><Text style={{ fontSize: 20 }}>⚙️</Text></Pressable>
+          {entry === 'gear' && <Pressable onPress={() => go('settings')} hitSlop={12}><Text style={{ fontSize: 20 }}>⚙️</Text></Pressable>}
+          {entry === 'pill' && <Pressable onPress={() => go('settings')} hitSlop={8} style={s.heroPill}><Text style={{ color: '#fff', fontWeight: '700' }}>⚙️  Settings</Text></Pressable>}
         </View>
         <Text style={s.heroStreak}>🔥 {d.streak}</Text>
         <Text style={{ color: '#e0e7ff' }}>day Streak</Text>
@@ -140,6 +146,13 @@ function TodayB({ api, go }: { api: Api; go: (p: PageB) => void }) {
           {st.action && <Pressable onPress={() => runStatus(api, openPause, st.action!.kind)}><Text style={{ color: '#fff', fontWeight: '800' }}>{st.action.label}</Text></Pressable>}
         </View>
       </View>
+      {entry === 'tiles' && (
+        <View style={s.tileRow}>
+          <Tile icon="📅" label="History" onPress={() => go('history')} />
+          <Tile icon="🏅" label="Achievements" dot={d.newBadge} onPress={() => { api.seenBadge(); go('achievements'); }} />
+          <Tile icon="⚙️" label="Settings" onPress={() => go('settings')} />
+        </View>
+      )}
       <View style={{ padding: 16, gap: 12 }}>
         <View>
           <Text style={sh.sub}>{t.done} done · {t.skip} skipped · {t.missed} missed · {t.exercises} Exercises</Text>
@@ -147,6 +160,7 @@ function TodayB({ api, go }: { api: Api; go: (p: PageB) => void }) {
           {[...d.entries].reverse().map((e) => <EntryRow key={e.id} e={e} onPress={() => openEdit(e)} onStart={() => api.start(e.id)} />)}
           {d.pauses.map((p) => <Text key={p.from} style={[sh.sub, { padding: 8 }]}>⏸ Paused {p.from}–{p.to}</Text>)}
         </View>
+        {entry !== 'tiles' && <>
         <Pressable onPress={() => go('history')} style={[s.card, { gap: 8 }]}>
           <View style={s.rowCenter}><Text style={[sh.h2, { flex: 1 }]}>History</Text><Text style={s.chev}>›</Text></View>
           <View style={{ flexDirection: 'row', gap: 6 }}>
@@ -167,6 +181,17 @@ function TodayB({ api, go }: { api: Api; go: (p: PageB) => void }) {
           {d.newBadge && <View style={[s.newDot, { position: 'relative', top: 0, right: 0 }]} />}
           <Text style={s.chev}>›</Text>
         </Pressable>
+        {entry === 'card' && (
+          <Pressable onPress={() => go('settings')} style={[s.card, s.rowCenter, { gap: 12 }]}>
+            <Text style={{ fontSize: 28 }}>⚙️</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={sh.h2}>Settings</Text>
+              <Text style={sh.sub}>{settingsSummary}</Text>
+            </View>
+            <Text style={s.chev}>›</Text>
+          </Pressable>
+        )}
+        </>}
         {!d.dayOff && <Pressable onPress={api.toggleDayOff}><Text style={s.link}>Take today off</Text></Pressable>}
       </View>
       {sheets}
@@ -174,11 +199,21 @@ function TodayB({ api, go }: { api: Api; go: (p: PageB) => void }) {
   );
 }
 
+function Tile({ icon, label, onPress, dot }: { icon: string; label: string; onPress: () => void; dot?: boolean }) {
+  return (
+    <Pressable onPress={onPress} style={s.tile}>
+      <View><Text style={{ fontSize: 24 }}>{icon}</Text>{dot && <View style={s.newDot} />}</View>
+      <Text style={{ fontWeight: '700', color: C.ink, fontSize: 13 }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 type PageB = 'history' | 'achievements' | 'settings';
-function RootB({ api }: { api: Api }) {
+const rootB = (entry: SettingsEntry) => ({ api }: { api: Api }) => <RootB api={api} entry={entry} />;
+function RootB({ api, entry }: { api: Api; entry: SettingsEntry }) {
   const [page, setPage] = useState<PageB | null>(null);
   useBack(page ? () => setPage(null) : null);
-  if (!page) return <View style={{ flex: 1, backgroundColor: C.bg }}><TodayB api={api} go={setPage} /></View>;
+  if (!page) return <View style={{ flex: 1, backgroundColor: C.bg }}><TodayB api={api} go={setPage} entry={entry} /></View>;
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Header title={{ history: 'History', achievements: 'Achievements', settings: 'Settings' }[page]} onBack={() => setPage(null)} />
@@ -268,7 +303,10 @@ function RootC({ api }: { api: Api }) {
 
 export const VARIANTS: Variant[] = [
   { key: 'A', name: '4 tabs · card stack', Root: RootA },
-  { key: 'B', name: 'Today hub · pushed pages', Root: RootB },
+  { key: 'B', name: 'hub · gear (original)', Root: rootB('gear') },
+  { key: 'B1', name: 'hub · labelled Settings pill', Root: rootB('pill') },
+  { key: 'B2', name: 'hub · Settings link card', Root: rootB('card') },
+  { key: 'B3', name: 'hub · 3 tiles under hero', Root: rootB('tiles') },
   { key: 'C', name: '3 tabs + gear · day timeline', Root: RootC },
 ];
 
@@ -297,6 +335,9 @@ const s = StyleSheet.create({
   heroStreak: { fontSize: 64, fontWeight: '900', color: '#fff', marginTop: 8 },
   goalDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: '#fff' },
   heroStatus: { marginTop: 18, backgroundColor: 'rgba(255,255,255,0.15)', padding: 12, borderRadius: 12 },
+  heroPill: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
+  tileRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: -18 },
+  tile: { flex: 1, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.line, paddingVertical: 12, alignItems: 'center', gap: 4, elevation: 3 },
   weekCell: { height: 26, alignSelf: 'stretch', borderRadius: 6 },
   goalBarWrap: { backgroundColor: '#fff', padding: 12, borderBottomWidth: 1, borderColor: C.line, gap: 8 },
   goalBar: { height: 8, borderRadius: 4, backgroundColor: C.line, overflow: 'hidden' },
