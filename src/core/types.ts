@@ -1,6 +1,7 @@
 /**
  * Domain-core types. Pure TypeScript: nothing here may import React, React
- * Native or Expo (enforced by ESLint's no-restricted-imports on src/core/**).
+ * Native or Expo (enforced by ESLint on src/core/**: no-restricted-imports for
+ * static imports, no-restricted-syntax for require() and dynamic import()).
  *
  * These are a skeleton. Later tickets grow each union with the events and
  * intents described in the v1 spec (#17, Modules -> Domain core).
