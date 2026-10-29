@@ -1,4 +1,7 @@
-import type { CoreDeps, CoreEvent, CoreResult, CoreState, Settings } from './types';
+import { notificationFor } from './notification';
+import { chainTimes, latestFired, reminderId } from './schedule';
+import { suggest } from './suggest';
+import type { CoreDeps, CoreEvent, CoreResult, CoreState, Intent, Reminder, Settings } from './types';
 
 const weekday = { start: 9 * 60, end: 18 * 60 };
 
@@ -18,12 +21,60 @@ export const initialState: CoreState = {
 
 /** The core's one entry point: (state, event, { clock, random, library }) -> { state, intents }. */
 export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): CoreResult {
+  const now = deps.clock.now();
   switch (event.type) {
     case 'AppOpened':
-      return { state: { ...state, lastAppOpenAt: deps.clock.now() }, intents: [] };
-    case 'Rearm':
-      throw new Error('not implemented');
-    case 'Response':
-      throw new Error('not implemented');
+      return { state: { ...state, lastAppOpenAt: now }, intents: [] };
+    case 'Rearm': {
+      const timeZone = event.timeZone ?? state.settings.timeZone;
+      return rearm({ ...state, settings: { ...state.settings, timeZone } }, deps);
+    }
+    case 'Response': {
+      const dismiss: Intent = { type: 'DismissNotification', reminderId: event.reminderId };
+      if (outstanding(state, now)?.id !== event.reminderId) return { state, intents: [dismiss] };
+      const skipped: CoreState = {
+        ...state,
+        lastResponseAt: now,
+        reminders: state.reminders.map((r) => (r.id === event.reminderId ? { ...r, status: 'skipped' } : r)),
+      };
+      const rebuilt = rearm(skipped, deps);
+      return { state: rebuilt.state, intents: [dismiss, ...rebuilt.intents] };
+    }
   }
+}
+
+/**
+ * The Reminder a Response can still act on: the latest fired one, if no
+ * Response has been given to it yet. Anything else (unknown, not fired yet,
+ * superseded by a later fired one, already answered) is a guarded no-op.
+ */
+function outstanding(state: CoreState, now: number): Reminder | undefined {
+  const latest = latestFired(state, now);
+  return latest?.status === 'scheduled' ? latest : undefined;
+}
+
+/**
+ * Rebuilds the chain ahead: fired Reminders stay in state as they are; the
+ * future is replaced by the freshly computed chain. A Reminder whose fire time
+ * is unchanged keeps its Id and its Suggestion; new ones get a Suggestion
+ * picked now. With an empty library no Suggestion can be made, so nothing is
+ * scheduled.
+ */
+function rearm(state: CoreState, deps: CoreDeps): CoreResult {
+  const now = deps.clock.now();
+  const library = deps.library ?? [];
+  const fired = state.reminders.filter((r) => r.firesAt <= now);
+  const previous = new Map(state.reminders.filter((r) => r.firesAt > now).map((r) => [r.id, r]));
+
+  const chain: Reminder[] = [];
+  for (const firesAt of library.length > 0 ? chainTimes(state, now) : []) {
+    const id = reminderId(firesAt);
+    const suggestion = previous.get(id)?.suggestion ?? suggest(library, deps.random);
+    chain.push({ id, firesAt, suggestion, status: 'scheduled' });
+  }
+
+  return {
+    state: { ...state, reminders: [...fired, ...chain] },
+    intents: [{ type: 'ScheduleChain', reminders: chain.map(notificationFor) }],
+  };
 }

@@ -75,8 +75,11 @@ export type ResponseKind = 'Skip';
 /** Something that happened, fed into the core by an adapter or screen. */
 export type CoreEvent =
   | { type: 'AppOpened' }
-  /** JS is running (launch, foreground): rebuild the chain ahead. */
-  | { type: 'Rearm' }
+  /**
+   * JS is running (launch, foreground): rebuild the chain ahead. `timeZone` is
+   * the device's IANA zone; when present it replaces `settings.timeZone`.
+   */
+  | { type: 'Rearm'; timeZone?: string }
   | { type: 'Response'; reminderId: string; kind: ResponseKind };
 
 /** The notification actions, in order. */

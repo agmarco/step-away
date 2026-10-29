@@ -180,6 +180,40 @@ describe('Rearm: the chain of upcoming Reminders', () => {
     expect(result.intents).toEqual([{ type: 'ScheduleChain', reminders: [] }]);
     expect(result.state.reminders).toEqual([]);
   });
+
+  it('takes the device time zone from Rearm and reads Active Hours in it', () => {
+    // Chicago on 2 Nov 2026 is CST, UTC-6 (US DST ended on 1 Nov).
+    const chicago = (date: string, time: string): number => Date.parse(`${date}T${time}:00-06:00`);
+
+    const result = reduce(start, { type: 'Rearm', timeZone: 'America/Chicago' }, depsAt(chicago(MON, '08:00')));
+
+    expect(result.state.settings.timeZone).toBe('America/Chicago');
+    expect(timesOf(result)[0]).toBe(chicago(MON, '09:45'));
+  });
+
+  it('keeps the current time zone when Rearm carries none', () => {
+    const result = rearm(start, local(MON, '08:00'));
+
+    expect(result.state.settings.timeZone).toBe(ZONE);
+  });
+
+  it('starts a fresh state mid-day at the next slot of the day, without backfilling', () => {
+    const now = local(MON, '13:00');
+
+    const result = rearm(start, now);
+
+    expect(timesOf(result)[0]).toBe(local(MON, '13:30'));
+    expect(result.state.reminders.filter((r) => r.firesAt <= now)).toEqual([]);
+  });
+
+  it('keeps 09:45 local on both sides of the Europe/Madrid DST change', () => {
+    // Sunday 28 Mar 2027: CET (UTC+1) becomes CEST (UTC+2). Friday is before it, Monday after.
+    const result = rearm(start, Date.parse('2027-03-26T08:00:00+01:00'));
+
+    expect(timesOf(result)[0]).toBe(Date.parse('2027-03-26T09:45:00+01:00'));
+    expect(timesOf(result)).toContain(Date.parse('2027-03-29T09:45:00+02:00'));
+    expect(timesOf(result)).not.toContain(Date.parse('2027-03-29T09:45:00+01:00'));
+  });
 });
 
 describe('Suggestion', () => {

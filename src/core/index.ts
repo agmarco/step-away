@@ -1,4 +1,5 @@
 export { defaultSettings, initialState, reduce } from './reduce';
+export { formatDose } from './dose';
 export { seededRandom } from './random';
 export type {
   ActiveWindow,
