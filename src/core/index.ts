@@ -1,5 +1,6 @@
 export { defaultSettings, initialState, reduce } from './reduce';
 export { formatDose } from './dose';
+export { outstandingReminder } from './schedule';
 export { seededRandom } from './random';
 export type {
   ActiveWindow,

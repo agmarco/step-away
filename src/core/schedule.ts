@@ -5,7 +5,7 @@
  */
 
 import { addDays, instantAt, localDateOf, weekdayOf } from './localTime';
-import type { CoreState, Instant } from './types';
+import type { CoreState, Instant, Reminder } from './types';
 
 const MINUTE = 60_000;
 const HORIZON_DAYS = 7;
@@ -23,6 +23,17 @@ export function latestFired(state: CoreState, now: Instant) {
     if (r.firesAt <= now && (!latest || r.firesAt > latest.firesAt)) latest = r;
   }
   return latest;
+}
+
+/**
+ * The Reminder a Response can still act on: the latest fired one, if no
+ * Response has been given to it yet. Anything else (unknown, not fired yet,
+ * superseded by a later fired one, already answered) is a guarded no-op.
+ * Adapters use it too, e.g. to dismiss stale notifications.
+ */
+export function outstandingReminder(state: CoreState, now: Instant): Reminder | undefined {
+  const latest = latestFired(state, now);
+  return latest?.status === 'scheduled' ? latest : undefined;
 }
 
 /**

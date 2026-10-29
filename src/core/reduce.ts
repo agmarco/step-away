@@ -1,5 +1,5 @@
 import { notificationFor } from './notification';
-import { chainTimes, latestFired, reminderId } from './schedule';
+import { chainTimes, outstandingReminder, reminderId } from './schedule';
 import { suggest } from './suggest';
 import type { CoreDeps, CoreEvent, CoreResult, CoreState, Intent, Reminder, Settings } from './types';
 
@@ -31,7 +31,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
     }
     case 'Response': {
       const dismiss: Intent = { type: 'DismissNotification', reminderId: event.reminderId };
-      if (outstanding(state, now)?.id !== event.reminderId) return { state, intents: [dismiss] };
+      if (outstandingReminder(state, now)?.id !== event.reminderId) return { state, intents: [dismiss] };
       const skipped: CoreState = {
         ...state,
         lastResponseAt: now,
@@ -41,16 +41,6 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       return { state: rebuilt.state, intents: [dismiss, ...rebuilt.intents] };
     }
   }
-}
-
-/**
- * The Reminder a Response can still act on: the latest fired one, if no
- * Response has been given to it yet. Anything else (unknown, not fired yet,
- * superseded by a later fired one, already answered) is a guarded no-op.
- */
-function outstanding(state: CoreState, now: number): Reminder | undefined {
-  const latest = latestFired(state, now);
-  return latest?.status === 'scheduled' ? latest : undefined;
 }
 
 /**
