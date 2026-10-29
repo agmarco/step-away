@@ -11,4 +11,14 @@ The v1 spec is being charted as a wayfinder map: [Map: Activity Reminder v1 spec
 | [`CONTEXT.md`](CONTEXT.md) | Domain glossary: Reminder, Suggestion, Exercise, Response… Use these terms everywhere. |
 | [`docs/`](docs/) | Index of decisions, research and ADRs. |
 | [`prototypes/`](prototypes/) | Index of throwaway prototypes. The code itself lives on `prototype/<name>` branches. |
-| [`src/`](src/) | App source (once building starts). |
+| [`src/`](src/) | The app: the Expo project (`package.json`, app/EAS config, tooling) and all code. |
+
+## Development
+
+All code and its config live in [`src/`](src/), which is the Expo project root. Run every command from there:
+
+```sh
+cd src
+```
+
+Then see [`src/README.md`](src/README.md) for setup, commands, lint rules, app variants and EAS builds.
