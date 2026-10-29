@@ -12,28 +12,20 @@
  * alarms don't diverge. Dismissals are idempotent and run after the commit.
  */
 import * as Notifications from 'expo-notifications';
-import { reduce, type CoreDeps, type CoreResult, type CoreState } from '../core';
+import { outstandingReminder, reduce, type CoreDeps, type CoreResult, type CoreState } from '../core';
 import { exercises } from '../library';
 import { write } from './db';
 import { ACTION, dismissNotifications, dismissStale, scheduleChains } from './notifications';
 import { guardedSkip, loadState, logResponse, notifyStateChanged, saveState, type Source } from './store';
 
-/** The real clock and randomness. Only adapters may touch Date.now and Math.random; the core may not. */
-export function platformDeps(): CoreDeps {
-  return {
-    clock: { now: Date.now },
-    random: { next: Math.random },
-    library: exercises,
-  };
-}
-
 /**
- * Platform deps with the clock frozen at one instant, so the core and the SQL
- * written in the same transaction agree on what "now" is.
+ * The real randomness and library, with the clock frozen at one instant, so
+ * the core and the SQL written in the same transaction agree on what "now" is.
+ * Only adapters may touch Date.now and Math.random; the core may not.
  */
 function frozenDeps(): { deps: CoreDeps; now: number } {
   const now = Date.now();
-  return { deps: { ...platformDeps(), clock: { now: () => now } }, now };
+  return { deps: { clock: { now: () => now }, random: { next: Math.random }, library: exercises }, now };
 }
 
 /** The device's IANA time zone, e.g. `Europe/Madrid`. */
@@ -76,11 +68,11 @@ export async function handleAction(actionId: string, payload: { reminderId?: str
     let accepted = false;
     const result = await write(async (d) => {
       const state = await loadState(d);
+      // The core's guard, asked before reducing: only the outstanding Reminder
+      // takes a Response. Anything else (duplicate, stale, unknown) is a no-op;
+      // its notification was already dismissed above.
+      if (outstandingReminder(state, now)?.id !== reminderId) return { state, intents: [] };
       const next = reduce(state, { type: 'Response', reminderId, kind: 'Skip' }, deps);
-      const before = state.reminders.find((r) => r.id === reminderId)?.status;
-      const after = next.state.reminders.find((r) => r.id === reminderId)?.status;
-      // A guarded no-op in the core (duplicate, stale, unknown): nothing to write.
-      if (before !== 'scheduled' || after !== 'skipped') return next;
       // The same guard in SQL, accepted only when exactly one row changed.
       if (!(await guardedSkip(d, reminderId, now))) return { state, intents: [] };
       await logResponse(d, reminderId, 'Skip', source, now);

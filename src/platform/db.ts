@@ -22,9 +22,13 @@ let dbPromise: Promise<Db> | null = null;
 export function db(): Promise<Db> {
   dbPromise ??= (async () => {
     const d = await SQLite.openDatabaseAsync(DB_NAME);
+    // busy_timeout is 15 s, not 5: the Reminder chain (up to 100
+    // notifications, notifications.ts MAX_SCHEDULED) is scheduled while
+    // BEGIN IMMEDIATE is held (handler.ts), and a cold-start headless Skip in
+    // the other JS context must outwait that, not fail with `database is locked`.
     await d.execAsync(`
       PRAGMA journal_mode = WAL;
-      PRAGMA busy_timeout = 5000;
+      PRAGMA busy_timeout = 15000;
       CREATE TABLE IF NOT EXISTS reminders (
         id TEXT PRIMARY KEY,
         fires_at INTEGER NOT NULL,

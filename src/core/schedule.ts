@@ -10,10 +10,32 @@ import type { CoreState, Instant, Reminder } from './types';
 const MINUTE = 60_000;
 const HORIZON_DAYS = 7;
 const HORIZON = HORIZON_DAYS * 24 * 60 * MINUTE;
+const REMINDER_ID_PREFIX = 'reminder-';
 
 /** A Reminder's Id: deterministic from its fire time. */
 export function reminderId(firesAt: Instant): string {
-  return `reminder-${firesAt}`;
+  return `${REMINDER_ID_PREFIX}${firesAt}`;
+}
+
+/** Whether `id` is a Reminder Id (as made by `reminderId`), e.g. to tell Reminder notifications from others. */
+export function isReminderId(id: string): boolean {
+  return id.startsWith(REMINDER_ID_PREFIX);
+}
+
+/** The next Reminder ahead: the first one still scheduled that fires strictly after `now`, or undefined. */
+export function nextReminder(state: CoreState, now: Instant): Reminder | undefined {
+  return state.reminders.find((r) => r.firesAt > now && r.status === 'scheduled');
+}
+
+/** The fired Reminders (any status) whose local date in the Settings' time zone is today, newest first. */
+export function todaysReminders(state: CoreState, now: Instant): Reminder[] {
+  const { timeZone } = state.settings;
+  const today = localDateOf(now, timeZone);
+  const isToday = (at: Instant) => {
+    const d = localDateOf(at, timeZone);
+    return d.year === today.year && d.month === today.month && d.day === today.day;
+  };
+  return state.reminders.filter((r) => r.firesAt <= now && isToday(r.firesAt)).sort((a, b) => b.firesAt - a.firesAt);
 }
 
 /** The latest Reminder that has fired by `now` (any status), or undefined. */

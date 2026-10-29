@@ -11,14 +11,20 @@
  * in the shade), so the core's Reminder Ids address notifications directly.
  */
 import * as Notifications from 'expo-notifications';
-import { outstandingReminder, type CoreState, type Instant, type Intent, type ScheduledNotification } from '../core';
+import {
+  isReminderId,
+  outstandingReminder,
+  type CoreState,
+  type Instant,
+  type Intent,
+  type NotificationAction,
+  type ScheduledNotification,
+} from '../core';
 
 export const CHANNEL = 'reminders';
 export const CATEGORY = 'reminder';
 /** Android group key: stale Reminders left in the shade bundle into one group. */
 const GROUP = 'reminders';
-/** Reminder Ids start with this (core/schedule.ts reminderId); other notifications are left alone. */
-const REMINDER_PREFIX = 'reminder-';
 
 /**
  * The most notifications scheduled at once. The default chain is about 60
@@ -28,8 +34,10 @@ const REMINDER_PREFIX = 'reminder-';
  */
 const MAX_SCHEDULED = 100;
 
-/** The action identifiers, as the core names them (NotificationAction). */
-export const ACTION = { start: 'start', snooze: 'snooze', skip: 'skip' } as const;
+/** The action identifiers, as the core names them: typed from NotificationAction, so the two can't drift. */
+export const ACTION = { start: 'start', snooze: 'snooze', skip: 'skip' } as const satisfies {
+  [A in NotificationAction]: A;
+};
 
 /** UI context only: permission, channel, category, and how to show a Reminder while the app is in front. */
 export async function setup() {
@@ -57,7 +65,7 @@ export async function setup() {
 
 /**
  * Replaces the OS chain with `reminders`. Called inside the `write()`
- * transaction (handler.ts), so it must stay well under busy_timeout (5 s):
+ * transaction (handler.ts), so it must stay well under busy_timeout (15 s, db.ts):
  * at most MAX_SCHEDULED calls, made one after another (a few ms each on the
  * Pixel), not in parallel, so their order is plain and the bridge isn't flooded.
  * A failing cancel throws and rolls the transaction back; one Reminder that
@@ -114,7 +122,7 @@ export async function dismissStale(state: CoreState, now: Instant) {
   const presented = await Notifications.getPresentedNotificationsAsync();
   for (const n of presented) {
     const id = n.request.identifier;
-    if (id.startsWith(REMINDER_PREFIX) && id !== keep) {
+    if (isReminderId(id) && id !== keep) {
       await Notifications.dismissNotificationAsync(id).catch(() => {});
     }
   }

@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { outstandingReminder, type CoreState, type Reminder } from '../core';
+import { nextReminder, outstandingReminder, todaysReminders, type CoreState, type Reminder } from '../core';
 import { useCoreState } from '../platform/useCoreState';
 import { isDevelopment } from '../platform/variant';
 import { type Palette, useColors } from '../theme';
@@ -39,9 +39,12 @@ export default function Today() {
 }
 
 function NextReminder({ state, now, colors }: { state: CoreState; now: number; colors: Palette }) {
-  const next = state.reminders.find((r) => r.firesAt > now && r.status === 'scheduled');
+  const next = nextReminder(state, now);
+  // Display only: the weekday is shown when the next Reminder's calendar date
+  // (as formatted in the Settings' time zone) is not today's.
+  const { timeZone } = state.settings;
   const label = next
-    ? `Next Reminder ${isSameDay(next.firesAt, now) ? '' : `${weekdayOf(next.firesAt)} `}${timeOf(next.firesAt)}`
+    ? `Next Reminder ${dateOf(next.firesAt, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(next.firesAt)} `}${timeOf(next.firesAt)}`
     : 'No Reminders scheduled';
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero }]}>
@@ -52,7 +55,7 @@ function NextReminder({ state, now, colors }: { state: CoreState; now: number; c
 
 function TodaysReminders({ state, now, colors }: { state: CoreState; now: number; colors: Palette }) {
   const outstandingId = outstandingReminder(state, now)?.id;
-  const fired = state.reminders.filter((r) => r.firesAt <= now && isSameDay(r.firesAt, now)).reverse();
+  const fired = todaysReminders(state, now);
 
   if (fired.length === 0) {
     return <Text style={[styles.empty, { color: colors.text.secondary }]}>No Reminders yet today.</Text>;
@@ -90,7 +93,8 @@ function statusOf(r: Reminder, outstandingId: string | undefined, colors: Palett
 const timeOf = (at: number) =>
   new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 const weekdayOf = (at: number) => new Date(at).toLocaleDateString(undefined, { weekday: 'short' });
-const isSameDay = (a: number, b: number) => new Date(a).toDateString() === new Date(b).toDateString();
+const dateOf = (at: number, timeZone: string) =>
+  new Date(at).toLocaleDateString('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' });
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, gap: 4 },

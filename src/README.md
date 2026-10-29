@@ -24,11 +24,11 @@ npm install          # or npm ci
 npm test             # Vitest: **/*.test.ts in Node (the domain core and the library build)
 npm run typecheck    # tsc --noEmit
 npm run lint         # ESLint: Expo rules, the core import rule, the no-literal-colours rule
-npx expo start       # dev server (npm start); open it in the "Activity Reminder (dev)" app
+APP_VARIANT=development npx expo start   # dev server; open it in the "Activity Reminder (dev)" app
 npm run web          # web: currently does not bundle (see below)
 ```
 
-`npx expo start` serves JavaScript to the **development** build (a dev client), not to Expo Go, so the dev app must be installed on the phone first.
+`APP_VARIANT=development npx expo start` serves JavaScript to the **development** build (a dev client), not to Expo Go, so the dev app must be installed on the phone first. Set the variant: plain `npx expo start` (and `npm start`) resolves the `preview` config, so the dev-only Test mode stays hidden.
 
 The web build no longer bundles since #21: expo-sqlite's web worker imports a `.wasm` file Metro isn't configured to resolve. The target is Android, so there are no web shims; `npx expo export --platform web` fails with `Unable to resolve "./wa-sqlite/wa-sqlite.wasm"`.
 
@@ -47,9 +47,9 @@ The web build no longer bundles since #21: expo-sqlite's web worker imports a `.
 | `ScheduleChain { reminders }` | Replaces the whole scheduled chain: cancel every scheduled notification, schedule these. |
 | `DismissNotification { reminderId }` | Removes that Reminder's notification from the shade. |
 
-Also exported: `outstandingReminder(state, now)` (the rule the Skip guard uses; the adapter uses it to dismiss stale notifications), `formatDose`, `defaultSettings` (Mon–Fri 09:00–18:00, 45 min) and `initialState`.
+Also exported: `outstandingReminder(state, now)` (the rule the Skip guard uses; the adapter uses it to accept a Skip and to dismiss stale notifications), `todaysReminders(state, now)` (today's fired Reminders in the Settings' time zone, newest first) and `nextReminder(state, now)` (the first scheduled Reminder after `now`), both for Today, `isReminderId(id)` (tells Reminder notifications from others), `formatDose`, `defaultSettings` (Mon–Fri 09:00–18:00, 45 min) and `initialState`.
 
-The chain is scheduled ahead because expo-notifications runs no JavaScript when a scheduled notification fires (see #21, "Owner decision: schedule the chain ahead"). Ignored Reminders stay in the shade, bundled in one group, until JS next runs and dismisses the stale ones.
+The chain is scheduled ahead because expo-notifications runs no JavaScript when a scheduled notification fires (see #21, "Owner decision: schedule the chain ahead"). Fired Reminders with no Response stay in the shade, bundled in one group, until JS next runs and dismisses the stale ones.
 
 ## Platform adapters
 
@@ -57,10 +57,10 @@ The chain is scheduled ahead because expo-notifications runs no JavaScript when 
 
 | File | What it does |
 |---|---|
-| `db.ts` | One SQLite connection per JS context (`activity-reminder.db`; on Android `files/SQLite/activity-reminder.db`), `journal_mode = WAL`, `busy_timeout = 5000`. `write(fn)` serializes writes per JS context with a promise-chain mutex and runs each as `BEGIN IMMEDIATE … COMMIT`, `ROLLBACK` on error. **Never `withExclusiveTransactionAsync`**: it opens a second connection without `busy_timeout` and lost Skips to `database is locked` on the Pixel. |
+| `db.ts` | One SQLite connection per JS context (`activity-reminder.db`; on Android `files/SQLite/activity-reminder.db`), `journal_mode = WAL`, `busy_timeout = 15000` (15 s: the chain, up to 100 notifications, is scheduled while `BEGIN IMMEDIATE` is held, and a cold-start headless Skip must outwait that rather than fail with `database is locked`). `write(fn)` serializes writes per JS context with a promise-chain mutex and runs each as `BEGIN IMMEDIATE … COMMIT`, `ROLLBACK` on error. **Never `withExclusiveTransactionAsync`**: it opens a second connection without `busy_timeout` and lost Skips to `database is locked` on the Pixel. |
 | `store.ts` | `CoreState` in tables `reminders (id, fires_at, suggestion, status)` and `meta` (`settings` JSON, `last_response_at`, `last_app_open_at`). `saveState` replaces future Reminders and upserts fired ones. `guardedSkip` is `UPDATE reminders SET status = 'skipped' WHERE id = ? AND status = 'scheduled' AND fires_at <= ?`, accepted only when exactly one row changed. `responses (reminder_id, kind, source, at)` gets a row only when that update wins. |
 | `notifications.ts` | `setup()`: permission, the high-importance `reminders` channel, the `reminder` category (Start opens the app; Snooze and Skip don't), and the foreground handler. `scheduleChains`: `ScheduleChain` cancels **scheduled** notifications only (presented ones stay) and schedules each Reminder with a `DATE` trigger, identifier = Reminder Id, `data: { reminderId }`, one Android group (`threadIdentifier`); at most 100 at once, one after another. `handler.ts` calls it **inside** the `write()` transaction, after the state is saved and before COMMIT, so the last chain committed is the last chain armed; a throw rolls the transaction back. `dismissNotifications` (`DismissNotification`) runs after the commit. `dismissStale` removes every presented Reminder except the outstanding one. |
-| `handler.ts` | `handleAction(actionId, payload, source)`, the one handler both delivery paths call. Skip: dismiss the notification first, then in one `write()` load the state, `reduce` the Response, run the guarded update, log the Response and save; after the commit, apply the intents. When the app is alive in the background both paths fire in one JS context and the guard makes the second a no-op. Snooze is only logged until #22; Start and a body tap just open the app. `rearmOnOpen()` runs `AppOpened` + `Rearm` (device time zone) the same way. Only adapters touch `Date.now` and `Math.random`. |
+| `handler.ts` | `handleAction(actionId, payload, source)`, the one handler both delivery paths call. Skip: dismiss the notification first, then in one `write()` load the state, accept only if `outstandingReminder(state, now)` is this Reminder (checked before `reduce`), `reduce` the Response, run the guarded update, log the Response and save; after the commit, apply the intents. When the app is alive in the background both paths fire in one JS context and the guard makes the second a no-op. Snooze is only logged until #22; Start and a body tap just open the app. `rearmOnOpen()` runs `AppOpened` + `Rearm` (device time zone) the same way. Only adapters touch `Date.now` and `Math.random`. |
 | `task.ts` | The background notification task (`TaskManager.defineTask` at module scope, `Notifications.registerTaskAsync`), loaded from `index.ts`. It reads the Reminder Id from `content.dataString` (a JSON string, what the task gets on the Pixel), falling back to `content.data`. |
 | `useReminderRuntime.ts` | Mounted by the root layout: `setup()`, `rearmOnOpen()` on launch and whenever `AppState` becomes `active`, and the foreground response listener. |
 | `useCoreState.ts`, `variant.ts` | Read-only helpers for screens: the stored state (re-read after each write and once a minute) and the app variant from `extra.appVariant`. |
