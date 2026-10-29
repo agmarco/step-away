@@ -11,3 +11,15 @@ export type {
   Outcome,
   Random,
 } from './types';
+export type {
+  BodyArea,
+  Difficulty,
+  Dose,
+  Equipment,
+  Exercise,
+  ExercisePhotos,
+  ExerciseSource,
+  ExerciseType,
+  Position,
+  TargetMuscle,
+} from './exercise';

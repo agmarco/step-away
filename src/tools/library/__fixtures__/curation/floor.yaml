@@ -1,0 +1,11 @@
+# Fixture: the floor group.
+Plank:
+  position: Floor
+  energetic: false
+  difficulty: Intermediate
+  dose:
+    seconds: 30
+  cue: Straight line from head to heels
+  steps:
+    - Lie face down, then lift onto your forearms and toes.
+    - Keep your body straight and your hips level.

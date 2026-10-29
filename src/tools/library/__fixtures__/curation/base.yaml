@@ -1,0 +1,74 @@
+# Fixture: the base group. Source-backed entries hold only curated fields.
+
+# No bodyArea, exerciseType or difficulty: the build falls back to the source mapping.
+Side_Neck_Stretch:
+  position: Either
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Drop ear to shoulder, keep shoulders down
+  steps:
+    - Sit or stand tall with your shoulders relaxed.
+    - Gently tilt your head towards one shoulder.
+    - Assist with a light pull on the side of your head.
+
+# Name override; dose mention removed from the steps.
+Bodyweight_Squat:
+  name: Desk Squat
+  position: Standing
+  energetic: false
+  difficulty: Beginner
+  dose:
+    reps: 10
+  cue: Sit back, chest up, drive through your heels
+  steps:
+    - Stand with your feet shoulder width apart.
+    - Sit back and down until your thighs are parallel to the floor.
+    - Drive through your heels to stand.
+
+# Exercise Type and Difficulty overrides beat the source category and level.
+Star_Jump:
+  exerciseType: Cardio
+  difficulty: Beginner
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Jump into a star, land soft
+  steps:
+    - Stand with your feet together and arms at your sides.
+    - Jump, spreading arms and legs into a star.
+    - Land softly with feet together.
+
+# Target Muscles and Body Area overrides beat the source primaryMuscles.
+Chair_Upper_Body_Stretch:
+  targetMuscles: [chest, shoulders]
+  bodyArea: Chest & Arms
+  position: Seated
+  energetic: false
+  difficulty: Beginner
+  dose:
+    seconds: 20
+  cue: Clasp hands behind the chair, lift your chest
+  steps:
+    - Sit on the edge of a chair and clasp your hands behind it.
+    - Straighten your arms and lift your chest.
+
+# Self-authored: every field written in full, no photos.
+custom/chin_tuck:
+  name: Chin Tuck
+  targetMuscles: [neck]
+  bodyArea: Neck
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    reps: 10
+  cue: Glide your chin straight back, make a double chin
+  steps:
+    - Sit or stand tall, looking straight ahead.
+    - Glide your chin straight back without tilting your head.
+    - Hold for a moment, then release.
