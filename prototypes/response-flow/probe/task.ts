@@ -13,9 +13,10 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(TASK, async ({ dat
     return;
   }
   const res = data as unknown as Notifications.NotificationResponse;
-  // The payload shape for local notifications isn't documented, so read both likely spots.
-  const content = res.notification?.request?.content as { data?: unknown } | undefined;
-  const result = await handleAction(res.actionIdentifier, content?.data ?? (data as { data?: unknown }).data, res.notification?.request?.identifier, 'bg-task')
+  // On the Pixel the task gets the notification's data as a JSON string, `content.dataString`.
+  const content = res.notification?.request?.content as { data?: unknown; dataString?: string } | undefined;
+  const payload = content?.data ?? (content?.dataString ? JSON.parse(content.dataString) : undefined);
+  const result = await handleAction(res.actionIdentifier, payload, res.notification?.request?.identifier, 'bg-task')
     .catch((e) => `threw: ${e}`);
   await logTaskCall(data, result);
 });

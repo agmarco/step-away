@@ -39,21 +39,39 @@ export function db() {
 
 const now = () => new Date().toISOString();
 
-export async function createReminder(): Promise<number> {
+// Writes are serialized per JS context and run as BEGIN IMMEDIATE on the one shared
+// connection. Not withExclusiveTransactionAsync: it opens a second connection that lacks
+// busy_timeout, and on the Pixel that lost both Skips to `database is locked`.
+let writeChain: Promise<unknown> = Promise.resolve();
+async function write<T>(fn: (d: SQLite.SQLiteDatabase) => Promise<T>): Promise<T> {
   const d = await db();
-  const r = await d.runAsync('INSERT INTO reminders (fired_at) VALUES (?)', now());
-  return r.lastInsertRowId;
+  const run = writeChain.then(async () => {
+    await d.execAsync('BEGIN IMMEDIATE');
+    try {
+      const out = await fn(d);
+      await d.execAsync('COMMIT');
+      return out;
+    } catch (e) {
+      await d.execAsync('ROLLBACK').catch(() => {});
+      throw e;
+    }
+  });
+  writeChain = run.catch(() => {});
+  return run;
+}
+
+export async function createReminder(): Promise<number> {
+  return write(async (d) => (await d.runAsync('INSERT INTO reminders (fired_at) VALUES (?)', now())).lastInsertRowId);
 }
 
 // Guarded transition: only a pending Reminder can be answered, and a Snooze must see the
 // snooze count it expects. Returns true if this call won (and wrote the Response).
 export async function recordResponse(reminderId: number, kind: Kind, source: Source, expectedSnoozes?: number): Promise<boolean> {
-  const d = await db();
   const appState = AppState.currentState ?? 'unknown';
   let won = false;
   let error: string | null = null;
   try {
-    await d.withExclusiveTransactionAsync(async (txn) => {
+    await write(async (txn) => {
       const res =
         kind === 'Snooze'
           ? await txn.runAsync(
@@ -73,22 +91,20 @@ export async function recordResponse(reminderId: number, kind: Kind, source: Sou
     error = String(e);
   }
   // Logged outside the transaction so a failed write is still visible.
-  await d.runAsync(
+  await write((d) => d.runAsync(
     'INSERT INTO attempts (reminder_id, kind, source, context, app_state, won, error, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    reminderId, kind, source, CONTEXT_ID, appState, won ? 1 : 0, error, now()).catch(() => {});
+    reminderId, kind, source, CONTEXT_ID, appState, won ? 1 : 0, error, now())).catch(() => {});
   return won;
 }
 
 // Raw background-task payloads, since their shape for local notifications isn't documented.
 export async function logTaskCall(payload: unknown, result: string) {
-  const d = await db();
-  await d.runAsync('INSERT INTO task_calls (context, app_state, payload, result, at) VALUES (?, ?, ?, ?, ?)',
-    CONTEXT_ID, AppState.currentState ?? 'unknown', JSON.stringify(payload).slice(0, 2000), result, now());
+  await write((d) => d.runAsync('INSERT INTO task_calls (context, app_state, payload, result, at) VALUES (?, ?, ?, ?, ?)',
+    CONTEXT_ID, AppState.currentState ?? 'unknown', JSON.stringify(payload).slice(0, 2000), result, now()));
 }
 
 export async function heartbeat() {
-  const d = await db();
-  await d.runAsync('INSERT INTO heartbeats (at) VALUES (?)', now());
+  await write((d) => d.runAsync('INSERT INTO heartbeats (at) VALUES (?)', now()));
 }
 
 export async function snapshot() {
@@ -111,6 +127,5 @@ export async function snapshot() {
 }
 
 export async function reset() {
-  const d = await db();
-  await d.execAsync('DELETE FROM reminders; DELETE FROM responses; DELETE FROM attempts; DELETE FROM heartbeats; DELETE FROM task_calls;');
+  await write((d) => d.execAsync('DELETE FROM reminders; DELETE FROM responses; DELETE FROM attempts; DELETE FROM heartbeats; DELETE FROM task_calls;'));
 }
