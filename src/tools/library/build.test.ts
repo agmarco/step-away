@@ -420,3 +420,31 @@ describe('buildLibrary: Equipment on a source-backed entry', () => {
     expectBuildError(() => build({ curation: { ...curation, dumbbells: bad } }), 'Hammer_Curls', 'equipment');
   });
 });
+
+describe('buildLibrary: group consistency, floor Equipment', () => {
+  it('rejects a floor entry with Equipment, naming the Id, floor and the Equipment', () => {
+    const floorPress = `
+custom/dumbbell_floor_press:
+  name: Dumbbell Floor Press
+  targetMuscles: [chest]
+  bodyArea: Chest & Arms
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Floor
+  equipment: dumbbells
+  energetic: false
+  dose:
+    reps: 10
+  cue: Press the dumbbells up over your chest
+  steps:
+    - Lie on your back holding a dumbbell in each hand.
+`;
+
+    expectBuildError(
+      () => build({ curation: { ...curation, floor: curation.floor + floorPress } }),
+      'custom/dumbbell_floor_press',
+      'floor',
+      'dumbbells',
+    );
+  });
+});

@@ -134,6 +134,11 @@ function checkGroup({ id, position, equipment }: Exercise, group: LibraryGroup) 
   if (group === 'floor' && position !== 'Floor') {
     throw new LibraryBuildError(`${id} (floor): a floor entry needs position Floor, got ${position}.`);
   }
+  if (group === 'floor' && equipment !== null) {
+    throw new LibraryBuildError(
+      `${id} (floor): a floor entry needs no Equipment, got ${equipment}; move it to its Equipment group with position Floor.`,
+    );
+  }
   if (group === 'base' && position === 'Floor') {
     throw new LibraryBuildError(`${id} (base): a base entry can't have position Floor; move it to floor.yaml.`);
   }

@@ -5,7 +5,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { BuildInput } from './build';
+import { type BuildInput, LibraryBuildError } from './build';
 import type { LibraryGroup, SourceExercise } from './types';
 
 /** The free-exercise-db commit `library/source/exercises.json` was fetched at. SOURCE.md records the same SHA. */
@@ -24,12 +24,24 @@ export function readSource(): SourceExercise[] {
   return JSON.parse(readFileSync(SOURCE_FILE, 'utf8'));
 }
 
+/** Files the curation folder may hold besides the `<group>.yaml` files. */
+const CURATION_EXTRAS = ['README.md', '.gitkeep'];
+
 /**
  * Every `curation/*.yaml`, keyed by file name. Names are passed through as
  * they are, so `buildLibrary` rejects a file that isn't one of the groups.
+ * Any file that is neither `.yaml` nor README.md or .gitkeep (e.g. a `base.yml`
+ * typo) fails, so it can't be skipped silently.
  */
 export function readCuration(): BuildInput['curation'] {
-  const files = existsSync(CURATION_DIR) ? readdirSync(CURATION_DIR).filter((f) => f.endsWith('.yaml')) : [];
+  const entries = existsSync(CURATION_DIR) ? readdirSync(CURATION_DIR) : [];
+  const stray = entries.filter((f) => !f.endsWith('.yaml') && !CURATION_EXTRAS.includes(f));
+  if (stray.length > 0) {
+    throw new LibraryBuildError(
+      `Unexpected file ${stray.join(', ')} in library/curation/: it may hold only <group>.yaml files and README.md.`,
+    );
+  }
+  const files = entries.filter((f) => f.endsWith('.yaml'));
   const curation: Record<string, string> = {};
   for (const file of files.sort()) curation[file.slice(0, -'.yaml'.length)] = readFileSync(join(CURATION_DIR, file), 'utf8');
   return curation as Partial<Record<LibraryGroup, string>>;

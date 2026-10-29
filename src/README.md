@@ -68,4 +68,6 @@ Identifiers use US "color" (`useColors`, `backgroundColor`, `no-literal-colors`)
 
 The two packages differ, so both apps install side by side. Both set `android.allowBackup: true` and `runtimeVersion: { policy: "fingerprint" }`. Check a variant's resolved config with `APP_VARIANT=development npx expo config --type public`.
 
+[`fingerprint.config.js`](fingerprint.config.js) keeps the default (balanced) fingerprint but skips every `package.json` script, so adding or editing a script doesn't change the runtime fingerprint or need a new EAS build.
+
 The app is linked to the EAS project `@agmarco/activity-reminder`: `app.config.ts` sets `owner` and `extra.eas.projectId` (the owner ran `eas init`; a dynamic config can't be written by EAS, so the ID lives there). EAS commands run from `src/`, like everything else. Builds are **owner steps**: `eas build --profile development --platform android` and `eas build --profile preview --platform android` need the Expo account and are run by the owner, not by agents.
