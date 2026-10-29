@@ -11,39 +11,14 @@ The v1 spec is being charted as a wayfinder map: [Map: Activity Reminder v1 spec
 | [`CONTEXT.md`](CONTEXT.md) | Domain glossary: Reminder, Suggestion, Exercise, Response… Use these terms everywhere. |
 | [`docs/`](docs/) | Index of decisions, research and ADRs. |
 | [`prototypes/`](prototypes/) | Index of throwaway prototypes. The code itself lives on `prototype/<name>` branches. |
-| [`src/`](src/) | App source (once building starts). |
+| [`src/`](src/) | The app: the Expo project (`package.json`, app/EAS config, tooling) and all code. |
 
 ## Development
 
-The Expo project (SDK 58, TypeScript, Expo Router) sits at the repo root. Node and npm are all you need on the Mac; native builds run on EAS.
+All code and its config live in [`src/`](src/), which is the Expo project root. Run every command from there:
 
 ```sh
-npm install          # or npm ci
-npm test             # Vitest: src/**/*.test.ts in Node (the domain core)
-npm run typecheck    # tsc --noEmit
-npm run lint         # ESLint: Expo rules, the core import rule, the no-literal-colours rule
-npx expo start       # dev server (npm start); open it in the "Activity Reminder (dev)" app
-npm run web          # the same app in a browser, for a quick look (light/dark follows the OS)
+cd src
 ```
 
-`npx expo start` serves JavaScript to the **development** build (a dev client), not to Expo Go, so the dev app must be installed on the phone first. `npx expo export --platform web` writes a static web build to `dist/`.
-
-Two rules guard the architecture, both run by `npm run lint`:
-
-- `src/core/**` may not import `react`, `react-native`, `expo`, `expo-*` or `@expo/*` (`no-restricted-imports`), and that also covers `require()` and dynamic `import()` (`no-restricted-syntax`).
-- Code under `src/` outside `src/theme/` may not contain literal colours: hex, `rgb()`/`rgba()`/`hsl()`/`hsla()`, or any string or numeric value given to a `…color` style key or prop (`local/no-literal-colors`, in [`eslint/no-literal-colors.js`](eslint/no-literal-colors.js)). Use `useColors()` from `src/theme`.
-
-Identifiers use US "color" (`useColors`, `backgroundColor`, `no-literal-colors`), following React Native and ESLint convention; prose uses "colour".
-
-### App variants and EAS builds
-
-`app.config.ts` picks the app from `APP_VARIANT`; each [`eas.json`](eas.json) profile sets it.
-
-| EAS profile | `APP_VARIANT` | App name | Android package | Build |
-|---|---|---|---|---|
-| `preview` | `preview` (also the default when unset) | Activity Reminder | `com.agmarco.activityreminder` | standalone APK, internal distribution |
-| `development` | `development` | Activity Reminder (dev) | `com.agmarco.activityreminder.dev` | dev client APK, internal distribution |
-
-The two packages differ, so both apps install side by side. Both set `android.allowBackup: true` and `runtimeVersion: { policy: "fingerprint" }`. Check a variant's resolved config with `APP_VARIANT=development npx expo config --type public`.
-
-The app is linked to the EAS project `@agmarco/activity-reminder`: `app.config.ts` sets `owner` and `extra.eas.projectId` (the owner ran `eas init`; a dynamic config can't be written by EAS, so the ID lives there). Builds are **owner steps**: `eas build --profile development --platform android` and `eas build --profile preview --platform android` need the Expo account and are run by the owner, not by agents.
+Then see [`src/README.md`](src/README.md) for setup, commands, lint rules, app variants and EAS builds.

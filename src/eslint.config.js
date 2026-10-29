@@ -1,7 +1,7 @@
 // https://docs.expo.dev/guides/using-eslint/
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
-const local = require('./eslint/no-literal-colors');
+const local = require('./tools/eslint/no-literal-colors');
 
 const CORE_IMPORT_MESSAGE =
   'src/core is pure TypeScript: no React, React Native or Expo imports. Return an intent for an adapter to carry out instead.';
@@ -12,11 +12,11 @@ const FORBIDDEN_SOURCE = String.raw`/^(react|react-native|expo)(\x2F|$)|^expo-|^
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/**', '.expo/**', 'android/**', 'ios/**', 'prototypes/**'],
+    ignores: ['dist/**', '.expo/**', 'android/**', 'ios/**'],
   },
   {
     // The domain core is pure TypeScript: no React, React Native or Expo.
-    files: ['src/core/**'],
+    files: ['core/**'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -44,9 +44,10 @@ module.exports = defineConfig([
     },
   },
   {
-    // Screens and other UI code read colours only through src/theme tokens.
-    files: ['src/**/*.{js,jsx,ts,tsx}'],
-    ignores: ['src/theme/**'],
+    // Screens and other UI code read colours only through the theme/ tokens.
+    // app.config.ts is native config, not UI: its adaptive-icon background is a literal.
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    ignores: ['theme/**', 'app.config.ts'],
     plugins: { local },
     rules: { 'local/no-literal-colors': 'error' },
   },
