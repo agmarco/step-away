@@ -26,6 +26,12 @@
       "expo-sqlite",
       "expo-notifications",
       "expo-task-manager"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c973b223-fa67-4510-8290-d6281250f9f5"
+      }
+    },
+    "owner": "agmarco"
   }
 }
