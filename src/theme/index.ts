@@ -11,28 +11,31 @@ export function useScheme(): Scheme {
   return useColorScheme() === 'dark' ? 'dark' : 'light';
 }
 
+/** The one place that decides which palette belongs to which scheme. */
+export const palettes: Record<Scheme, Palette> = { light, dark };
+
 /** The palette for the current scheme. Read it on every render; don't cache it. */
 export function useColors(): Palette {
-  return useScheme() === 'dark' ? dark : light;
+  return palettes[useScheme()];
 }
 
-function navigationTheme(base: Theme, p: Palette): Theme {
+function navigationTheme(base: Theme, palette: Palette): Theme {
   return {
     ...base,
     colors: {
       ...base.colors,
-      primary: p.accent.hero,
-      background: p.background.screen,
-      card: p.background.card,
-      text: p.text.primary,
-      border: p.line.divider,
-      notification: p.accent.hero,
+      primary: palette.accent.hero,
+      background: palette.background.screen,
+      card: palette.background.card,
+      text: palette.text.primary,
+      border: palette.line.divider,
+      notification: palette.accent.hero,
     },
   };
 }
 
 /** React Navigation themes matching the tokens, for Expo Router's ThemeProvider. */
 export const navigationThemes: Record<Scheme, Theme> = {
-  light: navigationTheme(DefaultTheme, light),
-  dark: navigationTheme(DarkTheme, dark),
+  light: navigationTheme(DefaultTheme, palettes.light),
+  dark: navigationTheme(DarkTheme, palettes.dark),
 };

@@ -4,7 +4,7 @@ import { useColors } from '../theme';
 
 /** Today: placeholder until the real screen lands. */
 export default function Today() {
-  const c = useColors();
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const date = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -13,9 +13,9 @@ export default function Today() {
   });
 
   return (
-    <View style={[styles.root, { backgroundColor: c.background.screen, paddingTop: insets.top + 24 }]}>
-      <Text style={[styles.title, { color: c.text.primary }]}>Today</Text>
-      <Text style={[styles.date, { color: c.text.secondary }]}>{date}</Text>
+    <View style={[styles.root, { backgroundColor: colors.background.screen, paddingTop: insets.top + 24 }]}>
+      <Text style={[styles.title, { color: colors.text.primary }]}>Today</Text>
+      <Text style={[styles.date, { color: colors.text.secondary }]}>{date}</Text>
     </View>
   );
 }

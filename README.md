@@ -30,8 +30,10 @@ npm run web          # the same app in a browser, for a quick look (light/dark f
 
 Two rules guard the architecture, both run by `npm run lint`:
 
-- `src/core/**` may not import `react`, `react-native`, `expo`, `expo-*` or `@expo/*` (`no-restricted-imports`).
-- Code under `src/` outside `src/theme/` may not contain literal colours: hex, `rgb()`/`rgba()`/`hsl()`/`hsla()`, or any string given to a `…color` style key or prop (`local/no-literal-colors`, in [`eslint/no-literal-colors.js`](eslint/no-literal-colors.js)). Use `useColors()` from `src/theme`.
+- `src/core/**` may not import `react`, `react-native`, `expo`, `expo-*` or `@expo/*` (`no-restricted-imports`), and that also covers `require()` and dynamic `import()` (`no-restricted-syntax`).
+- Code under `src/` outside `src/theme/` may not contain literal colours: hex, `rgb()`/`rgba()`/`hsl()`/`hsla()`, or any string or numeric value given to a `…color` style key or prop (`local/no-literal-colors`, in [`eslint/no-literal-colors.js`](eslint/no-literal-colors.js)). Use `useColors()` from `src/theme`.
+
+Identifiers use US "color" (`useColors`, `backgroundColor`, `no-literal-colors`), following React Native and ESLint convention; prose uses "colour".
 
 ### App variants and EAS builds
 

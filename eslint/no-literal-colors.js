@@ -7,6 +7,9 @@
  *   - any string literal (e.g. a named colour like 'red') given to a property
  *     or JSX attribute whose name ends in "color" (color, backgroundColor,
  *     borderColor, tintColor...), except 'transparent'.
+ *   - any numeric literal given to such a property or attribute
+ *     (e.g. { color: 0xff0000 } or shadowColor: 0); React Native accepts
+ *     numbers as colours.
  */
 const HEX = /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b/i;
 const FUNCTIONAL = /\b(?:rgba?|hsla?)\s*\(/i;
@@ -31,21 +34,29 @@ const rule = {
     },
   },
   create(context) {
+    function colorKey(parent, node) {
+      // <View color={0xff0000} />: look through the {} to the attribute.
+      if (parent && parent.type === 'JSXExpressionContainer') parent = parent.parent;
+      let key = null;
+      if (parent && parent.type === 'Property' && parent.value === node) key = keyName(parent.key);
+      if (parent && parent.type === 'JSXAttribute') key = keyName(parent.name);
+      return key && COLOR_KEY.test(key) ? key : null;
+    }
     function check(node, text, parent) {
       if (HEX.test(text) || FUNCTIONAL.test(text)) {
         context.report({ node, messageId: 'literal', data: { value: JSON.stringify(text) } });
         return;
       }
-      let key = null;
-      if (parent && parent.type === 'Property' && parent.value === node) key = keyName(parent.key);
-      if (parent && parent.type === 'JSXAttribute') key = keyName(parent.name);
-      if (key && COLOR_KEY.test(key) && !ALLOWED_NAMED.has(text.trim().toLowerCase())) {
+      if (colorKey(parent, node) && !ALLOWED_NAMED.has(text.trim().toLowerCase())) {
         context.report({ node, messageId: 'literal', data: { value: JSON.stringify(text) } });
       }
     }
     return {
       Literal(node) {
         if (typeof node.value === 'string') check(node, node.value, node.parent);
+        if (typeof node.value === 'number' && colorKey(node.parent, node)) {
+          context.report({ node, messageId: 'literal', data: { value: node.raw } });
+        }
       },
       TemplateLiteral(node) {
         const text = node.quasis.map((q) => q.value.cooked ?? q.value.raw).join('${}');

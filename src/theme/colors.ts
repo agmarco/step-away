@@ -1,3 +1,5 @@
+import type { Outcome } from '../core';
+
 /**
  * The colour tokens. This folder is the only place in src/ where literal
  * colours may appear (enforced by the local/no-literal-colors ESLint rule).
@@ -23,15 +25,19 @@ export interface Palette {
     /** Primary actions and the Today hero. */
     hero: string;
   };
-  /** One colour per Activity Log outcome or day state; all distinct. */
-  outcome: {
-    done: string;
-    skip: string;
-    missed: string;
+  /**
+   * One colour per outcome of a Reminder in the Activity Log (Done, Skip,
+   * Missed). Keyed by the core's Outcome type, so a new Outcome needs a colour.
+   */
+  outcome: Record<Lowercase<Outcome>, string>;
+  /** Day states: a Day Off, and a Goal Day (one that reached the Daily Goal). */
+  day: {
     dayOff: string;
     goalDay: string;
   };
 }
+
+// The outcome and day colours are all distinct from each other, in both palettes.
 
 export const light: Palette = {
   background: { screen: '#f8fafc', card: '#ffffff' },
@@ -42,6 +48,8 @@ export const light: Palette = {
     done: '#16a34a',
     skip: '#d97706',
     missed: '#94a3b8',
+  },
+  day: {
     dayOff: '#0ea5e9',
     goalDay: '#db2777',
   },
@@ -56,6 +64,8 @@ export const dark: Palette = {
     done: '#4ade80',
     skip: '#fbbf24',
     missed: '#64748b',
+  },
+  day: {
     dayOff: '#38bdf8',
     goalDay: '#f472b6',
   },
