@@ -9,7 +9,7 @@ A scheduled nudge telling the user it's time to move, fired on a user-configured
 _Avoid_: alert, notification (the notification is just how a Reminder is delivered)
 
 **Suggestion**:
-The set of 1–3 Exercises offered alongside a Reminder.
+The set of 1–3 Exercises offered alongside a Reminder. How many is a user setting (default 1) that applies to every Reminder.
 _Avoid_: recommendation, workout
 
 **Exercise**:
@@ -83,6 +83,14 @@ An Exercise whose Position is Floor (lying, kneeling, plank). Excluded unless th
 **Equipment**:
 A light piece of kit an Exercise needs: dumbbells, kettlebell, resistance bands, medicine ball, exercise ball or foam roller. An Exercise is only suggested if the user has said they own its Equipment.
 _Avoid_: gear
+
+**Excluded Exercise**:
+An Exercise the user has marked "never suggest". It stays in the Exercise Library and can be brought back in Settings.
+_Avoid_: blocked, hidden, disliked
+
+**Swap**:
+Replacing one Exercise in the current Suggestion with another that fits the same rules. Not a Response: it doesn't use up a Snooze or appear in the Activity Log.
+_Avoid_: reroll, shuffle, skip (Skip is a Response)
 
 ## Relationships
 
