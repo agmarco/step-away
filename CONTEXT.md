@@ -65,6 +65,26 @@ _Avoid_: ignored, expired
 The history of Responses: the app's record of whether the user moved.
 _Avoid_: workout history
 
+**Daily Goal**:
+The number of Done Responses the user aims for in a day (default 4), set by the user. A day that reaches it is a **Goal Day**.
+_Avoid_: target, quota
+
+**Streak**:
+The run of consecutive Goal Days. Days with no Active Hours, and Days Off, neither break nor extend it.
+_Avoid_: chain, combo
+
+**Day Off**:
+A whole day the user marks as off, ahead of time or on the day. No Reminders fire, and the Streak skips it like a day without Active Hours. Unlike a Pause, which covers only part of a day, it leaves the Streak untouched.
+_Avoid_: vacation, sick day, rest day
+
+**Badge**:
+A one-off achievement unlocked by something in the Activity Log (a Streak length, a total of Done Responses, Exercise variety, a balanced or perfect day). Once unlocked, never taken away.
+_Avoid_: trophy, award
+
+**Record**:
+A personal best computed from the Activity Log (longest Streak, most Done in a day or week). Unlike a Badge, always recalculated.
+_Avoid_: high score
+
 **Cue**:
 A one-line reminder of how to do an Exercise, short enough to read at a glance (e.g. "Drop ear to shoulder, keep shoulders down"). Every Exercise has one, alongside its full step-by-step instructions.
 _Avoid_: tip, description
