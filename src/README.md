@@ -4,15 +4,17 @@ The app. This folder is the Expo project root (SDK 58, TypeScript, Expo Router):
 
 | Path | What lives there |
 |---|---|
-| `package.json`, `package-lock.json` | Dependencies and npm scripts. |
-| `app.config.ts` | Expo app config; picks the app variant from `APP_VARIANT` (see below). |
+| `package.json`, `package-lock.json` | Dependencies and npm scripts. `main` is `index.ts`. |
+| `index.ts` | The app entry: imports `platform/task.ts` first (the background notification task must be defined at module scope before the app registers), then `expo-router/entry`. |
+| `app.config.ts` | Expo app config; picks the app variant from `APP_VARIANT` (see below) and holds the exact-alarm switch. |
 | `eas.json` | EAS build profiles. |
 | `tsconfig.json`, `eslint.config.js`, `vitest.config.ts` | TypeScript, ESLint and Vitest config. |
 | `assets/` | App icon, Android adaptive-icon layers and web favicon. |
 | `tools/` | Project tooling. `tools/eslint/no-literal-colors.js` is the local ESLint rule; `tools/library/` is the Exercise Library build step (see below). |
 | `library/` | The Exercise Library: vendored source, curation files, photos and the generated output (see below). |
-| `app/` | Expo Router screens (Expo Router's default `app/` directory under the project root). `_layout.tsx` is the root layout: it wraps the router in a `ThemeProvider` with the navigation theme for the current light/dark scheme. `index.tsx` is Today (a placeholder for now). Screens stay thin and aren't unit-tested. |
-| `core/` | The domain core: pure TypeScript, no React, React Native or Expo imports (lint-enforced). One entry point, `reduce(state, event, { clock, random })`, returns `{ state, intents }`; adapters carry out the intents, the core never calls the platform. Time and randomness are injected (`Clock`, `Random`; `seededRandom(seed)` for tests). Tests (`*.test.ts`) run in Node with Vitest. Currently a skeleton handling one event, `AppOpened`. |
+| `app/` | Expo Router screens (Expo Router's default `app/` directory under the project root). `_layout.tsx` is the root layout: it wraps the router in a `ThemeProvider` with the navigation theme for the current light/dark scheme and mounts the Reminder runtime (`platform/useReminderRuntime.ts`). `index.tsx` is Today, minimal for now (the next Reminder time and today's fired Reminders; the real design is #25). `debug/` holds temporary screens (the Exercise Library list, the dev-only test mode). Screens stay thin and aren't unit-tested. |
+| `core/` | The domain core: pure TypeScript, no React, React Native or Expo imports (lint-enforced). One entry point, `reduce(state, event, { clock, random, library })`, returns `{ state, intents }`; adapters carry out the intents, the core never calls the platform. Time and randomness are injected (`Clock`, `Random`; `seededRandom(seed)` for tests). Tests (`*.test.ts`) run in Node with Vitest. See [The domain core](#the-domain-core). |
+| `platform/` | The adapters: SQLite, notifications/alarms, the shared action handler, the background task and the hooks screens use. Thin and not unit-tested; checked on the Pixel. See [Platform adapters](#platform-adapters). |
 | `theme/` | The colour tokens: `light` and `dark` palettes of the same shape, grouped into backgrounds, text, lines, accent/hero, Reminder outcomes (Done / Skip / Missed, keyed by the core's `Outcome` type) and day states (Day Off / Goal Day). `useScheme()` reads `useColorScheme()` on every render (anything but `dark`, including `null`, means light); `useColors()` returns `palettes[useScheme()]`, and `navigationThemes` are built from the same `palettes` map. The only place allowed to hold literal colours. |
 
 ## Commands
@@ -23,10 +25,53 @@ npm test             # Vitest: **/*.test.ts in Node (the domain core and the lib
 npm run typecheck    # tsc --noEmit
 npm run lint         # ESLint: Expo rules, the core import rule, the no-literal-colours rule
 npx expo start       # dev server (npm start); open it in the "Activity Reminder (dev)" app
-npm run web          # the same app in a browser, for a quick look (light/dark follows the OS)
+npm run web          # web: currently does not bundle (see below)
 ```
 
-`npx expo start` serves JavaScript to the **development** build (a dev client), not to Expo Go, so the dev app must be installed on the phone first. `npx expo export --platform web` writes a static web build to `dist/` (gitignored).
+`npx expo start` serves JavaScript to the **development** build (a dev client), not to Expo Go, so the dev app must be installed on the phone first.
+
+The web build no longer bundles since #21: expo-sqlite's web worker imports a `.wasm` file Metro isn't configured to resolve. The target is Android, so there are no web shims; `npx expo export --platform web` fails with `Unable to resolve "./wa-sqlite/wa-sqlite.wasm"`.
+
+## The domain core
+
+`reduce(state, event, deps)` is the only entry point. `CoreState` holds the settings (Active Hours per weekday, Interval, IANA time zone), the Reminders (fired ones plus the scheduled chain ahead, each with an Id deterministic from its fire time, a Suggestion snapshot and a status), `lastResponseAt` and `lastAppOpenAt`.
+
+| Event | What it does |
+|---|---|
+| `AppOpened` | Records `lastAppOpenAt`. |
+| `Rearm { timeZone? }` | JS is running: rebuilds the chain of upcoming Reminders over the next 7 days of Active Hours (no-Response fallbacks one Interval apart) and, when given, adopts the device time zone. Fired Reminders stay as they are. |
+| `Response { reminderId, kind: 'Skip' }` | A guarded Skip: accepted only for the outstanding Reminder (the latest fired one, still `scheduled`); the chain is rebuilt from the Skip time. Anything else (duplicate, not fired, superseded, unknown) is a no-op that only dismisses the notification. |
+
+| Intent | Carried out by |
+|---|---|
+| `ScheduleChain { reminders }` | Replaces the whole scheduled chain: cancel every scheduled notification, schedule these. |
+| `DismissNotification { reminderId }` | Removes that Reminder's notification from the shade. |
+
+Also exported: `outstandingReminder(state, now)` (the rule the Skip guard uses; the adapter uses it to dismiss stale notifications), `formatDose`, `defaultSettings` (Mon–Fri 09:00–18:00, 45 min) and `initialState`.
+
+The chain is scheduled ahead because expo-notifications runs no JavaScript when a scheduled notification fires (see #21, "Owner decision: schedule the chain ahead"). Ignored Reminders stay in the shade, bundled in one group, until JS next runs and dismisses the stale ones.
+
+## Platform adapters
+
+`platform/` follows the rules the background-responses probe proved on the Pixel (#12):
+
+| File | What it does |
+|---|---|
+| `db.ts` | One SQLite connection per JS context (`activity-reminder.db`; on Android `files/SQLite/activity-reminder.db`), `journal_mode = WAL`, `busy_timeout = 5000`. `write(fn)` serializes writes per JS context with a promise-chain mutex and runs each as `BEGIN IMMEDIATE … COMMIT`, `ROLLBACK` on error. **Never `withExclusiveTransactionAsync`**: it opens a second connection without `busy_timeout` and lost Skips to `database is locked` on the Pixel. |
+| `store.ts` | `CoreState` in tables `reminders (id, fires_at, suggestion, status)` and `meta` (`settings` JSON, `last_response_at`, `last_app_open_at`). `saveState` replaces future Reminders and upserts fired ones. `guardedSkip` is `UPDATE reminders SET status = 'skipped' WHERE id = ? AND status = 'scheduled' AND fires_at <= ?`, accepted only when exactly one row changed. `responses (reminder_id, kind, source, at)` gets a row only when that update wins. |
+| `notifications.ts` | `setup()`: permission, the high-importance `reminders` channel, the `reminder` category (Start opens the app; Snooze and Skip don't), and the foreground handler. `applyIntents`: `ScheduleChain` cancels **scheduled** notifications only (presented ones stay) and schedules each Reminder with a `DATE` trigger, identifier = Reminder Id, `data: { reminderId }`, one Android group (`threadIdentifier`); at most 100 at once. `dismissStale` removes every presented Reminder except the outstanding one. |
+| `handler.ts` | `handleAction(actionId, payload, source)`, the one handler both delivery paths call. Skip: dismiss the notification first, then in one `write()` load the state, `reduce` the Response, run the guarded update, log the Response and save; after the commit, apply the intents. When the app is alive in the background both paths fire in one JS context and the guard makes the second a no-op. Snooze is only logged until #22; Start and a body tap just open the app. `rearmOnOpen()` runs `AppOpened` + `Rearm` (device time zone) the same way. Only adapters touch `Date.now` and `Math.random`. |
+| `task.ts` | The background notification task (`TaskManager.defineTask` at module scope, `Notifications.registerTaskAsync`), loaded from `index.ts`. It reads the Reminder Id from `content.dataString` (a JSON string, what the task gets on the Pixel), falling back to `content.data`. |
+| `useReminderRuntime.ts` | Mounted by the root layout: `setup()`, `rearmOnOpen()` on launch and whenever `AppState` becomes `active`, and the foreground response listener. |
+| `useCoreState.ts`, `variant.ts` | Read-only helpers for screens: the stored state (re-read after each write and once a minute) and the app variant from `extra.appVariant`. |
+
+### Exact alarms: the one switch
+
+`EXACT_ALARM_PERMISSION` in `app.config.ts` is the only place the exact-alarm permission is chosen; `android.permissions` is built from it. It is `USE_EXACT_ALARM` (granted at install; fine for a sideloaded app). For a Play Store release, switch it to `SCHEDULE_EXACT_ALARM` and add a grant prompt. With either permission, expo-notifications 58 arms `DATE` triggers with `setExactAndAllowWhileIdle` (Doze-safe); it re-arms them after a reboot itself.
+
+### Test mode (development build only)
+
+`app/debug/test-mode.tsx`, linked from Today only when `APP_VARIANT` is `development` (`extra.appVariant`, read with `expo-constants`). On: Interval 2 min, Active Hours 00:00–24:00 every day, then a Rearm, so a Reminder arrives within 2 minutes through the real core path. Off: `defaultSettings`. It writes settings straight into storage because the core has no settings event yet. Temporary: remove it once Settings can set the schedule.
 
 ## Exercise Library
 
@@ -65,6 +110,8 @@ Identifiers use US "color" (`useColors`, `backgroundColor`, `no-literal-colors`)
 |---|---|---|---|---|
 | `preview` | `preview` (also the default when unset) | Activity Reminder | `com.agmarco.activityreminder` | standalone APK, internal distribution |
 | `development` | `development` | Activity Reminder (dev) | `com.agmarco.activityreminder.dev` | dev client APK, internal distribution |
+
+The dev app's launcher icon has a plain amber background (the daily app keeps the light-blue grid), so the two are easy to tell apart. Each variant has its own package, so each has its own database.
 
 The two packages differ, so both apps install side by side. Both set `android.allowBackup: true` and `runtimeVersion: { policy: "fingerprint" }`. Check a variant's resolved config with `APP_VARIANT=development npx expo config --type public`.
 
