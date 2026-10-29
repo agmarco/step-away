@@ -1,6 +1,7 @@
-export { initialState, reduce } from './reduce';
+export { defaultSettings, initialState, reduce } from './reduce';
 export { seededRandom } from './random';
 export type {
+  ActiveWindow,
   Clock,
   CoreDeps,
   CoreEvent,
@@ -8,8 +9,16 @@ export type {
   CoreState,
   Instant,
   Intent,
+  Minutes,
+  NotificationAction,
   Outcome,
   Random,
+  Reminder,
+  ResponseKind,
+  ScheduledNotification,
+  Settings,
+  SuggestedExercise,
+  Weekday,
 } from './types';
 export type {
   BodyArea,
