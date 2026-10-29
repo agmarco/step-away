@@ -1,8 +1,8 @@
 import { registerRootComponent } from 'expo';
 
-import App from './App';
+// The background task must be defined at module scope, before the app registers.
+import './probe/task';
+import Probe from './probe/Probe';
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// Branch prototype/background-responses runs the probe (#12); App.tsx is the Response flow prototype (#9).
+registerRootComponent(Probe);
