@@ -50,5 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     web: { favicon: './assets/favicon.png' },
     plugins: ['expo-router', 'expo-status-bar'],
+    owner: 'agmarco',
+    extra: { ...config.extra, eas: { projectId: 'ad2beed2-abdc-4c1c-ad2b-f761b129a4da' } },
   };
 };
