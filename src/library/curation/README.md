@@ -1,6 +1,6 @@
 # Curation files
 
-One YAML file per group, named after it: `base.yaml`, `floor.yaml`, `dumbbells.yaml`, `kettlebell.yaml`, `resistance-bands.yaml`, `medicine-ball.yaml`, `exercise-ball.yaml`, `foam-roller.yaml`. Any other `.yaml` name fails the build. The folder holds only these `<group>.yaml` files and this README (and a `.gitkeep`): any other file, such as a `base.yml` typo, fails the build. Only Exercises with an entry here ship.
+One YAML file per group, named after it: `base.yaml`, `floor.yaml`, `dumbbells.yaml`, `kettlebell.yaml`, `resistance-bands.yaml`, `medicine-ball.yaml`, `exercise-ball.yaml`, `foam-roller.yaml`. Any other `.yaml` name fails the build. The folder holds only these `<group>.yaml` files, this README and the drafting guide (`DRAFTING.md`): any other file, such as a `base.yml` typo, fails the build. Hidden files (names starting with `.`, such as `.DS_Store` or `.gitkeep`) are ignored. Only Exercises with an entry here ship.
 
 Each file is a map keyed by frozen Id. A source-backed entry (Id from `library/source/exercises.json`) holds only the curated fields:
 
@@ -28,4 +28,4 @@ A self-authored entry has an Id starting `custom/` and writes every field above 
 
 Group rules: `floor` entries have `position: Floor` and no Equipment (a floor move that needs Equipment, such as a dumbbell floor press, goes in that Equipment's file with `position: Floor`); `base` entries are never Floor and have no Equipment; each Equipment file holds only that Equipment. Unknown keys fail the build.
 
-`npm run library:draft -- <group>` prints the candidates for a group with the script-filled fields. After editing, run `npm run library:photos` and `npm run library:build`, and commit the curation file, the photos and the generated output together. The drafting guide comes with the calibration set.
+`npm run library:draft -- <group>` prints the candidates for a group with the script-filled fields. After editing, run `npm run library:photos` and `npm run library:build`, and commit the curation file, the photos and the generated output together. [`DRAFTING.md`](DRAFTING.md) is the drafting guide: how to fill each field, with the calibration set as worked examples.
