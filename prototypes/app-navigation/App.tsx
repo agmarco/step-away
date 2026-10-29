@@ -10,7 +10,7 @@ import { Api } from './shared';
 import { VARIANTS } from './variants';
 
 export default function App() {
-  const [variantIdx, setVariantIdx] = useState(2); // start on B1
+  const [variantIdx, setVariantIdx] = useState(5); // start on B4
   const [scenario, setScenario] = useState(1);
   const [day, setDay] = useState<Day>(SCENARIOS[1].day());
   const [panelOpen, setPanelOpen] = useState(false);

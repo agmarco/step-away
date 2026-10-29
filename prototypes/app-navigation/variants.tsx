@@ -118,8 +118,9 @@ function RootA({ api }: { api: Api }) {
 
 // ───────────────────────────── B — Today is the hub; everything else is pushed on top
 // How Settings is reached from the hub: the original bare gear, a labelled pill in the
-// hero, a third link card, or a 3-up tile row under the hero replacing the link cards.
-type SettingsEntry = 'gear' | 'pill' | 'card' | 'tiles';
+// hero, a third link card, a 3-up tile row under the hero replacing the link cards, or
+// the tile row plus the History week panel kept at the bottom.
+type SettingsEntry = 'gear' | 'pill' | 'card' | 'tiles' | 'tiles+history';
 const settingsSummary = '9 am–6 pm · every 45 min · 1 Exercise';
 
 function TodayB({ api, go, entry }: { api: Api; go: (p: PageB) => void; entry: SettingsEntry }) {
@@ -146,7 +147,7 @@ function TodayB({ api, go, entry }: { api: Api; go: (p: PageB) => void; entry: S
           {st.action && <Pressable onPress={() => runStatus(api, openPause, st.action!.kind)}><Text style={{ color: '#fff', fontWeight: '800' }}>{st.action.label}</Text></Pressable>}
         </View>
       </View>
-      {entry === 'tiles' && (
+      {entry.startsWith('tiles') && (
         <View style={s.tileRow}>
           <Tile icon="📅" label="History" onPress={() => go('history')} />
           <Tile icon="🏅" label="Achievements" dot={d.newBadge} onPress={() => { api.seenBadge(); go('achievements'); }} />
@@ -172,6 +173,7 @@ function TodayB({ api, go, entry }: { api: Api; go: (p: PageB) => void; entry: S
             ))}
           </View>
         </Pressable>
+        {entry !== 'tiles+history' && <>
         <Pressable onPress={() => { api.seenBadge(); go('achievements'); }} style={[s.card, s.rowCenter, { gap: 12 }]}>
           <Text style={{ fontSize: 28 }}>🏅</Text>
           <View style={{ flex: 1 }}>
@@ -191,6 +193,7 @@ function TodayB({ api, go, entry }: { api: Api; go: (p: PageB) => void; entry: S
             <Text style={s.chev}>›</Text>
           </Pressable>
         )}
+        </>}
         </>}
         {!d.dayOff && <Pressable onPress={api.toggleDayOff}><Text style={s.link}>Take today off</Text></Pressable>}
       </View>
@@ -307,6 +310,7 @@ export const VARIANTS: Variant[] = [
   { key: 'B1', name: 'hub · labelled Settings pill', Root: rootB('pill') },
   { key: 'B2', name: 'hub · Settings link card', Root: rootB('card') },
   { key: 'B3', name: 'hub · 3 tiles under hero', Root: rootB('tiles') },
+  { key: 'B4', name: 'hub · tiles + History panel', Root: rootB('tiles+history') },
   { key: 'C', name: '3 tabs + gear · day timeline', Root: RootC },
 ];
 
