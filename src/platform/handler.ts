@@ -3,12 +3,19 @@
  * action taps (from both delivery paths) and the app coming to the front.
  * Each read-modify-write runs inside one `write()` transaction, so it sees the
  * latest committed state even when another JS context wrote in between.
+ *
+ * The `ScheduleChain` intent is carried out inside that same transaction,
+ * after the state is saved and before COMMIT. The per-context mutex (one JS
+ * context) and the BEGIN IMMEDIATE lock (two contexts) then hold "commit +
+ * schedule" as one critical section, so the last chain committed is the last
+ * chain armed. If scheduling throws, the transaction rolls back and state and
+ * alarms don't diverge. Dismissals are idempotent and run after the commit.
  */
 import * as Notifications from 'expo-notifications';
 import { reduce, type CoreDeps, type CoreResult, type CoreState } from '../core';
 import { exercises } from '../library';
 import { write } from './db';
-import { ACTION, applyIntents, dismissStale } from './notifications';
+import { ACTION, dismissNotifications, dismissStale, scheduleChains } from './notifications';
 import { guardedSkip, loadState, logResponse, notifyStateChanged, saveState, type Source } from './store';
 
 /** The real clock and randomness. Only adapters may touch Date.now and Math.random; the core may not. */
@@ -78,12 +85,17 @@ export async function handleAction(actionId: string, payload: { reminderId?: str
       if (!(await guardedSkip(d, reminderId, now))) return { state, intents: [] };
       await logResponse(d, reminderId, 'Skip', source, now);
       await saveState(d, next.state, now);
+      // Inside the lock, before COMMIT: see the header comment.
+      await scheduleChains(next.intents);
       accepted = true;
       return next;
+    }).catch((e: unknown) => {
+      console.warn(`[handler] Skip ${reminderId} from ${source} rolled back: ${e}`);
+      throw e;
     });
     console.log(`[handler] Skip ${reminderId} from ${source}: ${accepted ? 'accepted' : 'no-op'}`);
     if (accepted) notifyStateChanged();
-    await applyIntents(result.intents);
+    await dismissNotifications(result.intents);
     await dismissStale(result.state, now).catch(() => {});
     return;
   }
@@ -101,7 +113,7 @@ export async function handleAction(actionId: string, payload: { reminderId?: str
 
 /**
  * JS is running in front: AppOpened, then Rearm in the device's time zone,
- * persisted in one transaction; then the chain is rescheduled and stale
+ * persisted and the chain rescheduled in one transaction; then stale
  * Reminders leave the shade. `prepare` lets the dev test mode change the
  * stored settings in the same transaction.
  */
@@ -113,10 +125,16 @@ export async function rearmOnOpen(prepare?: (state: CoreState) => CoreState): Pr
     const opened = reduce(state, { type: 'AppOpened' }, deps);
     const rearmed = reduce(opened.state, { type: 'Rearm', timeZone: deviceTimeZone() }, deps);
     await saveState(d, rearmed.state, now);
-    return { state: rearmed.state, intents: [...opened.intents, ...rearmed.intents] };
+    const intents = [...opened.intents, ...rearmed.intents];
+    // Inside the lock, before COMMIT: see the header comment.
+    await scheduleChains(intents);
+    return { state: rearmed.state, intents };
+  }).catch((e: unknown) => {
+    console.warn(`[handler] Rearm rolled back: ${e}`);
+    throw e;
   });
   notifyStateChanged();
-  await applyIntents(result.intents);
+  await dismissNotifications(result.intents);
   await dismissStale(result.state, now).catch(() => {});
   return result;
 }

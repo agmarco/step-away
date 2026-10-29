@@ -55,6 +55,14 @@ export async function setup() {
   ]);
 }
 
+/**
+ * Replaces the OS chain with `reminders`. Called inside the `write()`
+ * transaction (handler.ts), so it must stay well under busy_timeout (5 s):
+ * at most MAX_SCHEDULED calls, made one after another (a few ms each on the
+ * Pixel), not in parallel, so their order is plain and the bridge isn't flooded.
+ * A failing cancel throws and rolls the transaction back; one Reminder that
+ * can't be scheduled is only logged, so it can't cost the user a Skip.
+ */
 async function scheduleChain(reminders: ScheduledNotification[]) {
   // Cancels scheduled (future) notifications only; presented ones stay in the shade.
   await Notifications.cancelAllScheduledNotificationsAsync();
@@ -79,15 +87,23 @@ async function scheduleChain(reminders: ScheduledNotification[]) {
   }
 }
 
-export async function applyIntents(intents: Intent[]) {
+/**
+ * Carries out the `ScheduleChain` intents. Call it inside the same `write()`
+ * that saved the state the chain came from: commit and schedule must be one
+ * critical section, or two writers can commit in one order and arm their
+ * chains in the other, leaving a stale chain in the OS.
+ */
+export async function scheduleChains(intents: Intent[]) {
   for (const intent of intents) {
-    switch (intent.type) {
-      case 'ScheduleChain':
-        await scheduleChain(intent.reminders);
-        break;
-      case 'DismissNotification':
-        await Notifications.dismissNotificationAsync(intent.reminderId).catch(() => {});
-        break;
+    if (intent.type === 'ScheduleChain') await scheduleChain(intent.reminders);
+  }
+}
+
+/** Carries out the `DismissNotification` intents. Idempotent, so it may run after the commit. */
+export async function dismissNotifications(intents: Intent[]) {
+  for (const intent of intents) {
+    if (intent.type === 'DismissNotification') {
+      await Notifications.dismissNotificationAsync(intent.reminderId).catch(() => {});
     }
   }
 }
