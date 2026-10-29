@@ -238,7 +238,7 @@ describe('Skip: a guarded Response', () => {
     expect(result.intents).toHaveLength(2);
     expect(result.intents).toContainEqual({ type: 'DismissNotification', reminderId: first.id });
     expect(timesOf(result).slice(0, 3)).toEqual(dayChain(MON, ['10:45', '11:30', '12:15']));
-    expect(timesOf(result).filter((t) => t < local(TUE, '00:00')).at(-1)).toBe(local(MON, '17:15'));
+    expect(timesOf(result).filter((t) => t < local(TUE, '00:00')).at(-1)).toBe(local(MON, '17:30'));
     // The old 10:30 fallback is gone: the state's future matches the new chain.
     expect(result.state.reminders.filter((r) => r.firesAt > now).map((r) => r.firesAt)).toEqual(timesOf(result));
     // The next day starts fresh.
