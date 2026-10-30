@@ -7,6 +7,8 @@ vi.mock('expo-sqlite', () => ({
     execAsync: async (sql: string) => {
       if (!sql.includes('PRAGMA')) log.push(sql);
     },
+    // Already at the latest schema, so opening runs no migration statements.
+    getFirstAsync: async () => ({ user_version: Number.MAX_SAFE_INTEGER }),
   }),
 }));
 

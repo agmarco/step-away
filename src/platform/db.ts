@@ -9,8 +9,11 @@
  *   BEGIN IMMEDIATE ... COMMIT transaction, ROLLBACK on error;
  * - never withExclusiveTransactionAsync: it opens a second connection without
  *   busy_timeout, and on the Pixel it lost Skips to `database is locked`.
+ *
+ * The schema lives in migrations.ts (versioned by PRAGMA user_version).
  */
 import * as SQLite from 'expo-sqlite';
+import { migrate } from './migrations';
 
 /** Under expo-sqlite's default directory: files/SQLite/activity-reminder.db on Android. */
 export const DB_NAME = 'activity-reminder.db';
@@ -29,20 +32,10 @@ export function db(): Promise<Db> {
     await d.execAsync(`
       PRAGMA journal_mode = WAL;
       PRAGMA busy_timeout = 15000;
-      CREATE TABLE IF NOT EXISTS reminders (
-        id TEXT PRIMARY KEY,
-        fires_at INTEGER NOT NULL,
-        suggestion TEXT NOT NULL,
-        status TEXT NOT NULL);
-      CREATE INDEX IF NOT EXISTS reminders_fires_at ON reminders (fires_at);
-      CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS responses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        reminder_id TEXT NOT NULL,
-        kind TEXT NOT NULL,
-        source TEXT NOT NULL,
-        at INTEGER NOT NULL);
     `);
+    // The schema, once per connection, after busy_timeout is set (the other
+    // JS context may be migrating at the same moment): see migrations.ts.
+    await migrate(d);
     return d;
   })();
   return dbPromise;
