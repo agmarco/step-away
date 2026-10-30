@@ -1,16 +1,31 @@
 import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { nextReminder, outstandingReminder, todaysReminders, type CoreState, type Reminder } from '../core';
+import {
+  effectiveFire,
+  nextReminder,
+  outstandingReminder,
+  refirePending,
+  settle,
+  todaysReminders,
+  type CoreState,
+  type Reminder,
+} from '../core';
 import { useCoreState } from '../platform/useCoreState';
 import { isDevelopment } from '../platform/variant';
 import { type Palette, useColors } from '../theme';
 
-/** Today, minimal (#21): the next Reminder and today's fired Reminders. The real design lands in #25. */
+/**
+ * Today, minimal (#21, #22): the next Reminder and today's fired Reminders
+ * with their status. The real design lands in #25. The stored state is
+ * settled at `now` first, so a Reminder shows Missed as soon as it is, even
+ * before the next write persists it.
+ */
 export default function Today() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { state, now } = useCoreState();
+  const { state: stored, now } = useCoreState();
+  const state = stored && settle(stored, now);
   const date = new Date(now).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
@@ -41,11 +56,14 @@ export default function Today() {
 function NextReminder({ state, now, colors }: { state: CoreState; now: number; colors: Palette }) {
   const next = nextReminder(state, now);
   // Display only: the weekday is shown when the next Reminder's calendar date
-  // (as formatted in the Settings' time zone) is not today's.
+  // (as formatted in the Settings' time zone) is not today's. A snoozed
+  // Reminder coming back is next at its re-fire.
   const { timeZone } = state.settings;
-  const label = next
-    ? `Next Reminder ${dateOf(next.firesAt, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(next.firesAt)} `}${timeOf(next.firesAt)}`
-    : 'No Reminders scheduled';
+  const at = next && effectiveFire(next);
+  const label =
+    next && at !== undefined
+      ? `Next Reminder ${dateOf(at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(at)} `}${timeOf(at)}${refirePending(next, now) ? ' (snoozed)' : ''}`
+      : 'No Reminders scheduled';
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero }]}>
       <Text style={[styles.heroText, { color: colors.text.onHero }]}>{label}</Text>
@@ -63,7 +81,8 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
   return (
     <View style={[styles.list, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
       {fired.map((r, i) => {
-        const status = statusOf(r, outstandingId, colors);
+        const status = statusOf(r, outstandingId, now, colors);
+        const snoozes = r.snoozes ?? 0;
         return (
           <View
             key={r.id}
@@ -74,7 +93,14 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
               <Text style={[styles.exercise, { color: colors.text.primary }]} numberOfLines={1}>
                 {r.suggestion.map((e) => e.name).join(', ')}
               </Text>
-              <Text style={[styles.status, { color: status.color }]}>{status.label}</Text>
+              <View style={styles.statusLine}>
+                <Text style={[styles.status, { color: status.color }]}>{status.label}</Text>
+                {snoozes > 0 && (
+                  <Text style={[styles.tag, { color: colors.text.secondary, borderColor: colors.line.divider }]}>
+                    snoozed ×{snoozes}
+                  </Text>
+                )}
+              </View>
             </View>
           </View>
         );
@@ -83,11 +109,23 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
   );
 }
 
-function statusOf(r: Reminder, outstandingId: string | undefined, colors: Palette) {
-  if (r.status === 'skipped') return { label: 'Skipped', color: colors.outcome.skip };
-  if (r.id === outstandingId) return { label: 'Waiting for you', color: colors.accent.hero };
-  // Fired, superseded by a later Reminder, no Response. It becomes Missed in #22.
-  return { label: 'No Response', color: colors.text.secondary };
+/** One fired Reminder's line, from its settled status. Done arrives with the guided flow (#23). */
+function statusOf(r: Reminder, outstandingId: string | undefined, now: number, colors: Palette) {
+  switch (r.status) {
+    case 'skipped':
+      return { label: 'Skipped', color: colors.outcome.skip };
+    case 'missed':
+      return { label: 'Missed', color: colors.outcome.missed };
+    case 'dropped':
+      return { label: 'Snoozed past closing', color: colors.outcome.missed };
+    case 'scheduled':
+      if (r.refiresAt !== undefined && refirePending(r, now)) {
+        return { label: `Snoozed, back at ${timeOf(r.refiresAt)}`, color: colors.text.secondary };
+      }
+      if (r.id === outstandingId) return { label: 'Waiting for you', color: colors.accent.hero };
+      // Not reachable once settled; kept so the screen never shows nothing.
+      return { label: 'No Response', color: colors.text.secondary };
+  }
 }
 
 const timeOf = (at: number) =>
@@ -108,6 +146,16 @@ const styles = StyleSheet.create({
   time: { fontSize: 17, fontWeight: '700', fontVariant: ['tabular-nums'] },
   rowBody: { flex: 1, gap: 2 },
   exercise: { fontSize: 15 },
+  statusLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   status: { fontSize: 13, fontWeight: '600' },
+  tag: {
+    fontSize: 11,
+    fontWeight: '600',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    overflow: 'hidden',
+  },
   debugLink: { fontSize: 14, marginTop: 24 },
 });

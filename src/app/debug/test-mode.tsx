@@ -1,8 +1,10 @@
 /**
  * TEMPORARY, development build only (#21): a test mode for the owner's device
- * check. On, it stores Interval 2 min with Active Hours 00:00-24:00 every day
- * and Rearms, so a Reminder arrives within 2 minutes through the real core
- * path. Off restores the default settings. Remove it once Settings (#2x) can
+ * check. On, it stores Interval 2 min, Snooze delay 1 min and Active Hours
+ * 00:00-24:00 every day, and Rearms, so a Reminder arrives within 2 minutes
+ * (and a snoozed one is back within 1) through the real core path. Off
+ * restores the default settings. With the window all day, Missed at closing
+ * and dropped can't happen here; Missed on replacement can. Remove it once Settings (#2x) can
  * set the schedule.
  *
  * It writes settings straight into the stored state, because the core has no
@@ -22,10 +24,12 @@ const ALL_DAY: ActiveWindow = { start: 0, end: 24 * 60 };
 const TEST_SETTINGS: Omit<Settings, 'timeZone'> = {
   activeHours: { mon: ALL_DAY, tue: ALL_DAY, wed: ALL_DAY, thu: ALL_DAY, fri: ALL_DAY, sat: ALL_DAY, sun: ALL_DAY },
   intervalMinutes: 2,
+  snoozeMinutes: 1,
 };
 
 const isTestMode = (s: Settings) =>
   s.intervalMinutes === TEST_SETTINGS.intervalMinutes &&
+  s.snoozeMinutes === TEST_SETTINGS.snoozeMinutes &&
   JSON.stringify(s.activeHours) === JSON.stringify(TEST_SETTINGS.activeHours);
 
 /** Keeps the stored time zone; Rearm replaces it with the device's anyway. */
@@ -57,7 +61,7 @@ export default function TestMode() {
       {isDevelopment ? (
         <>
           <View style={[styles.row, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>Reminder every 2 min, all day</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>Reminder every 2 min, all day, 1-min Snooze</Text>
             <Switch
               value={on}
               disabled={busy || !state}
@@ -66,8 +70,8 @@ export default function TestMode() {
             />
           </View>
           <Text style={[styles.body, { color: colors.text.secondary }]}>
-            On: Interval 2 min, Active Hours 00:00–24:00 every day, then a Rearm. Off: the default settings (Mon–Fri
-            09:00–18:00, 45 min). Development build only.
+            On: Interval 2 min, Snooze delay 1 min, Active Hours 00:00–24:00 every day, then a Rearm. Off: the
+            default settings (Mon–Fri 09:00–18:00, 45 min, 10-min Snooze). Development build only.
           </Text>
         </>
       ) : (
