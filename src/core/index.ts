@@ -2,6 +2,7 @@ export { defaultSettings, initialState, reduce } from './reduce';
 export { formatDose } from './dose';
 export { isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
+export { effectiveFire, settle } from './settle';
 export type {
   ActiveWindow,
   Clock,

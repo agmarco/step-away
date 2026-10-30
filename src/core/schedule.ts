@@ -5,7 +5,7 @@
  */
 
 import { addDays, instantAt, localDateOf, weekdayOf } from './localTime';
-import { effectiveFire, refirePending, settle } from './settle';
+import { effectiveFire, refirePending, settle, windowEndOf } from './settle';
 import type { CoreState, Instant, Reminder } from './types';
 
 const MINUTE = 60_000;
@@ -23,9 +23,21 @@ export function isReminderId(id: string): boolean {
   return id.startsWith(REMINDER_ID_PREFIX);
 }
 
-/** The next Reminder ahead: the first one still scheduled that fires strictly after `now`, or undefined. */
+/**
+ * The next Reminder ahead, or undefined: the earliest of the first one still
+ * scheduled that fires strictly after `now` and any pending Snooze re-fire (a
+ * fired Reminder still `scheduled` whose `refiresAt` is after `now`), compared
+ * by `effectiveFire`. A re-fire landing at or after its day's window end is
+ * never scheduled (it settles as dropped), so it doesn't count.
+ */
 export function nextReminder(state: CoreState, now: Instant): Reminder | undefined {
-  return state.reminders.find((r) => r.firesAt > now && r.status === 'scheduled');
+  let next = state.reminders.find((r) => r.firesAt > now && r.status === 'scheduled');
+  for (const r of state.reminders) {
+    if (r.status !== 'scheduled' || r.firesAt > now || !refirePending(r, now)) continue;
+    if (effectiveFire(r) >= windowEndOf(r.firesAt, state.settings)) continue;
+    if (!next || effectiveFire(r) < effectiveFire(next)) next = r;
+  }
+  return next;
 }
 
 /** The fired Reminders (any status) whose local date in the Settings' time zone is today, newest first. */
