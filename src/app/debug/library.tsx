@@ -6,14 +6,9 @@
 import { Link } from 'expo-router';
 import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Dose, Exercise } from '../../core';
+import { formatDose, type Exercise } from '../../core';
 import { exercises, photoSource } from '../../library';
 import { type Palette, useColors } from '../../theme';
-
-function doseText({ kind, amount, eachSide }: Dose): string {
-  const base = kind === 'reps' ? `${amount} reps` : `${amount} s`;
-  return eachSide ? `${base} each side` : base;
-}
 
 function Photo({ photoKey, colors }: { photoKey: string; colors: Palette }) {
   const source = photoSource(photoKey);
@@ -52,7 +47,7 @@ function ExerciseCard({ exercise, colors }: { exercise: Exercise; colors: Palett
       <Text style={[styles.name, { color: colors.text.primary }]}>{exercise.name}</Text>
       <Text style={[styles.small, { color: colors.text.secondary }]}>{exercise.id}</Text>
       <Text style={[styles.body, { color: colors.text.secondary }]}>{facts}</Text>
-      <Text style={[styles.dose, { color: colors.accent.hero }]}>{doseText(exercise.dose)}</Text>
+      <Text style={[styles.dose, { color: colors.accent.hero }]}>{formatDose(exercise.dose)}</Text>
       <Text style={[styles.cue, { color: colors.text.primary }]}>{exercise.cue}</Text>
       {exercise.steps.map((step, i) => (
         <Text key={i} style={[styles.body, { color: colors.text.primary }]}>
