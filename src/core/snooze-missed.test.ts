@@ -403,3 +403,55 @@ describe('settle runs before every event', () => {
     expect(result.intents).toEqual([dismiss(last.id)]);
   });
 });
+
+describe('closing time on a day without Active Hours', () => {
+  it('settles a Reminder whose day has no Active Hours (e.g. after a Settings change) at that day’s midnight', () => {
+    const fired = morning().state;
+    // Monday loses its Active Hours after the day's Reminders fired.
+    const noMonday: CoreState = {
+      ...fired,
+      settings: { ...fired.settings, activeHours: { ...fired.settings.activeHours, mon: null } },
+    };
+
+    // 23:59 is past the old 18:00 end, but Monday now ends at midnight: 17:15 is still outstanding.
+    const evening = rearm(noMonday, at('23:59')).state;
+
+    expect(firedStatuses(evening, at('23:59'))).toEqual([
+      ...DAY_TIMES.slice(0, -1).map((t) => [t, 'missed']),
+      ['17:15', 'scheduled'],
+    ]);
+    expect(outstandingReminder(evening, at('23:59'))?.firesAt).toBe(at('17:15'));
+
+    // Tuesday 00:00 is Monday's midnight end: 17:15 is Missed.
+    const midnight = rearm(noMonday, local(TUE, '00:00')).state;
+
+    expect(reminderAt(midnight, at('17:15')).status).toBe('missed');
+    expect(outstandingReminder(midnight, local(TUE, '00:00'))).toBeUndefined();
+  });
+});
+
+describe('Snooze: the re-fire notification', () => {
+  it('says in its title that it was snoozed', () => {
+    const before = morning();
+    const first = reminderAt(before.state, at('09:45'));
+
+    const [refire, fallback] = chainOf(snooze(before.state, first.id, at('10:00')));
+
+    expect(refire.reminderId).toBe(first.id);
+    expect(refire.title).toMatch(/snoozed/i);
+    expect(fallback.title).not.toMatch(/snoozed/i);
+  });
+});
+
+describe('Skip: a guarded Response while a re-fire is pending', () => {
+  it('ignores a Skip before the Reminder’s re-fire has fired, only dismissing the notification', () => {
+    const first = reminderAt(morning().state, at('09:45'));
+    const once = snooze(morning().state, first.id, at('10:00')).state;
+
+    // The re-fire is at 10:10; 10:05 is before it.
+    const result = skip(once, first.id, at('10:05'));
+
+    expect(result.state).toEqual(once);
+    expect(result.intents).toEqual([dismiss(first.id)]);
+  });
+});
