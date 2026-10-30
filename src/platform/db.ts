@@ -29,15 +29,19 @@ export function db(): Promise<Db> {
     // notifications, notifications.ts MAX_SCHEDULED) is scheduled while
     // BEGIN IMMEDIATE is held (handler.ts), and a cold-start headless Skip in
     // the other JS context must outwait that, not fail with `database is locked`.
-    await d.execAsync(`
-      PRAGMA journal_mode = WAL;
-      PRAGMA busy_timeout = 15000;
-    `);
+    // busy_timeout goes first: on a brand-new file the WAL switch itself takes
+    // a lock, and without the timeout a second context fails there at once.
+    await d.execAsync('PRAGMA busy_timeout = 15000');
+    await d.execAsync('PRAGMA journal_mode = WAL');
     // The schema, once per connection, after busy_timeout is set (the other
     // JS context may be migrating at the same moment): see migrations.ts.
     await migrate(d);
     return d;
-  })();
+  })().catch((e: unknown) => {
+    // Don't cache a failed open or migration: the next call retries.
+    dbPromise = null;
+    throw e;
+  });
   return dbPromise;
 }
 

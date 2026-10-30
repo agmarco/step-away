@@ -4,7 +4,7 @@
  * migrations.ts. Every function taking a `Db` is meant
  * to run inside `write()` (one BEGIN IMMEDIATE transaction).
  */
-import { defaultSettings, type CoreState, type Instant, type Reminder, type ResponseKind, type Settings } from '../core';
+import { defaultSettings, MAX_SNOOZES, type CoreState, type Instant, type Reminder, type ResponseKind, type Settings } from '../core';
 import { db, type Db } from './db';
 
 /** Who handled an action tap: the background task or the foreground response listener. */
@@ -98,18 +98,19 @@ export async function guardedSkip(d: Db, reminderId: string, now: Instant): Prom
 }
 
 /**
- * The guarded Snooze: the Skip guard plus fewer than 2 Snoozes so far
- * (MAX_SNOOZES in core/notification.ts). `refiresAt` is the re-fire the core
+ * The guarded Snooze: the Skip guard plus fewer than MAX_SNOOZES Snoozes so
+ * far (core/notification.ts). `refiresAt` is the re-fire the core
  * computed. True only when exactly one row changed.
  */
 export async function guardedSnooze(d: Db, reminderId: string, refiresAt: Instant, now: Instant): Promise<boolean> {
   const res = await d.runAsync(
     `UPDATE reminders SET snoozes = snoozes + 1, refires_at = ?
-     WHERE id = ? AND status = 'scheduled' AND fires_at <= ? AND (refires_at IS NULL OR refires_at <= ?) AND snoozes < 2`,
+     WHERE id = ? AND status = 'scheduled' AND fires_at <= ? AND (refires_at IS NULL OR refires_at <= ?) AND snoozes < ?`,
     refiresAt,
     reminderId,
     now,
     now,
+    MAX_SNOOZES,
   );
   return res.changes === 1;
 }

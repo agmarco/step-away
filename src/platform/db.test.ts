@@ -46,3 +46,25 @@ describe('write()', () => {
     expect(log).toEqual(['BEGIN IMMEDIATE', 'save A', 'ROLLBACK', 'BEGIN IMMEDIATE', 'save B', 'COMMIT']);
   });
 });
+
+describe('db()', () => {
+  it('retries the open after a failed one instead of caching the rejection', async () => {
+    // A fresh module, so this test owns the first open of its connection.
+    vi.resetModules();
+    let opens = 0;
+    vi.doMock('expo-sqlite', () => ({
+      openDatabaseAsync: async () => {
+        opens += 1;
+        if (opens === 1) throw new Error('database is locked');
+        return {
+          execAsync: async () => {},
+          getFirstAsync: async () => ({ user_version: Number.MAX_SAFE_INTEGER }),
+        };
+      },
+    }));
+    const fresh = await import('./db');
+    await expect(fresh.db()).rejects.toThrow('database is locked');
+    await expect(fresh.db()).resolves.toBeDefined();
+    expect(opens).toBe(2);
+  });
+});
