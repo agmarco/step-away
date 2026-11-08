@@ -1,6 +1,7 @@
 import { MAX_SNOOZES, notificationFor, refireNotificationFor } from './notification';
 import { chainTimes, outstandingReminder, reminderId } from './schedule';
-import { MINUTE } from './localTime';
+import { dateKey, dayOf, sameDate } from './days';
+import { addDays, localDateOf, MINUTE } from './localTime';
 import { refirePending, refireScheduled, settle } from './settle';
 import { suggest } from './suggest';
 import type {
@@ -54,6 +55,16 @@ export const initialState: CoreState = {
  * Snooze count and `lastResponseAt` stay) and rebuilds the chain, which then
  * counts from the Reminder's own fire time. Anything else returns the input
  * state unchanged, with no intents.
+ *
+ * SetDailyGoal records the goal from tomorrow (Settings' time zone), replacing
+ * any change dated tomorrow or later; a goal that isn't a whole number of at
+ * least 1 returns the input state. Correct changes the outcome of one of
+ * today's fired Reminders already done, skipped, Missed or dropped (by the
+ * settled state): to Done with the same mapping as a Done Response (at least
+ * one Id left, else rejected), to Skip or Missed without its `done` list. A
+ * correction is history: `lastResponseAt`, `snoozes`, `refiresAt` and the
+ * chain stay. Anything else (a past day, outstanding, not fired, unknown)
+ * returns the input state. Neither returns intents.
  */
 export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): CoreResult {
   const now = deps.clock.now();
@@ -96,10 +107,35 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const { refiresAt: _cancelled, ...withoutRefire } = target;
       return rearm({ ...settled, reminders: replace(settled, withoutRefire) }, deps);
     }
-    case 'SetDailyGoal':
-      throw new Error('not implemented');
-    case 'Correct':
-      throw new Error('not implemented');
+    case 'SetDailyGoal': {
+      if (!Number.isInteger(event.goal) || event.goal < 1) return { state, intents: [] };
+      const settled = settle(state, now);
+      // From tomorrow: today's goal never moves. A change dated tomorrow or later is replaced.
+      const from = addDays(localDateOf(now, settled.settings.timeZone), 1);
+      const kept = settled.goalChanges.filter((c) => dateKey(c.from) < dateKey(from));
+      return { state: { ...settled, goalChanges: [...kept, { from, goal: event.goal }] }, intents: [] };
+    }
+    case 'Correct': {
+      // Settled first, so a fired Reminder superseded but not yet persisted counts as Missed.
+      const settled = settle(state, now);
+      const target = settled.reminders.find((r) => r.id === event.reminderId);
+      if (!target || target.firesAt > now || target.status === 'scheduled') return { state, intents: [] };
+      const { timeZone } = settled.settings;
+      if (!sameDate(dayOf(target, timeZone), localDateOf(now, timeZone))) return { state, intents: [] };
+
+      const { done: _removed, ...withoutDone } = target;
+      let corrected: Reminder;
+      if (event.to === 'Done') {
+        const done = doneExercises(target, event.did ?? []);
+        if (done.length === 0) return { state, intents: [] };
+        corrected = { ...target, status: 'done', done };
+      } else {
+        // Only the outcome changes: `snoozes` and `refiresAt` stay.
+        corrected = { ...withoutDone, status: event.to === 'Skip' ? 'skipped' : 'missed' };
+      }
+      // History only: lastResponseAt and the chain stay, and there are no intents.
+      return { state: { ...settled, reminders: replace(settled, corrected) }, intents: [] };
+    }
   }
 }
 
