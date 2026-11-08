@@ -8,14 +8,14 @@
 
 import { dayOf, sameDate } from './days';
 import { localDateOf } from './localTime';
-import { outstandingReminder } from './schedule';
+import { isOutstanding, outstandingReminder } from './schedule';
 import { settle } from './settle';
 import type { CoreEvent, CoreState, Instant, Reminder } from './types';
 
-/** The event a guided finish feeds into the core: a Done Response or a Correct. */
+/** The event a guided finish feeds into the core: a Done Response, or a Correct to Done or Skip. */
 export type GuidedFinishEvent =
   | Extract<CoreEvent, { type: 'Response'; kind: 'Done' }>
-  | Extract<CoreEvent, { type: 'Correct' }>;
+  | (Extract<CoreEvent, { type: 'Correct' }> & { to: 'Done' | 'Skip' });
 
 /**
  * What finishing the guided screen on `reminderId` records, with `did` the Ids marked Did it
@@ -27,7 +27,7 @@ export function guidedFinish(
   did: readonly string[],
   now: Instant,
 ): GuidedFinishEvent | null {
-  if (outstandingReminder(state, now)?.id === reminderId) {
+  if (isOutstanding(state, reminderId, now)) {
     return { type: 'Response', reminderId, kind: 'Done', did: [...did] };
   }
 
@@ -50,8 +50,7 @@ export function guidedFinish(
  * undefined otherwise (answered, another day, not fired, unknown).
  */
 export function guidedStart(state: CoreState, reminderId: string, now: Instant): Reminder | undefined {
-  const outstanding = outstandingReminder(state, now);
-  if (outstanding?.id === reminderId) return outstanding;
+  if (isOutstanding(state, reminderId, now)) return outstandingReminder(state, now);
   const target = settledToday(state, reminderId, now);
   return target?.status === 'missed' || target?.status === 'dropped' ? target : undefined;
 }

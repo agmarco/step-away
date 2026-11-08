@@ -78,7 +78,7 @@ export function outstandingReminder(state: CoreState, now: Instant): Reminder | 
 
 /** Whether `reminderId` is the outstanding Reminder at `now` (see `outstandingReminder`). */
 export function isOutstanding(state: CoreState, reminderId: string, now: Instant): boolean {
-  throw new Error('not implemented');
+  return outstandingReminder(state, now)?.id === reminderId;
 }
 
 /**
