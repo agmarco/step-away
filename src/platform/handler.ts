@@ -1,8 +1,8 @@
 /**
  * The one place JS turns platform happenings into core events: Responses
  * (notification action taps from both delivery paths, and the guided screen's
- * Done, Snooze and Skip), the guided screen opening, corrections from Today,
- * and the app coming to the front.
+ * Snooze and Skip), the guided screen opening and finishing, corrections from
+ * Today, and the app coming to the front.
  * Each read-modify-write runs inside one `write()` transaction, so it sees the
  * latest committed state even when another JS context wrote in between.
  *
@@ -14,6 +14,7 @@
  * alarms don't diverge. Dismissals are idempotent and run after the commit.
  */
 import {
+  guidedFinish,
   outstandingReminder,
   reduce,
   type CoreDeps,
@@ -33,6 +34,7 @@ import {
   loadState,
   logResponse,
   notifyStateChanged,
+  readState,
   saveState,
   type Source,
 } from './store';
@@ -161,6 +163,49 @@ export async function startGuided(reminderId: string): Promise<CoreState> {
   console.log(`[handler] GuidedStarted ${reminderId}: ${changed ? 'cancelled the re-fire' : 'no-op'}`);
   if (changed) notifyStateChanged();
   return state;
+}
+
+/**
+ * The guided screen finished on `reminderId` (its last card answered, or End
+ * here), with `did` the Ids marked Did it. The core's `guidedFinish` says what
+ * that records: on the outstanding Reminder, the Done Response through
+ * `respond`; once it is no longer outstanding, a late answer as a correction
+ * (logged with source `guided-late`); or nothing. If the Done Response loses a
+ * race (a newer Reminder fired, or a shade answer landed, between the read and
+ * the lock), it falls through to the late path once. True when something was
+ * recorded.
+ */
+export async function finishGuided(reminderId: string, did: string[]): Promise<boolean> {
+  const event = guidedFinish(await readState(), reminderId, did, frozenDeps().now);
+  if (!event) {
+    console.log(`[handler] GuidedFinish ${reminderId}: nothing to record`);
+    return false;
+  }
+  if (event.type === 'Response' && (await respond(event, 'app'))) return true;
+  return finishGuidedLate(reminderId, did);
+}
+
+/** The late path of `finishGuided`: the correction, recomputed and applied in one `write()`. */
+async function finishGuidedLate(reminderId: string, did: string[]): Promise<boolean> {
+  const { deps, now } = frozenDeps();
+  let recorded: 'Done' | 'Skip' | null = null;
+  await write(async (d) => {
+    const state = await loadState(d);
+    const event = guidedFinish(state, reminderId, did, now);
+    if (event?.type !== 'Correct') return;
+    const next = reduce(state, event, deps);
+    if (next.state === state) return;
+    const kind = event.to === 'Done' ? 'Done' : 'Skip';
+    await saveState(d, next.state, now);
+    await logResponse(d, reminderId, kind, 'guided-late', now);
+    recorded = kind;
+  }).catch((e: unknown) => {
+    console.warn(`[handler] GuidedFinish ${reminderId} rolled back: ${e}`);
+    throw e;
+  });
+  console.log(`[handler] GuidedFinish ${reminderId}: ${recorded ? `accepted as Correct ${recorded}` : 'no-op'}`);
+  if (recorded) notifyStateChanged();
+  return recorded !== null;
 }
 
 /**

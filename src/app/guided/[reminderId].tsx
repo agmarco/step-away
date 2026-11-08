@@ -1,18 +1,28 @@
 /**
- * The guided Response flow (#23): one full-screen card per Exercise of the
- * Reminder's Suggestion, opened by Start or a tap on the notification (or
- * Start on Today). Each card is answered Did it or Not this one; after the
- * last, the Done goes through the shared handler with the Ids marked Did it
- * (the core counts none as a Skip). Snooze and Skip are break links across the
- * flow. Opening the screen cancels a pending Snooze re-fire (the core's
- * GuidedStarted, through the handler), so it can't arrive mid-flow. Leaving
- * early records nothing and doesn't bring the re-fire back: the Reminder stays
- * outstanding until the next Reminder replaces it.
+ * The guided Response flow (#23, #41): one full-screen card per Exercise of
+ * the Reminder's Suggestion, opened by Start or a tap on the notification (or
+ * Start on Today). Each card is answered Did it or Not this one. Opening the
+ * screen cancels a pending Snooze re-fire (the core's GuidedStarted, through
+ * the handler), so it can't arrive mid-flow.
  *
- * Thin: whether the Reminder can still be answered is the core's
+ * Until the first card is answered, Snooze and Skip are break links (Responses
+ * through the handler). From then on End here takes their place. The last
+ * card's answer and End here both finish through the handler's
+ * `finishGuided` with the Ids marked Did it so far, then go back to Today,
+ * recorded or not: on the outstanding Reminder that is the Done (none counts
+ * as a Skip); if the Reminder stopped being outstanding meanwhile (a newer one
+ * fired, or it was answered from the shade), a finished workout is saved as a
+ * correction of today's Reminder (no Did its never overwrites an answer).
+ * Leaving early records nothing and doesn't bring the re-fire back.
+ *
+ * Thin: whether the Reminder can be started is the core's
  * `outstandingReminder`, asked once when the screen opens, on the state
- * `startGuided` returns; whether Snooze shows is the core's `canSnooze`; the
- * handler's guard decides the rest. Swap (#24) and the celebration card (#28) aren't here yet.
+ * `startGuided` returns; the screen keeps that Reminder for the whole
+ * session. Whether Snooze shows is the core's `canSnooze`; what a finish
+ * records is the core's `guidedFinish`. The fallback ("isn't waiting any
+ * more") shows only when the Reminder wasn't outstanding at open, or a Snooze
+ * or Skip wasn't accepted. Swap (#24) and the celebration card (#28) aren't
+ * here yet.
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -20,7 +30,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { canSnooze, formatDose, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
 import { exercises, photoSource } from '../../library';
-import { respond, startGuided } from '../../platform/handler';
+import { finishGuided, respond, startGuided } from '../../platform/handler';
 import { dismissReminder } from '../../platform/notifications';
 import { useCoreState } from '../../platform/useCoreState';
 import { type Palette, useColors } from '../../theme';
@@ -34,8 +44,8 @@ export default function Guided() {
   // Only for `now`, refreshed once a minute: whether the Snooze link shows.
   const { now } = useCoreState();
   // The Reminder as it was when the screen opened, from the state startGuided
-  // returns: undefined until then, null if it isn't outstanding (or a Response
-  // turned out a no-op).
+  // returns: undefined until then, null if it isn't outstanding (or a Snooze or
+  // Skip turned out a no-op). Kept for the session even once it stops being outstanding.
   const [reminder, setReminder] = useState<Reminder | null>();
   const [step, setStep] = useState(0);
   const [did, setDid] = useState<string[]>([]);
@@ -67,6 +77,17 @@ export default function Guided() {
       .finally(() => setBusy(false));
   };
 
+  // Recorded or not, back to Today: a finish that records nothing has nothing new to record.
+  const finish = (didSoFar: string[]) => {
+    setBusy(true);
+    finishGuided(reminderId, didSoFar)
+      .catch((e) => console.warn(`[guided] finish ${reminderId} failed: ${e}`))
+      .finally(() => {
+        setBusy(false);
+        backToToday();
+      });
+  };
+
   const answer = (done: boolean) => {
     if (!reminder) return;
     const exercise = reminder.suggestion[step];
@@ -75,7 +96,7 @@ export default function Guided() {
       setDid(next);
       setStep(step + 1);
     } else {
-      send({ type: 'Response', reminderId, kind: 'Done', did: next });
+      finish(next);
     }
   };
 
@@ -84,9 +105,9 @@ export default function Guided() {
   if (reminder === null || reminder.suggestion.length === 0) {
     return (
       <View style={[styles.root, styles.ended, screen, { paddingTop: insets.top + 24 }]}>
-        <Text style={[styles.endedTitle, { color: colors.text.primary }]}>This Reminder has ended</Text>
+        <Text style={[styles.endedTitle, { color: colors.text.primary }]}>{"This Reminder isn't waiting any more"}</Text>
         <Text style={[styles.body, { color: colors.text.secondary }]}>
-          It was answered, or a newer Reminder has replaced it.
+          {"It was answered or a newer one replaced it. You can change today's answers on Today."}
         </Text>
         <Pressable onPress={backToToday} accessibilityRole="link">
           <Text style={[styles.link, { color: colors.accent.hero }]}>Back to Today</Text>
@@ -134,24 +155,32 @@ export default function Guided() {
       </View>
 
       <View style={styles.breaks}>
-        {snoozeAllowed && (
-          <Pressable
-            onPress={() => send({ type: 'Response', reminderId, kind: 'Snooze' })}
-            disabled={busy}
-            accessibilityRole="button"
-            hitSlop={8}
-          >
-            <Text style={[styles.link, { color: colors.text.secondary }]}>Snooze</Text>
+        {step > 0 ? (
+          <Pressable onPress={() => finish(did)} disabled={busy} accessibilityRole="button" hitSlop={8}>
+            <Text style={[styles.link, { color: colors.text.secondary }]}>End here</Text>
           </Pressable>
+        ) : (
+          <>
+            {snoozeAllowed && (
+              <Pressable
+                onPress={() => send({ type: 'Response', reminderId, kind: 'Snooze' })}
+                disabled={busy}
+                accessibilityRole="button"
+                hitSlop={8}
+              >
+                <Text style={[styles.link, { color: colors.text.secondary }]}>Snooze</Text>
+              </Pressable>
+            )}
+            <Pressable
+              onPress={() => send({ type: 'Response', reminderId, kind: 'Skip' })}
+              disabled={busy}
+              accessibilityRole="button"
+              hitSlop={8}
+            >
+              <Text style={[styles.link, { color: colors.text.secondary }]}>Skip</Text>
+            </Pressable>
+          </>
         )}
-        <Pressable
-          onPress={() => send({ type: 'Response', reminderId, kind: 'Skip' })}
-          disabled={busy}
-          accessibilityRole="button"
-          hitSlop={8}
-        >
-          <Text style={[styles.link, { color: colors.text.secondary }]}>Skip</Text>
-        </Pressable>
       </View>
     </ScrollView>
   );
