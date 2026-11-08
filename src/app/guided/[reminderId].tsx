@@ -6,8 +6,8 @@
  * the handler), so it can't arrive mid-flow.
  *
  * The screen opens on the outstanding Reminder, and also on one of today's
- * that a newer Reminder has just replaced (Missed) or that was snoozed past
- * closing (dropped): Start on a Today that hasn't redrawn yet never dead-ends.
+ * that settled as Missed or dropped (e.g. just replaced by a newer Reminder,
+ * or past closing): Start on a Today that hasn't redrawn yet never dead-ends.
  *
  * Until the first card is answered, Skip is a break link, and Snooze too
  * while the Reminder is still outstanding and can be snoozed (a Response
@@ -16,19 +16,24 @@
  * `finishGuided` (Skip with no Ids, the others with the Ids marked Did it so
  * far), then go back to Today, recorded or not: on the outstanding Reminder
  * that is the Done (none counts as a Skip); if the Reminder isn't outstanding
- * (a newer one fired, or it was answered from the shade), a finished workout
- * is saved as a correction of today's Reminder, and no Did its turns Missed or
- * dropped into a Skip (never overwriting an answer). Leaving early records
- * nothing and doesn't bring the re-fire back.
+ * (a newer one fired, or it was answered from the shade), a finish with a Did
+ * it is saved as a correction of today's Reminder to Done, and no Did its turns
+ * Missed or dropped into a Skip (never overwriting an answer).
+ *
+ * Back (the ‹ Today link, Android back or the back gesture): before any card
+ * is answered it leaves and records nothing, and doesn't bring the re-fire
+ * back. Once a card is answered it saves exactly like End here, then goes to
+ * Today. A ref tracks the finish, so back during a finish doesn't finish
+ * twice, and the finish's own navigation to Today is let through.
  *
  * Thin: whether the Reminder can be opened is the core's `guidedStart`, asked
  * once when the screen opens, on the state `startGuided` returns; the screen
  * keeps that Reminder for the whole session. Whether Snooze shows is the
- * core's `outstandingReminder` and `canSnooze` on the latest snapshot; what a
+ * core's `isOutstanding` and `canSnooze` on the latest snapshot; what a
  * finish records is the core's `guidedFinish`. The fallback ("isn't waiting
- * any more") shows only when `guidedStart` refused the Reminder at open
- * (already answered, from another day, or unknown), or a Snooze wasn't
- * accepted. Swap (#24) and the celebration card (#28) aren't here yet.
+ * any more") shows when `guidedStart` refused the Reminder at open (already
+ * answered, from another day, or unknown), when its Suggestion is empty, or
+ * when a Snooze wasn't accepted. Swap (#24) and the celebration card (#28) aren't here yet.
  */
 import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';

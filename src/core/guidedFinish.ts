@@ -2,8 +2,9 @@
  * What finishing the guided screen records. On the outstanding Reminder it is
  * the Done Response; once that Reminder is no longer outstanding (a newer one
  * fired, or it was answered from the shade meanwhile) a late answer is saved
- * as a correction of today's Reminder: a finished workout (at least one Did it
- * in the Suggestion) wins, even over a Skip; no Did its never overwrites a Done.
+ * as a correction of today's Reminder: a finish with a Did it (at least one Id
+ * in the Suggestion) is a Done, even over a Skip; no Did its never overwrites
+ * an answer (Done or Skip), it only turns Missed or dropped into a Skip.
  */
 
 import { dayOf, sameDate } from './days';
@@ -36,7 +37,7 @@ export function guidedFinish(
 
   const marked = new Set(did);
   if (target.suggestion.some(({ id }) => marked.has(id))) {
-    // A finished workout wins, over any settled status.
+    // A finish with a Did it is a Done, over any settled status.
     return { type: 'Correct', reminderId, to: 'Done', did: [...did] };
   }
   // No Did its never overwrites an answer; it only turns Missed or dropped into a Skip.
@@ -46,7 +47,7 @@ export function guidedFinish(
 
 /**
  * The Reminder the guided screen can open on `reminderId` at `now`: the outstanding one, or one of
- * today's fired Reminders that settled as Missed or dropped (just replaced, or snoozed past closing).
+ * today's fired Reminders that settled as Missed or dropped (e.g. just replaced, or past closing).
  * undefined otherwise (answered, another day, not fired, unknown).
  */
 export function guidedStart(state: CoreState, reminderId: string, now: Instant): Reminder | undefined {
