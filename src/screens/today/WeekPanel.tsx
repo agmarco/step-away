@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { useOpenPage } from './useOpenPage';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { weekMarks, type CoreState, type DayMark } from '../../core';
 import { type Palette, useColors } from '../../theme';
@@ -33,9 +33,10 @@ function cellStyle(mark: DayMark, colors: Palette) {
 export function WeekPanel({ state, now }: { state: CoreState; now: number }) {
   const colors = useColors();
   const marks = weekMarks(state, now);
+  const open = useOpenPage();
   return (
     <Pressable
-      onPress={() => router.push('/history')}
+      onPress={() => open('/history')}
       accessibilityRole="button"
       accessibilityLabel={`History. This week: ${marks.map((m, i) => `${NAMES[i]} ${MARK_LABEL[m.mark]}`).join(', ')}`}
       style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}

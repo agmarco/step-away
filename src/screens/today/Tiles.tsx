@@ -1,6 +1,7 @@
-import { router, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '../../theme';
+import { useOpenPage } from './useOpenPage';
 
 const TILES: { icon: string; label: string; href: Href }[] = [
   { icon: '📅', label: 'History', href: '/history' },
@@ -10,17 +11,19 @@ const TILES: { icon: string; label: string; href: Href }[] = [
 
 /**
  * The three tiles under the hero (B4), each pushing its page on the Stack, so
- * the back arrow and Android back return to Today. The Achievements tile's
+ * the back arrow and Android back return to Today. One page opens at a time
+ * (useOpenPage). The Achievements tile's
  * "new" dot comes with Badges (#28).
  */
 export function Tiles() {
   const colors = useColors();
+  const open = useOpenPage();
   return (
     <View style={styles.row}>
       {TILES.map((t) => (
         <Pressable
           key={t.label}
-          onPress={() => router.push(t.href)}
+          onPress={() => open(t.href)}
           accessibilityRole="button"
           accessibilityLabel={t.label}
           style={[styles.tile, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}
