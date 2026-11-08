@@ -13,7 +13,7 @@ export interface LocalDate {
 }
 
 const WEEKDAYS: readonly Weekday[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-const MINUTE = 60_000;
+export const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 
 const formatters = new Map<string, Intl.DateTimeFormat>();

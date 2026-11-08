@@ -5,7 +5,7 @@ import {
   effectiveFire,
   nextReminder,
   outstandingReminder,
-  refirePending,
+  refireScheduled,
   settle,
   todaysReminders,
   type CoreState,
@@ -58,12 +58,13 @@ function NextReminder({ state, now, colors }: { state: CoreState; now: number; c
   // Display only: the weekday is shown when the next Reminder's calendar date
   // (as formatted in the Settings' time zone) is not today's. A snoozed
   // Reminder coming back is next at its re-fire.
-  const { timeZone } = state.settings;
-  const at = next && effectiveFire(next);
-  const label =
-    next && at !== undefined
-      ? `Next Reminder ${dateOf(at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(at)} `}${timeOf(at)}${refirePending(next, now) ? ' (snoozed)' : ''}`
-      : 'No Reminders scheduled';
+  const { settings } = state;
+  let label = 'No Reminders scheduled';
+  if (next) {
+    const at = effectiveFire(next);
+    const day = dateOf(at, settings.timeZone) === dateOf(now, settings.timeZone) ? '' : `${weekdayOf(at)} `;
+    label = `Next Reminder ${day}${timeOf(at)}${refireScheduled(next, settings, now) ? ' (snoozed)' : ''}`;
+  }
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero }]}>
       <Text style={[styles.heroText, { color: colors.text.onHero }]}>{label}</Text>
@@ -81,7 +82,7 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
   return (
     <View style={[styles.list, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
       {fired.map((r, i) => {
-        const status = statusOf(r, outstandingId, now, colors);
+        const status = statusOf(r, state, outstandingId, now, colors);
         const snoozes = r.snoozes ?? 0;
         return (
           <View
@@ -110,17 +111,22 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
 }
 
 /** One fired Reminder's line, from its settled status. Done arrives with the guided flow (#23). */
-function statusOf(r: Reminder, outstandingId: string | undefined, now: number, colors: Palette) {
+function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefined, now: number, colors: Palette) {
   switch (r.status) {
     case 'skipped':
       return { label: 'Skipped', color: colors.outcome.skip };
     case 'missed':
       return { label: 'Missed', color: colors.outcome.missed };
+    // Dropped is not an Activity Log outcome (not Missed), so it takes no outcome colour.
     case 'dropped':
-      return { label: 'Snoozed past closing', color: colors.outcome.missed };
+      return { label: 'Snoozed past closing', color: colors.text.secondary };
     case 'scheduled':
-      if (r.refiresAt !== undefined && refirePending(r, now)) {
-        return { label: `Snoozed, back at ${timeOf(r.refiresAt)}`, color: colors.text.secondary };
+      if (refireScheduled(r, state.settings, now)) {
+        return { label: `Snoozed, back at ${timeOf(effectiveFire(r))}`, color: colors.text.secondary };
+      }
+      // Its re-fire lands past closing: never scheduled, dropped once the window ends.
+      if (r.refiresAt !== undefined && r.refiresAt > now) {
+        return { label: 'Snoozed past closing', color: colors.text.secondary };
       }
       if (r.id === outstandingId) return { label: 'Waiting for you', color: colors.accent.hero };
       // Not reachable once settled; kept so the screen never shows nothing.

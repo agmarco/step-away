@@ -29,6 +29,20 @@ export function refirePending(reminder: Reminder, now: Instant): boolean {
   return reminder.refiresAt !== undefined && reminder.refiresAt > now;
 }
 
+/** Whether a Reminder's Snooze re-fire lands at or after its day's window end, so it is never scheduled. */
+function refirePastClosing(reminder: Reminder, settings: Settings): boolean {
+  return reminder.refiresAt !== undefined && reminder.refiresAt >= windowEndOf(reminder.firesAt, settings);
+}
+
+/**
+ * Whether a snoozed Reminder is coming back: still `scheduled`, its re-fire
+ * ahead of `now` and before its day's window end. A re-fire past closing is
+ * never scheduled (it settles as dropped).
+ */
+export function refireScheduled(reminder: Reminder, settings: Settings, now: Instant): boolean {
+  return reminder.status === 'scheduled' && refirePending(reminder, now) && !refirePastClosing(reminder, settings);
+}
+
 /**
  * Settles every Reminder still `scheduled`, comparing its effective fire:
  * - dropped: its re-fire lands at or after its day's window end (so it was
@@ -39,12 +53,16 @@ export function refirePending(reminder: Reminder, now: Instant): boolean {
  * same state object when nothing changes.
  */
 export function settle(state: CoreState, now: Instant): CoreState {
-  let latestFired = -Infinity;
-  for (const r of state.reminders) if (r.firesAt <= now && r.firesAt > latestFired) latestFired = r.firesAt;
+  // "A later Reminder has fired" compares fire times only, not other Reminders'
+  // re-fires: the chain always counts from the latest re-fire, so no Reminder
+  // fires between a re-fire and the next chain entry (unlike `latestFired` in
+  // schedule.ts, which needs the re-fire to pick the outstanding one).
+  let latestFiresAt = -Infinity;
+  for (const r of state.reminders) if (r.firesAt <= now && r.firesAt > latestFiresAt) latestFiresAt = r.firesAt;
 
   let changed = false;
   const reminders = state.reminders.map((r) => {
-    const status = settledStatus(r, state.settings, now, latestFired);
+    const status = settledStatus(r, state.settings, now, latestFiresAt);
     if (status === r.status) return r;
     changed = true;
     return { ...r, status };
@@ -52,12 +70,12 @@ export function settle(state: CoreState, now: Instant): CoreState {
   return changed ? { ...state, reminders } : state;
 }
 
-function settledStatus(r: Reminder, settings: Settings, now: Instant, latestFired: Instant): Reminder['status'] {
+function settledStatus(r: Reminder, settings: Settings, now: Instant, latestFiresAt: Instant): Reminder['status'] {
   if (r.status !== 'scheduled' || r.firesAt > now) return r.status;
   const fire = effectiveFire(r);
   const end = windowEndOf(r.firesAt, settings);
-  if (r.refiresAt !== undefined && r.refiresAt >= end) return end <= now ? 'dropped' : r.status;
+  if (refirePastClosing(r, settings)) return end <= now ? 'dropped' : r.status;
   if (fire > now) return r.status;
-  if (latestFired > fire || end <= now) return 'missed';
+  if (latestFiresAt > fire || end <= now) return 'missed';
   return r.status;
 }

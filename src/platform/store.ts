@@ -32,11 +32,12 @@ export async function loadState(d: Db): Promise<CoreState> {
   const meta = new Map(
     (await d.getAllAsync<{ key: string; value: string }>('SELECT key, value FROM meta')).map((m) => [m.key, m.value]),
   );
-  const rows = await d.getAllAsync<ReminderRow>('SELECT id, fires_at, suggestion, status, snoozes, refires_at FROM reminders ORDER BY fires_at',);
+  const rows = await d.getAllAsync<ReminderRow>('SELECT id, fires_at, suggestion, status, snoozes, refires_at FROM reminders ORDER BY fires_at');
   const instant = (key: string): Instant | null => (meta.has(key) ? Number(meta.get(key)) : null);
   const settings = meta.get(META.settings);
   return {
-    settings: settings ? (JSON.parse(settings) as Settings) : defaultSettings,
+    // Over the defaults: settings stored before a field existed (e.g. #21's, without `snoozeMinutes`) get its default.
+    settings: settings ? { ...defaultSettings, ...(JSON.parse(settings) as Partial<Settings>) } : defaultSettings,
     lastResponseAt: instant(META.lastResponseAt),
     lastAppOpenAt: instant(META.lastAppOpenAt),
     reminders: rows.map(
@@ -82,18 +83,14 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
 }
 
 /**
- * The guarded Skip, the core's guard in SQL: a fired Reminder still
- * `scheduled` whose Snooze re-fire (if any) has fired too. True only when
- * exactly one row changed; anything else lost the race.
+ * The core's Response guard in SQL, binding (id, now, now): this fired
+ * Reminder is still `scheduled` and its Snooze re-fire (if any) has fired too.
  */
+const ACCEPTS_RESPONSE = `id = ? AND status = 'scheduled' AND fires_at <= ? AND (refires_at IS NULL OR refires_at <= ?)`;
+
+/** The guarded Skip. True only when exactly one row changed; anything else lost the race. */
 export async function guardedSkip(d: Db, reminderId: string, now: Instant): Promise<boolean> {
-  const res = await d.runAsync(
-    `UPDATE reminders SET status = 'skipped'
-     WHERE id = ? AND status = 'scheduled' AND fires_at <= ? AND (refires_at IS NULL OR refires_at <= ?)`,
-    reminderId,
-    now,
-    now,
-  );
+  const res = await d.runAsync(`UPDATE reminders SET status = 'skipped' WHERE ${ACCEPTS_RESPONSE}`, reminderId, now, now);
   return res.changes === 1;
 }
 
@@ -104,8 +101,7 @@ export async function guardedSkip(d: Db, reminderId: string, now: Instant): Prom
  */
 export async function guardedSnooze(d: Db, reminderId: string, refiresAt: Instant, now: Instant): Promise<boolean> {
   const res = await d.runAsync(
-    `UPDATE reminders SET snoozes = snoozes + 1, refires_at = ?
-     WHERE id = ? AND status = 'scheduled' AND fires_at <= ? AND (refires_at IS NULL OR refires_at <= ?) AND snoozes < ?`,
+    `UPDATE reminders SET snoozes = snoozes + 1, refires_at = ? WHERE ${ACCEPTS_RESPONSE} AND snoozes < ?`,
     refiresAt,
     reminderId,
     now,

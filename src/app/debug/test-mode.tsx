@@ -4,8 +4,8 @@
  * 00:00-24:00 every day, and Rearms, so a Reminder arrives within 2 minutes
  * (and a snoozed one is back within 1) through the real core path. Off
  * restores the default settings. With the window all day, Missed at closing
- * and dropped can't happen here; Missed on replacement can. Remove it once Settings (#2x) can
- * set the schedule.
+ * and dropped can't happen here; Missed on replacement can. Remove it once
+ * Settings (#2x) can set the schedule.
  *
  * It writes settings straight into the stored state, because the core has no
  * settings event yet; the Rearm that follows goes through the core as usual.

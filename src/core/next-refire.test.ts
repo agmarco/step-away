@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { initialState, nextReminder, type CoreState, type Reminder } from './index';
+import { initialState, nextReminder, refireScheduled, type CoreState, type Reminder } from './index';
 
 // Local times are Europe/Madrid in November 2026: CET, UTC+1. Default Settings: Mon-Fri 09:00-18:00.
 const ZONE = 'Europe/Madrid';
@@ -53,5 +53,28 @@ describe('nextReminder with a pending Snooze re-fire', () => {
       reminder(at('10:40')),
     );
     expect(nextReminder(state, at('09:50'))?.id).toBe(`reminder-${at('10:40')}`);
+  });
+});
+
+describe('refireScheduled: whether a snoozed Reminder is coming back', () => {
+  const settings = inMadrid().settings;
+
+  it('is true while a re-fire before the window end is pending', () => {
+    expect(refireScheduled(reminder(at('09:45'), { snoozes: 1, refiresAt: at('09:55') }), settings, at('09:50'))).toBe(true);
+  });
+
+  it('is false once the re-fire has fired', () => {
+    expect(refireScheduled(reminder(at('09:45'), { snoozes: 1, refiresAt: at('09:55') }), settings, at('09:55'))).toBe(false);
+  });
+
+  it('is false for a re-fire at or after its window end, even before closing: it is never scheduled', () => {
+    // 17:55 snoozed: 18:05 is past Monday's 18:00 close.
+    expect(refireScheduled(reminder(at('17:55'), { snoozes: 1, refiresAt: at('18:05') }), settings, at('17:58'))).toBe(false);
+    // Exactly at the window end counts as closed.
+    expect(refireScheduled(reminder(at('17:50'), { snoozes: 1, refiresAt: at('18:00') }), settings, at('17:55'))).toBe(false);
+  });
+
+  it('is false for a Reminder never snoozed', () => {
+    expect(refireScheduled(reminder(at('09:45')), settings, at('09:50'))).toBe(false);
   });
 });

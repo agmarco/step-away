@@ -24,14 +24,12 @@ export function notificationFor(reminder: Reminder): ScheduledNotification {
  * `MAX_SNOOZES` times it offers only Start and Skip.
  */
 export function refireNotificationFor(reminder: Reminder & { refiresAt: number }): ScheduledNotification {
-  const snoozes = reminder.snoozes ?? 0;
   return {
     reminderId: reminder.id,
     at: reminder.refiresAt,
     title: SNOOZED_TITLE,
     body: bodyOf(reminder),
-    actions: snoozes >= MAX_SNOOZES ? ACTIONS.filter((a) => a !== 'snooze') : [...ACTIONS],
-    snoozes,
+    actions: (reminder.snoozes ?? 0) >= MAX_SNOOZES ? ACTIONS.filter((a) => a !== 'snooze') : [...ACTIONS],
   };
 }
 

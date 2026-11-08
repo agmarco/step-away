@@ -1,6 +1,7 @@
 import { MAX_SNOOZES, notificationFor, refireNotificationFor } from './notification';
 import { chainTimes, outstandingReminder, reminderId } from './schedule';
-import { refirePending, settle, windowEndOf } from './settle';
+import { MINUTE } from './localTime';
+import { refireScheduled, settle } from './settle';
 import { suggest } from './suggest';
 import type {
   CoreDeps,
@@ -13,9 +14,6 @@ import type {
   Settings,
 } from './types';
 
-const MINUTE = 60_000;
-const DEFAULT_SNOOZE_MINUTES = 10;
-
 const weekday = { start: 9 * 60, end: 18 * 60 };
 
 /** Mon-Fri 09:00-18:00, weekends off, 45-minute Interval, 10-minute Snooze delay. The adapter sets `timeZone` from the device. */
@@ -23,7 +21,7 @@ export const defaultSettings: Settings = {
   activeHours: { mon: weekday, tue: weekday, wed: weekday, thu: weekday, fri: weekday, sat: null, sun: null },
   intervalMinutes: 45,
   timeZone: 'UTC',
-  snoozeMinutes: DEFAULT_SNOOZE_MINUTES,
+  snoozeMinutes: 10,
 };
 
 export const initialState: CoreState = {
@@ -62,7 +60,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       } else {
         const snoozes = target.snoozes ?? 0;
         if (snoozes >= MAX_SNOOZES) return { state, intents: [dismiss] };
-        const refiresAt = now + (settled.settings.snoozeMinutes ?? DEFAULT_SNOOZE_MINUTES) * MINUTE;
+        const refiresAt = now + settled.settings.snoozeMinutes * MINUTE;
         // Not a final Response: lastResponseAt stays as it is.
         answered = { ...settled, reminders: replace(settled, { ...target, snoozes: snoozes + 1, refiresAt }) };
       }
@@ -95,8 +93,7 @@ function rearm(state: CoreState, deps: CoreDeps): CoreResult {
 
   const refires: ScheduledNotification[] = [];
   for (const r of fired) {
-    if (r.status !== 'scheduled' || r.refiresAt === undefined || !refirePending(r, now)) continue;
-    if (r.refiresAt >= windowEndOf(r.firesAt, state.settings)) continue;
+    if (r.refiresAt === undefined || !refireScheduled(r, state.settings, now)) continue;
     refires.push(refireNotificationFor({ ...r, refiresAt: r.refiresAt }));
   }
 

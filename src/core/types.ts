@@ -36,12 +36,8 @@ export interface Settings {
    * machine's zone. The adapter sets it from the device.
    */
   timeZone: string;
-  /**
-   * The Snooze delay: a Snooze re-fires the same Reminder this many minutes
-   * later. Optional so that settings stored before it existed (and literals
-   * outside the core) stay valid; absent means 10.
-   */
-  snoozeMinutes?: number;
+  /** The Snooze delay: a Snooze re-fires the same Reminder this many minutes later. */
+  snoozeMinutes: number;
 }
 
 /** One Exercise of a Suggestion: a text snapshot, not a link to the library entry. */
@@ -111,8 +107,6 @@ export interface ScheduledNotification {
   /** One line per suggested Exercise: `Name · Dose · Cue`. */
   body: string;
   actions: NotificationAction[];
-  /** How many times this Reminder was snoozed, on a Snooze re-fire. Absent means 0. */
-  snoozes?: number;
 }
 
 /** Something the core wants the platform to do. Adapters carry these out. */

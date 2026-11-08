@@ -4,11 +4,10 @@
  * Recomputed whenever JS runs, because nothing runs when a notification fires.
  */
 
-import { addDays, instantAt, localDateOf, weekdayOf } from './localTime';
-import { effectiveFire, refirePending, settle, windowEndOf } from './settle';
+import { addDays, instantAt, localDateOf, MINUTE, weekdayOf } from './localTime';
+import { effectiveFire, refirePending, refireScheduled, settle } from './settle';
 import type { CoreState, Instant, Reminder } from './types';
 
-const MINUTE = 60_000;
 const HORIZON_DAYS = 7;
 const HORIZON = HORIZON_DAYS * 24 * 60 * MINUTE;
 const REMINDER_ID_PREFIX = 'reminder-';
@@ -33,8 +32,7 @@ export function isReminderId(id: string): boolean {
 export function nextReminder(state: CoreState, now: Instant): Reminder | undefined {
   let next = state.reminders.find((r) => r.firesAt > now && r.status === 'scheduled');
   for (const r of state.reminders) {
-    if (r.status !== 'scheduled' || r.firesAt > now || !refirePending(r, now)) continue;
-    if (effectiveFire(r) >= windowEndOf(r.firesAt, state.settings)) continue;
+    if (r.firesAt > now || !refireScheduled(r, state.settings, now)) continue;
     if (!next || effectiveFire(r) < effectiveFire(next)) next = r;
   }
   return next;

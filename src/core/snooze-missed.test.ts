@@ -114,7 +114,7 @@ describe('Snooze: re-fires the same Reminder after the Snooze delay', () => {
     expect(result.intents).toContainEqual(dismiss(first.id));
 
     const [refire] = chainOf(result);
-    expect(refire).toMatchObject({ reminderId: first.id, at: at('10:10'), body: bodyOf(before, at('09:45')), snoozes: 1 });
+    expect(refire).toMatchObject({ reminderId: first.id, at: at('10:10'), body: bodyOf(before, at('09:45')) });
     expect(refire.actions).toEqual(['start', 'snooze', 'skip']);
 
     // 10:10 + 45 = 10:55, + 45 = 11:40, + 45 = 12:25; the old 10:30 fallback is gone.
@@ -153,7 +153,7 @@ describe('Snooze: re-fires the same Reminder after the Snooze delay', () => {
     expect(result.intents).toContainEqual(dismiss(first.id));
 
     const [refire] = chainOf(result);
-    expect(refire).toMatchObject({ reminderId: first.id, at: at('10:22'), body: bodyOf(before, at('09:45')), snoozes: 2 });
+    expect(refire).toMatchObject({ reminderId: first.id, at: at('10:22'), body: bodyOf(before, at('09:45')) });
     expect(refire.actions).toEqual(['start', 'skip']);
     // 10:22 + 45 = 11:07.
     expect(timesOf(result)[1]).toBe(at('11:07'));
@@ -361,7 +361,7 @@ describe('closing time', () => {
     // 17:20 + 10 = 17:30, before the window end, so it is scheduled.
     const snoozed = snooze(state, last.id, at('17:20'));
 
-    expect(chainOf(snoozed)[0]).toMatchObject({ reminderId: last.id, at: at('17:30'), snoozes: 1 });
+    expect(chainOf(snoozed)[0]).toMatchObject({ reminderId: last.id, at: at('17:30') });
     // The next fallback, 17:30 + 45 = 18:15, is past closing.
     expect(timesOf(snoozed)[1]).toBe(local(TUE, '09:45'));
 

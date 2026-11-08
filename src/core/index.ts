@@ -3,7 +3,7 @@ export { formatDose } from './dose';
 export { MAX_SNOOZES } from './notification';
 export { isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
-export { effectiveFire, refirePending, settle } from './settle';
+export { effectiveFire, refireScheduled, settle } from './settle';
 export type {
   ActiveWindow,
   Clock,
