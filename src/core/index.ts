@@ -6,7 +6,7 @@ export type { DayMark, Tally } from './days';
 export type { LocalDate } from './localTime';
 export { formatDose } from './dose';
 export { MAX_SNOOZES } from './notification';
-export { isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
+export { isOutstanding, isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
 export { effectiveFire, refireScheduled, settle } from './settle';
 export type {
