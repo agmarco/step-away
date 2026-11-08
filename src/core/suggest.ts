@@ -6,6 +6,6 @@ import type { Random, SuggestedExercise } from './types';
  * Random, as a text snapshot. The library must not be empty.
  */
 export function suggest(library: readonly Exercise[], random: Random): SuggestedExercise[] {
-  const { id, name, dose, cue } = library[Math.floor(random.next() * library.length)];
-  return [{ id, name, dose, cue }];
+  const { id, name, dose, cue, bodyArea } = library[Math.floor(random.next() * library.length)];
+  return [{ id, name, dose, cue, bodyArea }];
 }

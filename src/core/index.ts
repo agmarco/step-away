@@ -11,6 +11,7 @@ export type {
   CoreEvent,
   CoreResult,
   CoreState,
+  DoneExercise,
   Instant,
   Intent,
   Minutes,

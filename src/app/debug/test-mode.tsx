@@ -25,6 +25,7 @@ const TEST_SETTINGS: Omit<Settings, 'timeZone'> = {
   activeHours: { mon: ALL_DAY, tue: ALL_DAY, wed: ALL_DAY, thu: ALL_DAY, fri: ALL_DAY, sat: ALL_DAY, sun: ALL_DAY },
   intervalMinutes: 2,
   snoozeMinutes: 1,
+  exercisesPerSuggestion: 3,
 };
 
 const isTestMode = (s: Settings) =>

@@ -110,9 +110,11 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
   );
 }
 
-/** One fired Reminder's line, from its settled status. Done arrives with the guided flow (#23). */
+/** One fired Reminder's line, from its settled status. */
 function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefined, now: number, colors: Palette) {
   switch (r.status) {
+    case 'done':
+      return { label: 'Done', color: colors.outcome.done };
     case 'skipped':
       return { label: 'Skipped', color: colors.outcome.skip };
     case 'missed':

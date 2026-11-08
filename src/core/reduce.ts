@@ -16,12 +16,16 @@ import type {
 
 const weekday = { start: 9 * 60, end: 18 * 60 };
 
-/** Mon-Fri 09:00-18:00, weekends off, 45-minute Interval, 10-minute Snooze delay. The adapter sets `timeZone` from the device. */
+/**
+ * Mon-Fri 09:00-18:00, weekends off, 45-minute Interval, 10-minute Snooze
+ * delay, 1 Exercise per Suggestion. The adapter sets `timeZone` from the device.
+ */
 export const defaultSettings: Settings = {
   activeHours: { mon: weekday, tue: weekday, wed: weekday, thu: weekday, fri: weekday, sat: null, sun: null },
   intervalMinutes: 45,
   timeZone: 'UTC',
   snoozeMinutes: 10,
+  exercisesPerSuggestion: 1,
 };
 
 export const initialState: CoreState = {
@@ -49,6 +53,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       return rearm(settle({ ...state, settings: { ...state.settings, timeZone } }, now), deps);
     }
     case 'Response': {
+      if (event.kind === 'Done') throw new Error('not implemented');
       const dismiss: Intent = { type: 'DismissNotification', reminderId: event.reminderId };
       const settled = settle(state, now);
       const target = outstandingReminder(settled, now);
