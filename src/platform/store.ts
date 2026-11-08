@@ -9,6 +9,7 @@ import {
   MAX_SNOOZES,
   type CoreState,
   type DoneExercise,
+  type GoalChange,
   type Instant,
   type Reminder,
   type ResponseKind,
@@ -38,6 +39,7 @@ const META = {
   settings: 'settings',
   lastResponseAt: 'last_response_at',
   lastAppOpenAt: 'last_app_open_at',
+  goalChanges: 'goal_changes',
 } as const;
 
 /** Rows per multi-row INSERT: 7 params each, well under SQLite's bound-parameter limit (999 before 3.32). */
@@ -50,13 +52,14 @@ export async function loadState(d: Db): Promise<CoreState> {
   const rows = await d.getAllAsync<ReminderRow>('SELECT id, fires_at, suggestion, status, snoozes, refires_at, done_exercises FROM reminders ORDER BY fires_at');
   const instant = (key: string): Instant | null => (meta.has(key) ? Number(meta.get(key)) : null);
   const settings = meta.get(META.settings);
+  const goalChanges = meta.get(META.goalChanges);
   return {
     // Over the defaults: settings stored before a field existed (e.g. #21's, without `snoozeMinutes`) get its default.
     settings: settings ? { ...defaultSettings, ...(JSON.parse(settings) as Partial<Settings>) } : defaultSettings,
     lastResponseAt: instant(META.lastResponseAt),
     lastAppOpenAt: instant(META.lastAppOpenAt),
-    // Not persisted yet (#25 CP3): the default goal until then.
-    goalChanges: [],
+    // Absent before #25: no Daily Goal change recorded, so the default goal.
+    goalChanges: goalChanges ? (JSON.parse(goalChanges) as GoalChange[]) : [],
     reminders: rows.map(
       (r): Reminder => ({
         id: r.id,
@@ -87,6 +90,7 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
   await setMeta(META.settings, JSON.stringify(state.settings));
   await setMeta(META.lastResponseAt, state.lastResponseAt === null ? null : String(state.lastResponseAt));
   await setMeta(META.lastAppOpenAt, state.lastAppOpenAt === null ? null : String(state.lastAppOpenAt));
+  await setMeta(META.goalChanges, JSON.stringify(state.goalChanges));
 
   await d.runAsync('DELETE FROM reminders WHERE fires_at > ?', now);
   for (let i = 0; i < state.reminders.length; i += BATCH) {

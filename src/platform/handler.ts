@@ -1,8 +1,8 @@
 /**
  * The one place JS turns platform happenings into core events: Responses
  * (notification action taps from both delivery paths, and the guided screen's
- * Done, Snooze and Skip), the guided screen opening, and the app coming to the
- * front.
+ * Done, Snooze and Skip), the guided screen opening, corrections from Today,
+ * and the app coming to the front.
  * Each read-modify-write runs inside one `write()` transaction, so it sees the
  * latest committed state even when another JS context wrote in between.
  *
@@ -13,7 +13,16 @@
  * chain armed. If scheduling throws, the transaction rolls back and state and
  * alarms don't diverge. Dismissals are idempotent and run after the commit.
  */
-import { outstandingReminder, reduce, type CoreDeps, type CoreEvent, type CoreResult, type CoreState, type ResponseKind } from '../core';
+import {
+  outstandingReminder,
+  reduce,
+  type CoreDeps,
+  type CoreEvent,
+  type CoreResult,
+  type CoreState,
+  type Outcome,
+  type ResponseKind,
+} from '../core';
 import { exercises } from '../library';
 import { write, type Db } from './db';
 import { ACTION, dismissNotifications, dismissReminder, dismissStale, scheduleChains } from './notifications';
@@ -152,6 +161,32 @@ export async function startGuided(reminderId: string): Promise<CoreState> {
   console.log(`[handler] GuidedStarted ${reminderId}: ${changed ? 'cancelled the re-fire' : 'no-op'}`);
   if (changed) notifyStateChanged();
   return state;
+}
+
+/**
+ * A correction from Today: Correct in one `write()`. The core accepts it only
+ * for one of today's answered Reminders (done, skipped, Missed or dropped);
+ * then the new state is saved (the Reminder's status and `done` list, plus
+ * whatever settling changed). A correction is history, with no intents: no
+ * scheduling and no Response logged. Anything else (a past day, the
+ * outstanding Reminder, a Done with nothing done) writes nothing. True when
+ * the correction was accepted.
+ */
+export async function correct(reminderId: string, to: Outcome, did?: string[]): Promise<boolean> {
+  const { deps, now } = frozenDeps();
+  const accepted = await write(async (d) => {
+    const state = await loadState(d);
+    const next = reduce(state, { type: 'Correct', reminderId, to, did }, deps);
+    if (next.state === state) return false;
+    await saveState(d, next.state, now);
+    return true;
+  }).catch((e: unknown) => {
+    console.warn(`[handler] Correct ${reminderId} to ${to} rolled back: ${e}`);
+    throw e;
+  });
+  console.log(`[handler] Correct ${reminderId} to ${to}: ${accepted ? 'accepted' : 'no-op'}`);
+  if (accepted) notifyStateChanged();
+  return accepted;
 }
 
 /**
