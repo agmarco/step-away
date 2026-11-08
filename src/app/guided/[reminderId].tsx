@@ -30,11 +30,11 @@
  * (already answered, from another day, or unknown), or a Snooze wasn't
  * accepted. Swap (#24) and the celebration card (#28) aren't here yet.
  */
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { canSnooze, formatDose, guidedStart, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
+import { canSnooze, formatDose, guidedStart, isOutstanding, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
 import { exercises, photoSource } from '../../library';
 import { finishGuided, respond, startGuided } from '../../platform/handler';
 import { dismissReminder } from '../../platform/notifications';
@@ -56,6 +56,11 @@ export default function Guided() {
   const [step, setStep] = useState(0);
   const [did, setDid] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  // Where a finish is: a second one while it runs (back during End here) is ignored, and once it is
+  // done its own navigation back to Today is let through instead of being turned into another finish.
+  // A ref, so the back handler sees it in the same tick; `finished` lifts the prevention on render.
+  const leaving = useRef<'no' | 'finishing' | 'finished'>('no');
+  const [finished, setFinished] = useState(false);
 
   useEffect(() => {
     dismissReminder(reminderId);
@@ -65,8 +70,8 @@ export default function Guided() {
     let alive = true;
     // Once, on open, after the dismissal above: cancels a pending re-fire, if any.
     startGuided(reminderId)
-      .then((state) => {
-        const opened = guidedStart(state, reminderId, Date.now());
+      .then(({ state, now }) => {
+        const opened = guidedStart(state, reminderId, now);
         if (alive) setReminder(opened ?? null);
       })
       .catch((e) => console.warn(`[guided] open failed: ${e}`));
@@ -83,16 +88,32 @@ export default function Guided() {
       .finally(() => setBusy(false));
   };
 
+  // Once a card is answered, leaving by Android back or the back gesture saves like End here.
+  // Before any answer, back leaves without recording.
+  const allowLeave = usePreventRemove(step > 0 && !finished, ({ repeat }) => {
+    // The finish's own navigation, if the prevention hadn't lifted yet: let it through.
+    if (leaving.current === 'finished') repeat();
+    else finish(did);
+  });
+
   // Recorded or not, back to Today: a finish that records nothing has nothing new to record.
-  const finish = (didSoFar: string[]) => {
+  function finish(didSoFar: string[]) {
+    if (leaving.current !== 'no') return;
+    leaving.current = 'finishing';
     setBusy(true);
     finishGuided(reminderId, didSoFar)
       .catch((e) => console.warn(`[guided] finish ${reminderId} failed: ${e}`))
       .finally(() => {
         setBusy(false);
+        leaving.current = 'finished';
+        setFinished(true);
+        allowLeave();
         backToToday();
       });
-  };
+  }
+
+  // The ‹ Today link: the same as back.
+  const leave = () => (step > 0 ? finish(did) : backToToday());
 
   const answer = (done: boolean) => {
     if (!reminder) return;
@@ -123,8 +144,8 @@ export default function Guided() {
   }
 
   const total = reminder.suggestion.length;
-  const outstanding = state ? outstandingReminder(state, now) : undefined;
-  const snoozeAllowed = outstanding?.id === reminderId && canSnooze(outstanding, now);
+  const outstanding = state && isOutstanding(state, reminderId, now) ? outstandingReminder(state, now) : undefined;
+  const snoozeAllowed = outstanding !== undefined && canSnooze(outstanding, now);
 
   return (
     <ScrollView
@@ -132,7 +153,7 @@ export default function Guided() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
     >
       <View style={styles.topBar}>
-        <Pressable onPress={backToToday} accessibilityRole="link" hitSlop={8}>
+        <Pressable onPress={leave} disabled={busy} accessibilityRole="link" hitSlop={8}>
           <Text style={[styles.small, { color: colors.accent.hero }]}>‹ Today</Text>
         </Pressable>
         <Text style={[styles.counter, { color: colors.text.secondary }]}>

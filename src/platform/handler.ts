@@ -15,8 +15,9 @@
  */
 import {
   guidedFinish,
-  outstandingReminder,
+  isOutstanding,
   reduce,
+  settle,
   type CoreDeps,
   type CoreEvent,
   type CoreResult,
@@ -114,7 +115,7 @@ export async function respond(event: ResponseEvent, source: Source): Promise<boo
     // takes a Response (a pending re-fire doesn't stop a Done or Skip). Anything
     // else (duplicate, stale, unknown) is a no-op; its notification was already
     // dismissed above.
-    if (outstandingReminder(state, now)?.id !== reminderId) return { state, intents: [] };
+    if (!isOutstanding(state, reminderId, now)) return { state, intents: [] };
     const next = reduce(state, event, deps);
     // A guarded no-op returns the input state itself (e.g. a third Snooze, or a Snooze before the re-fire).
     if (next.state === state) return { state, intents: [] };
@@ -142,9 +143,10 @@ export async function respond(event: ResponseEvent, source: Source): Promise<boo
  * The guided screen opened on `reminderId`: GuidedStarted in one `write()`.
  * On the outstanding Reminder with a Snooze re-fire pending, the core cancels
  * the re-fire; the new state is saved and the chain rescheduled without it.
- * Anything else is a no-op that writes nothing. Returns the resulting state.
+ * Anything else is a no-op that writes nothing. Returns the resulting state
+ * and the instant it was computed at, for the screen's `guidedStart`.
  */
-export async function startGuided(reminderId: string): Promise<CoreState> {
+export async function startGuided(reminderId: string): Promise<{ state: CoreState; now: number }> {
   const { deps, now } = frozenDeps();
   let changed = false;
   const state = await write(async (d) => {
@@ -162,7 +164,7 @@ export async function startGuided(reminderId: string): Promise<CoreState> {
   });
   console.log(`[handler] GuidedStarted ${reminderId}: ${changed ? 'cancelled the re-fire' : 'no-op'}`);
   if (changed) notifyStateChanged();
-  return state;
+  return { state, now };
 }
 
 /**
@@ -185,25 +187,34 @@ export async function finishGuided(reminderId: string, did: string[]): Promise<b
   return finishGuidedLate(reminderId, did);
 }
 
-/** The late path of `finishGuided`: the correction, recomputed and applied in one `write()`. */
+/**
+ * The late path of `finishGuided`: the correction, recomputed and applied in one `write()`.
+ * The new state is saved whenever the core changed it (the Did it list may change), but a
+ * `guided-late` row is logged only when the Reminder's settled status changes.
+ */
 async function finishGuidedLate(reminderId: string, did: string[]): Promise<boolean> {
   const { deps, now } = frozenDeps();
   let recorded: 'Done' | 'Skip' | null = null;
+  let logged = false;
   await write(async (d) => {
     const state = await loadState(d);
     const event = guidedFinish(state, reminderId, did, now);
     if (event?.type !== 'Correct') return;
     const next = reduce(state, event, deps);
     if (next.state === state) return;
-    const kind = event.to === 'Done' ? 'Done' : 'Skip';
     await saveState(d, next.state, now);
-    await logResponse(d, reminderId, kind, 'guided-late', now);
-    recorded = kind;
+    recorded = event.to;
+    const statusOf = (s: CoreState) => settle(s, now).reminders.find((r) => r.id === reminderId)?.status;
+    if (statusOf(next.state) === statusOf(state)) return;
+    await logResponse(d, reminderId, event.to, 'guided-late', now);
+    logged = true;
   }).catch((e: unknown) => {
     console.warn(`[handler] GuidedFinish ${reminderId} rolled back: ${e}`);
     throw e;
   });
-  console.log(`[handler] GuidedFinish ${reminderId}: ${recorded ? `accepted as Correct ${recorded}` : 'no-op'}`);
+  console.log(
+    `[handler] GuidedFinish ${reminderId}: ${recorded ? `accepted as Correct ${recorded}${logged ? '' : ' (status unchanged, not logged)'}` : 'no-op'}`,
+  );
   if (recorded) notifyStateChanged();
   return recorded !== null;
 }
