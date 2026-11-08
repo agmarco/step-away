@@ -120,6 +120,20 @@ export async function scheduleChains(intents: Intent[]) {
   }
 }
 
+/**
+ * Whether a notification response opens the guided screen: the Start action
+ * (which brings the app to the front; Android asks to unlock a locked phone
+ * first) or a tap on the notification body.
+ */
+export function opensGuided(actionId: string): boolean {
+  return actionId === ACTION.start || actionId === Notifications.DEFAULT_ACTION_IDENTIFIER;
+}
+
+/** Removes one Reminder's notification from the shade, if it is there. */
+export async function dismissReminder(reminderId: string) {
+  await Notifications.dismissNotificationAsync(reminderId).catch(() => {});
+}
+
 /** Carries out the `DismissNotification` intents. Idempotent, so it may run after the commit. */
 export async function dismissNotifications(intents: Intent[]) {
   for (const intent of intents) {
