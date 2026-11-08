@@ -218,7 +218,7 @@ describe('Rearm: the chain of upcoming Reminders', () => {
 
 describe('Suggestion', () => {
   const library = [neckStretch, chestSqueeze, squat];
-  const snapshots = library.map(({ id, name, dose, cue }) => ({ id, name, dose, cue }));
+  const snapshots = library.map(({ id, name, dose, cue, bodyArea }) => ({ id, name, dose, cue, bodyArea }));
 
   it('gives every Reminder exactly 1 Exercise from the library, as a text snapshot', () => {
     const result = rearm(start, local(MON, '08:00'), library);
