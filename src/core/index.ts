@@ -1,4 +1,6 @@
 export { canSnooze, defaultSettings, initialState, reduce } from './reduce';
+export { guidedFinish } from './guidedFinish';
+export type { GuidedFinishEvent } from './guidedFinish';
 export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isGoalDay, streak, todayTally, weekMarks } from './days';
 export type { DayMark, Tally } from './days';
 export type { LocalDate } from './localTime';
