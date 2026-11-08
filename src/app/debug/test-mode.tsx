@@ -7,12 +7,16 @@
  * and dropped can't happen here; Missed on replacement can. Remove it once
  * Settings (#2x) can set the schedule.
  *
+ * Also TEMPORARY (#23, until #24's Suggestion rules): a 1 / 3 choice of
+ * Exercises per Suggestion, so the guided flow can be walked with both. On
+ * sets 3; off restores the default 1.
+ *
  * It writes settings straight into the stored state, because the core has no
  * settings event yet; the Rearm that follows goes through the core as usual.
  */
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { defaultSettings, type ActiveWindow, type CoreState, type Settings } from '../../core';
 import { rearmOnOpen } from '../../platform/handler';
@@ -33,6 +37,23 @@ const isTestMode = (s: Settings) =>
   s.snoozeMinutes === TEST_SETTINGS.snoozeMinutes &&
   JSON.stringify(s.activeHours) === JSON.stringify(TEST_SETTINGS.activeHours);
 
+/** The choices for Exercises per Suggestion. */
+const COUNTS = [1, 3] as const;
+
+/**
+ * Sets Exercises per Suggestion and drops the chain ahead, so the Rearm that
+ * follows picks new Suggestions at once (a Rearm keeps the Suggestion of a
+ * Reminder whose fire time is unchanged). Fired Reminders stay as they are.
+ */
+const withCount = (count: number) => (state: CoreState): CoreState => {
+  const now = Date.now();
+  return {
+    ...state,
+    settings: { ...state.settings, exercisesPerSuggestion: count },
+    reminders: state.reminders.filter((r) => r.firesAt <= now),
+  };
+};
+
 /** Keeps the stored time zone; Rearm replaces it with the device's anyway. */
 const withSettings = (settings: Omit<Settings, 'timeZone'>) => (state: CoreState): CoreState => ({
   ...state,
@@ -46,12 +67,14 @@ export default function TestMode() {
   const [busy, setBusy] = useState(false);
   const on = state ? isTestMode(state.settings) : false;
 
-  const toggle = (value: boolean) => {
+  const run = (prepare: (state: CoreState) => CoreState) => {
     setBusy(true);
-    rearmOnOpen(withSettings(value ? TEST_SETTINGS : defaultSettings))
+    rearmOnOpen(prepare)
       .catch((e) => console.warn(`[test-mode] ${e}`))
       .finally(() => setBusy(false));
   };
+  const toggle = (value: boolean) => run(withSettings(value ? TEST_SETTINGS : defaultSettings));
+  const count = state?.settings.exercisesPerSuggestion;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.screen, paddingTop: insets.top + 24 }]}>
@@ -73,6 +96,34 @@ export default function TestMode() {
           <Text style={[styles.body, { color: colors.text.secondary }]}>
             On: Interval 2 min, Snooze delay 1 min, Active Hours 00:00–24:00 every day, then a Rearm. Off: the
             default settings (Mon–Fri 09:00–18:00, 45 min, 10-min Snooze). Development build only.
+          </Text>
+          <View style={[styles.row, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>Exercises per Suggestion</Text>
+            <View style={styles.choices}>
+              {COUNTS.map((n) => {
+                const selected = count === n;
+                return (
+                  <Pressable
+                    key={n}
+                    onPress={() => run(withCount(n))}
+                    disabled={busy || !state || selected}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    style={[
+                      styles.choice,
+                      { borderColor: colors.accent.hero },
+                      selected && { backgroundColor: colors.accent.hero },
+                    ]}
+                  >
+                    <Text style={[styles.choiceText, { color: selected ? colors.text.onHero : colors.accent.hero }]}>{n}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+          <Text style={[styles.body, { color: colors.text.secondary }]}>
+            How many Exercises each new Suggestion has, for walking the guided flow. Changing it re-picks the
+            Suggestions of every Reminder ahead; fired ones keep theirs. Test mode on sets 3, off sets 1.
           </Text>
         </>
       ) : (
@@ -96,5 +147,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   label: { fontSize: 16, flex: 1 },
+  choices: { flexDirection: 'row', gap: 8 },
+  choice: { borderWidth: 2, borderRadius: 10, minWidth: 44, paddingVertical: 6, alignItems: 'center' },
+  choiceText: { fontSize: 16, fontWeight: '700' },
   body: { fontSize: 14, lineHeight: 20 },
 });
