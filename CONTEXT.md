@@ -61,6 +61,10 @@ _Avoid_: mute, do not disturb
 The outcome of a Reminder that never got a Response before the next Reminder replaced it. Recorded in the Activity Log; not a Response, since the user said nothing.
 _Avoid_: ignored, expired
 
+**Dropped**:
+The end of a snoozed Reminder whose re-fire would land at or after its day's closing time: it never re-fires, and once the Active Hours end it is dropped. Not Missed, and not a Response: it isn't counted in the Activity Log, so snoozing near the end of the day isn't punished.
+_Avoid_: cancelled, expired
+
 **Activity Log**:
 The history of Responses: the app's record of whether the user moved.
 _Avoid_: workout history
@@ -117,7 +121,7 @@ _Avoid_: reroll, shuffle, skip (Skip is a Response)
 - A **Reminder** carries one **Suggestion**
 - A **Suggestion** contains 1–3 **Exercises**, drawn from the **Exercise Library**
 - An **Exercise** has one or more **Target Muscles**; its main Target Muscle places it in exactly one **Body Area**
-- A **Reminder** ends with one final **Response** (Done or Skip) or as **Missed**; up to two **Snoozes** may come before that, each re-firing the same **Reminder**
+- A **Reminder** ends with one final **Response** (Done or Skip), as **Missed**, or **Dropped** (a Snooze past closing time); up to two **Snoozes** may come before that, each re-firing the same **Reminder**
 - Only one **Reminder** is outstanding at a time; when a new one fires, an unanswered previous one becomes **Missed**
 - The **Activity Log** is built from **Responses** and **Missed** Reminders; the user self-reports, and nothing is detected from sensors
 
