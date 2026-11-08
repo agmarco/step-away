@@ -246,3 +246,19 @@ describe('Correct: rejected, returning the same state object and no intents', ()
     rejected(evening, { reminderId: 'not-a-reminder', to: 'Done', did: ['Side_Neck_Stretch'] }, EVENING);
   });
 });
+
+describe('Correct: settles first', () => {
+  it('accepts a fired Reminder still scheduled that settles as Missed today (superseded, not yet persisted)', () => {
+    // At 14:20 the 14:15 Reminder has fired, so the 13:30 one is Missed on replacement.
+    const when = local(MON, '14:20');
+    const superseded = find(afternoon, idAt(MON, '13:30'));
+
+    const result = correct(afternoon, { reminderId: superseded.id, to: 'Done', did: ['Side_Neck_Stretch'] }, when);
+
+    expect(result).toStrictEqual({
+      state: withCorrected(afternoon, { ...superseded, status: 'done', done: [NECK] }),
+      intents: [],
+    });
+    expect(todayTally(result.state, when)).toEqual({ done: 2, skipped: 0, missed: 0, exercises: 2 });
+  });
+});

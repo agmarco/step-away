@@ -305,3 +305,23 @@ describe('Week marks', () => {
     );
   });
 });
+
+describe('SetDailyGoal: a goal must be a whole number of at least 1', () => {
+  it.each([0, -2, 2.5, Number.NaN, Number.POSITIVE_INFINITY])('rejects %s: the same state object and no intents', (goal) => {
+    const state = setDailyGoal(inZone(doneOn(MON, 3)), 3, local(MON, '12:30')).state;
+
+    const result = setDailyGoal(state, goal, local(MON, '17:00'));
+
+    expect(result.state).toBe(state);
+    expect(result.intents).toEqual([]);
+  });
+
+  it('accepts a goal of 1', () => {
+    const result = setDailyGoal(inZone([]), 1, local(MON, '12:30'));
+
+    expect(result.state.goalChanges).toEqual([{ from: date(TUE), goal: 1 }]);
+    expect(result.intents).toEqual([]);
+    const tuesday = { ...result.state, reminders: doneOn(TUE, 1) };
+    expect(isGoalDay(tuesday, date(TUE))).toBe(true);
+  });
+});
