@@ -6,6 +6,10 @@
  * in the Suggestion) wins, even over a Skip; no Did its never overwrites a Done.
  */
 
+import { dayOf, sameDate } from './days';
+import { localDateOf } from './localTime';
+import { outstandingReminder } from './schedule';
+import { settle } from './settle';
 import type { CoreEvent, CoreState, Instant } from './types';
 
 /** The event a guided finish feeds into the core: a Done Response or a Correct. */
@@ -18,10 +22,28 @@ export type GuidedFinishEvent =
  * (empty for all Not this one, or End here before any Did it). null when nothing is recorded.
  */
 export function guidedFinish(
-  _state: CoreState,
-  _reminderId: string,
-  _did: readonly string[],
-  _now: Instant,
+  state: CoreState,
+  reminderId: string,
+  did: readonly string[],
+  now: Instant,
 ): GuidedFinishEvent | null {
-  throw new Error('not implemented');
+  if (outstandingReminder(state, now)?.id === reminderId) {
+    return { type: 'Response', reminderId, kind: 'Done', did: [...did] };
+  }
+
+  // Late: read the settled status, since a replaced Reminder can still be stored as `scheduled`.
+  const settled = settle(state, now);
+  const target = settled.reminders.find((r) => r.id === reminderId);
+  if (!target || target.firesAt > now || target.status === 'scheduled') return null;
+  const { timeZone } = settled.settings;
+  if (!sameDate(dayOf(target, timeZone), localDateOf(now, timeZone))) return null;
+
+  const marked = new Set(did);
+  if (target.suggestion.some(({ id }) => marked.has(id))) {
+    // A finished workout wins, over any settled status.
+    return { type: 'Correct', reminderId, to: 'Done', did: [...did] };
+  }
+  // No Did its never overwrites an answer; it only turns Missed or dropped into a Skip.
+  if (target.status === 'done' || target.status === 'skipped') return null;
+  return { type: 'Correct', reminderId, to: 'Skip' };
 }
