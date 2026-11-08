@@ -9,8 +9,11 @@
  *   BEGIN IMMEDIATE ... COMMIT transaction, ROLLBACK on error;
  * - never withExclusiveTransactionAsync: it opens a second connection without
  *   busy_timeout, and on the Pixel it lost Skips to `database is locked`.
+ *
+ * The schema lives in migrations.ts (versioned by PRAGMA user_version).
  */
 import * as SQLite from 'expo-sqlite';
+import { migrate } from './migrations';
 
 /** Under expo-sqlite's default directory: files/SQLite/activity-reminder.db on Android. */
 export const DB_NAME = 'activity-reminder.db';
@@ -26,25 +29,19 @@ export function db(): Promise<Db> {
     // notifications, notifications.ts MAX_SCHEDULED) is scheduled while
     // BEGIN IMMEDIATE is held (handler.ts), and a cold-start headless Skip in
     // the other JS context must outwait that, not fail with `database is locked`.
-    await d.execAsync(`
-      PRAGMA journal_mode = WAL;
-      PRAGMA busy_timeout = 15000;
-      CREATE TABLE IF NOT EXISTS reminders (
-        id TEXT PRIMARY KEY,
-        fires_at INTEGER NOT NULL,
-        suggestion TEXT NOT NULL,
-        status TEXT NOT NULL);
-      CREATE INDEX IF NOT EXISTS reminders_fires_at ON reminders (fires_at);
-      CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS responses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        reminder_id TEXT NOT NULL,
-        kind TEXT NOT NULL,
-        source TEXT NOT NULL,
-        at INTEGER NOT NULL);
-    `);
+    // busy_timeout goes first: on a brand-new file the WAL switch itself takes
+    // a lock, and without the timeout a second context fails there at once.
+    await d.execAsync('PRAGMA busy_timeout = 15000');
+    await d.execAsync('PRAGMA journal_mode = WAL');
+    // The schema, once per connection, after busy_timeout is set (the other
+    // JS context may be migrating at the same moment): see migrations.ts.
+    await migrate(d);
     return d;
-  })();
+  })().catch((e: unknown) => {
+    // Don't cache a failed open or migration: the next call retries.
+    dbPromise = null;
+    throw e;
+  });
   return dbPromise;
 }
 

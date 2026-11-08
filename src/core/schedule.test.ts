@@ -161,7 +161,7 @@ describe('Rearm: the chain of upcoming Reminders', () => {
     expect(fired.map((r) => r.id)).toEqual(
       morning.state.reminders.filter((r) => r.firesAt <= now).map((r) => r.id),
     );
-    expect(fired.every((r) => r.status === 'scheduled')).toBe(true);
+    expect(fired.map((r) => r.status)).toEqual(['missed', 'missed', 'missed', 'missed', 'scheduled']);
   });
 
   it('resolves Active Hours in the Settings time zone, whatever the machine time zone', () => {

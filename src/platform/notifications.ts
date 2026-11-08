@@ -8,7 +8,9 @@
  * after a reboot itself (its BOOT_COMPLETED receiver).
  *
  * A notification's identifier is the Reminder Id (it is also the Android tag
- * in the shade), so the core's Reminder Ids address notifications directly.
+ * in the shade), so the core's Reminder Ids address notifications directly. A
+ * Snooze re-fire keeps the Id: its earlier notification was dismissed by the
+ * Snooze, so the re-fire replaces nothing stale. Titles come from the intent.
  */
 import * as Notifications from 'expo-notifications';
 import {
@@ -22,7 +24,10 @@ import {
 } from '../core';
 
 export const CHANNEL = 'reminders';
+/** Start, Snooze and Skip. */
 export const CATEGORY = 'reminder';
+/** Start and Skip only: a Reminder's re-fire after its last allowed Snooze. */
+export const CATEGORY_NO_SNOOZE = 'reminder-no-snooze';
 /** Android group key: stale Reminders left in the shade bundle into one group. */
 const GROUP = 'reminders';
 
@@ -39,7 +44,7 @@ export const ACTION = { start: 'start', snooze: 'snooze', skip: 'skip' } as cons
   [A in NotificationAction]: A;
 };
 
-/** UI context only: permission, channel, category, and how to show a Reminder while the app is in front. */
+/** UI context only: permission, channel, the two categories, and how to show a Reminder while the app is in front. */
 export async function setup() {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -56,11 +61,19 @@ export async function setup() {
     // eslint-disable-next-line import/namespace
     importance: Notifications.AndroidImportance.HIGH,
   });
-  await Notifications.setNotificationCategoryAsync(CATEGORY, [
-    { identifier: ACTION.start, buttonTitle: 'Start', options: { opensAppToForeground: true } },
-    { identifier: ACTION.snooze, buttonTitle: 'Snooze', options: { opensAppToForeground: false } },
-    { identifier: ACTION.skip, buttonTitle: 'Skip', options: { opensAppToForeground: false } },
-  ]);
+  const start = { identifier: ACTION.start, buttonTitle: 'Start', options: { opensAppToForeground: true } };
+  const snooze = { identifier: ACTION.snooze, buttonTitle: 'Snooze', options: { opensAppToForeground: false } };
+  const skip = { identifier: ACTION.skip, buttonTitle: 'Skip', options: { opensAppToForeground: false } };
+  await Notifications.setNotificationCategoryAsync(CATEGORY, [start, snooze, skip]);
+  await Notifications.setNotificationCategoryAsync(CATEGORY_NO_SNOOZE, [start, skip]);
+}
+
+/**
+ * The category carrying the entry's actions: the core offers Start/Skip only
+ * once a Reminder has used its Snoozes; anything else gets the full set.
+ */
+function categoryOf(n: ScheduledNotification): string {
+  return n.actions.includes(ACTION.snooze) ? CATEGORY : CATEGORY_NO_SNOOZE;
 }
 
 /**
@@ -83,7 +96,7 @@ async function scheduleChain(reminders: ScheduledNotification[]) {
         content: {
           title: n.title,
           body: n.body,
-          categoryIdentifier: CATEGORY,
+          categoryIdentifier: categoryOf(n),
           threadIdentifier: GROUP,
           data: { reminderId: n.reminderId },
         },

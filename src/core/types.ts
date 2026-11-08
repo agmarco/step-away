@@ -36,6 +36,8 @@ export interface Settings {
    * machine's zone. The adapter sets it from the device.
    */
   timeZone: string;
+  /** The Snooze delay: a Snooze re-fires the same Reminder this many minutes later. */
+  snoozeMinutes: number;
 }
 
 /** One Exercise of a Suggestion: a text snapshot, not a link to the library entry. */
@@ -49,13 +51,22 @@ export interface SuggestedExercise {
 /**
  * A Reminder of the current chain. One whose `firesAt <= now` and status is
  * still `scheduled` has fired; only the latest fired one is outstanding.
+ *
+ * Statuses: `scheduled` (ahead, or fired with no final Response yet),
+ * `skipped` (a Skip Response), `missed` (no Response before a later Reminder
+ * fired, or before its day's Active Hours ended) and `dropped` (a pending
+ * Snooze re-fire that would land at or after its day's window end).
  */
 export interface Reminder {
-  /** Deterministic from `firesAt`. */
+  /** Deterministic from `firesAt`. A Snooze re-fire keeps it. */
   id: string;
   firesAt: Instant;
   suggestion: SuggestedExercise[];
-  status: 'scheduled' | 'skipped';
+  status: 'scheduled' | 'skipped' | 'missed' | 'dropped';
+  /** How many times it was snoozed (at most 2). Absent means 0. */
+  snoozes?: number;
+  /** The pending or latest Snooze re-fire. Absent if never snoozed. */
+  refiresAt?: Instant;
 }
 
 /** Everything the core knows. Adapters persist it; the core never does. */
@@ -69,8 +80,11 @@ export interface CoreState {
   lastResponseAt: Instant | null;
 }
 
-/** A Response the user can give from the notification or the Today screen. */
-export type ResponseKind = 'Skip';
+/**
+ * A Response the user can give from the notification or the Today screen.
+ * Skip is final; Snooze is not (it re-fires the same Reminder later).
+ */
+export type ResponseKind = 'Skip' | 'Snooze';
 
 /** Something that happened, fed into the core by an adapter or screen. */
 export type CoreEvent =

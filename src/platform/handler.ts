@@ -12,11 +12,11 @@
  * alarms don't diverge. Dismissals are idempotent and run after the commit.
  */
 import * as Notifications from 'expo-notifications';
-import { outstandingReminder, reduce, type CoreDeps, type CoreResult, type CoreState } from '../core';
+import { outstandingReminder, reduce, type CoreDeps, type CoreResult, type CoreState, type ResponseKind } from '../core';
 import { exercises } from '../library';
-import { write } from './db';
+import { write, type Db } from './db';
 import { ACTION, dismissNotifications, dismissStale, scheduleChains } from './notifications';
-import { guardedSkip, loadState, logResponse, notifyStateChanged, saveState, type Source } from './store';
+import { guardedSkip, guardedSnooze, loadState, logResponse, notifyStateChanged, saveState, type Source } from './store';
 
 /**
  * The real randomness and library, with the clock frozen at one instant, so
@@ -52,6 +52,19 @@ export function reminderIdOf(content: unknown): string | undefined {
   return typeof id === 'string' ? id : undefined;
 }
 
+/** The notification actions that are Responses. Start isn't one: it opens the app. */
+const RESPONSE_OF: Partial<Record<string, ResponseKind>> = { [ACTION.skip]: 'Skip', [ACTION.snooze]: 'Snooze' };
+
+/**
+ * The guarded UPDATE for an accepted Response. A Snooze stores the re-fire
+ * time the core computed (`next` is the reduced state).
+ */
+async function guarded(d: Db, kind: ResponseKind, reminderId: string, next: CoreState, now: number): Promise<boolean> {
+  if (kind === 'Skip') return guardedSkip(d, reminderId, now);
+  const refiresAt = next.reminders.find((r) => r.id === reminderId)?.refiresAt;
+  return refiresAt !== undefined && guardedSnooze(d, reminderId, refiresAt, now);
+}
+
 /**
  * The shared action handler, called by the background task and by the
  * foreground response listener. When the app is alive in the background both
@@ -61,7 +74,8 @@ export async function handleAction(actionId: string, payload: { reminderId?: str
   const reminderId = payload.reminderId;
   if (!reminderId) return;
 
-  if (actionId === ACTION.skip) {
+  const kind = RESPONSE_OF[actionId];
+  if (kind) {
     // Dismiss first: on a cold start JS takes seconds to reach the database.
     await Notifications.dismissNotificationAsync(reminderId).catch(() => {});
     const { deps, now } = frozenDeps();
@@ -69,38 +83,34 @@ export async function handleAction(actionId: string, payload: { reminderId?: str
     const result = await write(async (d) => {
       const state = await loadState(d);
       // The core's guard, asked before reducing: only the outstanding Reminder
-      // takes a Response. Anything else (duplicate, stale, unknown) is a no-op;
-      // its notification was already dismissed above.
+      // takes a Response. Anything else (duplicate, stale, unknown, re-fire
+      // still pending) is a no-op; its notification was already dismissed above.
       if (outstandingReminder(state, now)?.id !== reminderId) return { state, intents: [] };
-      const next = reduce(state, { type: 'Response', reminderId, kind: 'Skip' }, deps);
+      const next = reduce(state, { type: 'Response', reminderId, kind }, deps);
+      // A guarded no-op returns the input state itself (e.g. a third Snooze).
+      if (next.state === state) return { state, intents: [] };
       // The same guard in SQL, accepted only when exactly one row changed.
-      if (!(await guardedSkip(d, reminderId, now))) return { state, intents: [] };
-      await logResponse(d, reminderId, 'Skip', source, now);
+      if (!(await guarded(d, kind, reminderId, next.state, now))) return { state, intents: [] };
+      await logResponse(d, reminderId, kind, source, now);
+      // Also persists what settling changed (Missed, dropped).
       await saveState(d, next.state, now);
       // Inside the lock, before COMMIT: see the header comment.
       await scheduleChains(next.intents);
       accepted = true;
       return next;
     }).catch((e: unknown) => {
-      console.warn(`[handler] Skip ${reminderId} from ${source} rolled back: ${e}`);
+      console.warn(`[handler] ${kind} ${reminderId} from ${source} rolled back: ${e}`);
       throw e;
     });
-    console.log(`[handler] Skip ${reminderId} from ${source}: ${accepted ? 'accepted' : 'no-op'}`);
+    console.log(`[handler] ${kind} ${reminderId} from ${source}: ${accepted ? 'accepted' : 'no-op'}`);
     if (accepted) notifyStateChanged();
     await dismissNotifications(result.intents);
     await dismissStale(result.state, now).catch(() => {});
     return;
   }
 
-  if (actionId === ACTION.snooze) {
-    // Snooze arrives in #22. Until then the tap is only logged, and the
-    // notification is left in the shade as it is.
-    console.log(`[handler] Snooze on ${reminderId} from ${source}: not handled yet (#22)`);
-    return;
-  }
-
   // Start, or a tap on the notification body: the app opens. Nothing to record
-  // until the guided flow lands (#22).
+  // until the guided flow lands (#23).
 }
 
 /**

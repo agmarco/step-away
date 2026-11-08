@@ -4,10 +4,10 @@
  * Recomputed whenever JS runs, because nothing runs when a notification fires.
  */
 
-import { addDays, instantAt, localDateOf, weekdayOf } from './localTime';
+import { addDays, instantAt, localDateOf, MINUTE, weekdayOf } from './localTime';
+import { effectiveFire, refirePending, refireScheduled, settle } from './settle';
 import type { CoreState, Instant, Reminder } from './types';
 
-const MINUTE = 60_000;
 const HORIZON_DAYS = 7;
 const HORIZON = HORIZON_DAYS * 24 * 60 * MINUTE;
 const REMINDER_ID_PREFIX = 'reminder-';
@@ -22,9 +22,20 @@ export function isReminderId(id: string): boolean {
   return id.startsWith(REMINDER_ID_PREFIX);
 }
 
-/** The next Reminder ahead: the first one still scheduled that fires strictly after `now`, or undefined. */
+/**
+ * The next Reminder ahead, or undefined: the earliest of the first one still
+ * scheduled that fires strictly after `now` and any pending Snooze re-fire (a
+ * fired Reminder still `scheduled` whose `refiresAt` is after `now`), compared
+ * by `effectiveFire`. A re-fire landing at or after its day's window end is
+ * never scheduled (it settles as dropped), so it doesn't count.
+ */
 export function nextReminder(state: CoreState, now: Instant): Reminder | undefined {
-  return state.reminders.find((r) => r.firesAt > now && r.status === 'scheduled');
+  let next = state.reminders.find((r) => r.firesAt > now && r.status === 'scheduled');
+  for (const r of state.reminders) {
+    if (r.firesAt > now || !refireScheduled(r, state.settings, now)) continue;
+    if (!next || effectiveFire(r) < effectiveFire(next)) next = r;
+  }
+  return next;
 }
 
 /** The fired Reminders (any status) whose local date in the Settings' time zone is today, newest first. */
@@ -38,24 +49,29 @@ export function todaysReminders(state: CoreState, now: Instant): Reminder[] {
   return state.reminders.filter((r) => r.firesAt <= now && isToday(r.firesAt)).sort((a, b) => b.firesAt - a.firesAt);
 }
 
-/** The latest Reminder that has fired by `now` (any status), or undefined. */
-export function latestFired(state: CoreState, now: Instant) {
-  let latest: CoreState['reminders'][number] | undefined;
+/**
+ * The latest Reminder that has fired by `now` (any status), by effective fire
+ * (its pending or latest Snooze re-fire, else its fire time), or undefined.
+ */
+function latestFired(state: CoreState, now: Instant): Reminder | undefined {
+  let latest: Reminder | undefined;
   for (const r of state.reminders) {
-    if (r.firesAt <= now && (!latest || r.firesAt > latest.firesAt)) latest = r;
+    if (r.firesAt <= now && (!latest || effectiveFire(r) > effectiveFire(latest))) latest = r;
   }
   return latest;
 }
 
 /**
- * The Reminder a Response can still act on: the latest fired one, if no
- * Response has been given to it yet. Anything else (unknown, not fired yet,
- * superseded by a later fired one, already answered) is a guarded no-op.
- * Adapters use it too, e.g. to dismiss stale notifications.
+ * The Reminder a Response can still act on, once settled: the latest fired
+ * one by effective fire, while it is still `scheduled` and its Snooze re-fire
+ * (if any) has fired. Anything else (unknown, not fired yet, superseded by a
+ * later fired one, already answered, Missed or dropped at closing, re-fire
+ * still pending) is a guarded no-op. Adapters use it too, e.g. to dismiss
+ * stale notifications.
  */
 export function outstandingReminder(state: CoreState, now: Instant): Reminder | undefined {
-  const latest = latestFired(state, now);
-  return latest?.status === 'scheduled' ? latest : undefined;
+  const latest = latestFired(settle(state, now), now);
+  return latest?.status === 'scheduled' && !refirePending(latest, now) ? latest : undefined;
 }
 
 /**
@@ -63,7 +79,8 @@ export function outstandingReminder(state: CoreState, now: Instant): Reminder | 
  * strictly before `now` + 7 days.
  *
  * Today the chain runs one Interval after the anchor, the later of the last
- * Response and the latest fired Reminder, counted only if it falls inside
+ * Response and the latest fire (a fired Reminder, or its pending or latest
+ * Snooze re-fire), counted only if it falls inside
  * today's Active Hours. Without an anchor today it takes the day's grid
  * (start + Interval + k·Interval) from the next slot after `now`, with no
  * backfill. Every other day starts one Interval after its Active Hours begin.
@@ -75,6 +92,8 @@ export function chainTimes(state: CoreState, now: Instant): Instant[] {
   const horizon = now + HORIZON;
   const today = localDateOf(now, timeZone);
   const times: Instant[] = [];
+  const latest = latestFired(state, now);
+  const latestFire = latest ? effectiveFire(latest) : -Infinity;
 
   for (let offset = 0; offset <= HORIZON_DAYS; offset++) {
     const date = addDays(today, offset);
@@ -85,7 +104,7 @@ export function chainTimes(state: CoreState, now: Instant): Instant[] {
 
     let first = start + step;
     if (offset === 0) {
-      const anchor = Math.max(state.lastResponseAt ?? -Infinity, latestFired(state, now)?.firesAt ?? -Infinity);
+      const anchor = Math.max(state.lastResponseAt ?? -Infinity, latestFire);
       if (anchor >= start && anchor < end) first = anchor + step;
     }
     for (let t = first; t < end && t < horizon; t += step) {
