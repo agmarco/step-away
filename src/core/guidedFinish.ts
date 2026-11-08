@@ -10,7 +10,7 @@ import { dayOf, sameDate } from './days';
 import { localDateOf } from './localTime';
 import { outstandingReminder } from './schedule';
 import { settle } from './settle';
-import type { CoreEvent, CoreState, Instant } from './types';
+import type { CoreEvent, CoreState, Instant, Reminder } from './types';
 
 /** The event a guided finish feeds into the core: a Done Response or a Correct. */
 export type GuidedFinishEvent =
@@ -46,4 +46,13 @@ export function guidedFinish(
   // No Did its never overwrites an answer; it only turns Missed or dropped into a Skip.
   if (target.status === 'done' || target.status === 'skipped') return null;
   return { type: 'Correct', reminderId, to: 'Skip' };
+}
+
+/**
+ * The Reminder the guided screen can open on `reminderId` at `now`: the outstanding one, or one of
+ * today's fired Reminders that settled as Missed or dropped (just replaced, or snoozed past closing).
+ * undefined otherwise (answered, another day, not fired, unknown).
+ */
+export function guidedStart(state: CoreState, reminderId: string, now: Instant): Reminder | undefined {
+  throw new Error('not implemented');
 }
