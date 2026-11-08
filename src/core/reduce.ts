@@ -35,6 +35,7 @@ export const initialState: CoreState = {
   settings: defaultSettings,
   reminders: [],
   lastResponseAt: null,
+  goalChanges: [],
 };
 
 /**
@@ -95,6 +96,10 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const { refiresAt: _cancelled, ...withoutRefire } = target;
       return rearm({ ...settled, reminders: replace(settled, withoutRefire) }, deps);
     }
+    case 'SetDailyGoal':
+      throw new Error('not implemented');
+    case 'Correct':
+      throw new Error('not implemented');
   }
 }
 

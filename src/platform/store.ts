@@ -55,6 +55,8 @@ export async function loadState(d: Db): Promise<CoreState> {
     settings: settings ? { ...defaultSettings, ...(JSON.parse(settings) as Partial<Settings>) } : defaultSettings,
     lastResponseAt: instant(META.lastResponseAt),
     lastAppOpenAt: instant(META.lastAppOpenAt),
+    // Not persisted yet (#25 CP3): the default goal until then.
+    goalChanges: [],
     reminders: rows.map(
       (r): Reminder => ({
         id: r.id,

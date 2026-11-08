@@ -8,6 +8,7 @@
  */
 
 import type { BodyArea, Dose, Exercise } from './exercise';
+import type { LocalDate } from './localTime';
 
 /** Epoch milliseconds. */
 export type Instant = number;
@@ -94,6 +95,17 @@ export interface CoreState {
   reminders: Reminder[];
   /** When the user last gave a Response (Done or Skip), or null if never. */
   lastResponseAt: Instant | null;
+  /**
+   * Daily Goal changes, oldest first. The goal for a day is the last change
+   * with `from` on or before it; with none it is 4.
+   */
+  goalChanges: GoalChange[];
+}
+
+/** From `from` on (a local date in the Settings' time zone), the Daily Goal is `goal`. */
+export interface GoalChange {
+  from: LocalDate;
+  goal: number;
 }
 
 /**
@@ -122,7 +134,18 @@ export type CoreEvent =
    * The guided screen opened on this Reminder. Not a Response: if it is the
    * outstanding one with a Snooze re-fire pending, the re-fire is cancelled.
    */
-  | { type: 'GuidedStarted'; reminderId: string };
+  | { type: 'GuidedStarted'; reminderId: string }
+  /**
+   * Sets the Daily Goal from tomorrow (Settings' time zone): today's goal never
+   * moves. Replaces any change dated tomorrow or later.
+   */
+  | { type: 'SetDailyGoal'; goal: number }
+  /**
+   * A correction from Today: changes the outcome of one of today's Reminders
+   * already Done, skipped, Missed or dropped. To Done, `did` must keep at
+   * least one Id of the Suggestion. History only: no Response, no intents.
+   */
+  | { type: 'Correct'; reminderId: string; to: Outcome; did?: string[] };
 
 /** The notification actions, in order. */
 export type NotificationAction = 'start' | 'snooze' | 'skip';
