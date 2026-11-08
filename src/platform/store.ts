@@ -21,9 +21,11 @@ import { withBodyAreas } from './suggestionBackfill';
 
 /**
  * Who handled a Response: the background task or the foreground response
- * listener (notification action taps), or the app's own screens (the guided flow).
+ * listener (notification action taps), or the app's own screens (the guided
+ * flow). `guided-late` is a guided finish saved as a correction, because its
+ * Reminder was no longer outstanding (core/guidedFinish.ts).
  */
-export type Source = 'bg-task' | 'fg-listener' | 'app';
+export type Source = 'bg-task' | 'fg-listener' | 'app' | 'guided-late';
 
 interface ReminderRow {
   id: string;

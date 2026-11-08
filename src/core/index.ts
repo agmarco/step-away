@@ -1,10 +1,12 @@
 export { canSnooze, defaultSettings, initialState, reduce } from './reduce';
+export { guidedFinish, guidedStart } from './guidedFinish';
+export type { GuidedFinishEvent } from './guidedFinish';
 export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isGoalDay, streak, todayTally, weekMarks } from './days';
 export type { DayMark, Tally } from './days';
 export type { LocalDate } from './localTime';
 export { formatDose } from './dose';
 export { MAX_SNOOZES } from './notification';
-export { isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
+export { isOutstanding, isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
 export { effectiveFire, refireScheduled, settle } from './settle';
 export type {

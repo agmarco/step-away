@@ -76,6 +76,11 @@ export function outstandingReminder(state: CoreState, now: Instant): Reminder | 
   return latest?.status === 'scheduled' ? latest : undefined;
 }
 
+/** Whether `reminderId` is the outstanding Reminder at `now` (see `outstandingReminder`). */
+export function isOutstanding(state: CoreState, reminderId: string, now: Instant): boolean {
+  return outstandingReminder(state, now)?.id === reminderId;
+}
+
 /**
  * The fire times of the chain, oldest first: all strictly after `now` and
  * strictly before `now` + 7 days.

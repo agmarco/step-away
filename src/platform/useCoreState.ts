@@ -1,16 +1,23 @@
 /**
  * The stored core state for screens, plus "now". Re-reads after every write
- * in this JS context and once a minute, so a Reminder that has just fired
- * shows up without user action.
+ * in this JS context, just after the next Reminder becomes due (its fire
+ * time, or a pending Snooze re-fire, by the core's `nextReminder`), and once
+ * a minute as a backstop, so a Reminder that has just fired shows up, and the
+ * one it replaced settles, without user action.
  */
-import { useEffect, useState } from 'react';
-import type { CoreState } from '../core';
+import { useEffect, useRef, useState } from 'react';
+import { effectiveFire, nextReminder, type CoreState } from '../core';
 import { onStateChanged, readState } from './store';
 
 const REFRESH_MS = 60_000;
+/** How long after the next Reminder becomes due the one-shot refresh runs. */
+const AFTER_DUE_MS = 500;
 
-export function useCoreState(): { state: CoreState | null; now: number } {
-  const [snapshot, setSnapshot] = useState<{ state: CoreState | null; now: number }>(() => ({ state: null, now: Date.now() }));
+type Snapshot = { state: CoreState | null; now: number };
+
+export function useCoreState(): Snapshot {
+  const [snapshot, setSnapshot] = useState<Snapshot>(() => ({ state: null, now: Date.now() }));
+  const refreshRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     let alive = true;
@@ -19,6 +26,7 @@ export function useCoreState(): { state: CoreState | null; now: number } {
         .then((state) => alive && setSnapshot({ state, now: Date.now() }))
         .catch((e) => console.warn(`[useCoreState] read failed: ${e}`));
     };
+    refreshRef.current = refresh;
     refresh();
     const unsubscribe = onStateChanged(refresh);
     const timer = setInterval(refresh, REFRESH_MS);
@@ -28,6 +36,16 @@ export function useCoreState(): { state: CoreState | null; now: number } {
       clearInterval(timer);
     };
   }, []);
+
+  // One-shot refresh just after the next Reminder is due: re-armed on every snapshot, cleared on unmount.
+  useEffect(() => {
+    if (!snapshot.state) return;
+    const next = nextReminder(snapshot.state, snapshot.now);
+    if (!next) return;
+    const delay = Math.max(0, effectiveFire(next) - Date.now()) + AFTER_DUE_MS;
+    const timer = setTimeout(() => refreshRef.current(), delay);
+    return () => clearTimeout(timer);
+  }, [snapshot]);
 
   return snapshot;
 }
