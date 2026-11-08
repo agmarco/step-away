@@ -1,4 +1,4 @@
-export { defaultSettings, initialState, reduce } from './reduce';
+export { canSnooze, defaultSettings, initialState, reduce } from './reduce';
 export { formatDose } from './dose';
 export { MAX_SNOOZES } from './notification';
 export { isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';

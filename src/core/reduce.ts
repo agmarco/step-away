@@ -9,6 +9,7 @@ import type {
   CoreResult,
   CoreState,
   DoneExercise,
+  Instant,
   Intent,
   Reminder,
   ScheduledNotification,
@@ -46,6 +47,12 @@ export const initialState: CoreState = {
  * also needs its re-fire (if any) to have fired and fewer than 2 Snoozes. A
  * Done or Skip is final: it cancels a pending re-fire and rebuilds the chain
  * from now. A Done with none of its Ids in the Suggestion counts as a Skip.
+ *
+ * GuidedStarted (the guided screen opened) is not a Response: on the
+ * outstanding Reminder with a re-fire pending it cancels the re-fire (the
+ * Snooze count and `lastResponseAt` stay) and rebuilds the chain, which then
+ * counts from the Reminder's own fire time. Anything else returns the input
+ * state unchanged, with no intents.
  */
 export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): CoreResult {
   const now = deps.clock.now();
@@ -64,11 +71,11 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
 
       let answered: CoreState;
       if (event.kind === 'Snooze') {
-        const snoozes = target.snoozes ?? 0;
-        if (snoozes >= MAX_SNOOZES || refirePending(target, now)) return { state, intents: [dismiss] };
+        if (!canSnooze(target, now)) return { state, intents: [dismiss] };
         const refiresAt = now + settled.settings.snoozeMinutes * MINUTE;
         // Not a final Response: lastResponseAt stays as it is.
-        answered = { ...settled, reminders: replace(settled, { ...target, snoozes: snoozes + 1, refiresAt }) };
+        const snoozes = (target.snoozes ?? 0) + 1;
+        answered = { ...settled, reminders: replace(settled, { ...target, snoozes, refiresAt }) };
       } else {
         // A final Response before a pending re-fire cancels it; the Snooze count stays.
         const { refiresAt: _cancelled, ...withoutRefire } = target;
@@ -80,7 +87,24 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const rebuilt = rearm(answered, deps);
       return { state: rebuilt.state, intents: [dismiss, ...rebuilt.intents] };
     }
+    case 'GuidedStarted': {
+      const settled = settle(state, now);
+      const target = outstandingReminder(settled, now);
+      if (target?.id !== event.reminderId || !refirePending(target, now)) return { state, intents: [] };
+      // Not a Response: lastResponseAt and the Snooze count stay as they are.
+      const { refiresAt: _cancelled, ...withoutRefire } = target;
+      return rearm({ ...settled, reminders: replace(settled, withoutRefire) }, deps);
+    }
   }
+}
+
+/**
+ * Whether a Snooze on this (outstanding) Reminder is accepted at `now`: fewer
+ * than `MAX_SNOOZES` Snoozes so far and no Snooze re-fire still pending.
+ * Screens use it to show or hide Snooze.
+ */
+export function canSnooze(reminder: Reminder, now: Instant): boolean {
+  return (reminder.snoozes ?? 0) < MAX_SNOOZES && !refirePending(reminder, now);
 }
 
 /**

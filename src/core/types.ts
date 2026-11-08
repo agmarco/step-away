@@ -66,10 +66,11 @@ export interface DoneExercise {
  * A Reminder of the current chain. One whose `firesAt <= now` and status is
  * still `scheduled` has fired; only the latest fired one is outstanding.
  *
- * Statuses: `scheduled` (ahead, or fired with no final Response yet),
- * `done` (a Done Response), `skipped` (a Skip Response), `missed` (no Response before a later Reminder
- * fired, or before its day's Active Hours ended) and `dropped` (a pending
- * Snooze re-fire that would land at or after its day's window end).
+ * Statuses: `scheduled` (ahead, or fired with no final Response yet), `done`
+ * (a Done Response), `skipped` (a Skip Response), `missed` (no Response
+ * before a later Reminder fired, or before its day's Active Hours ended) and
+ * `dropped` (a pending Snooze re-fire that would land at or after its day's
+ * window end).
  */
 export interface Reminder {
   /** Deterministic from `firesAt`. A Snooze re-fire keeps it. */
@@ -79,7 +80,10 @@ export interface Reminder {
   status: 'scheduled' | 'done' | 'skipped' | 'missed' | 'dropped';
   /** How many times it was snoozed (at most 2). Absent means 0. */
   snoozes?: number;
-  /** The pending or latest Snooze re-fire. Absent if never snoozed, or if a Done or Skip cancelled it. */
+  /**
+   * The pending or latest Snooze re-fire. Absent if never snoozed, or if a
+   * Done or Skip, or opening the guided screen (GuidedStarted), cancelled it.
+   */
   refiresAt?: Instant;
   /** The Exercises done, in Suggestion order. Present only when `status` is `done`. */
   done?: DoneExercise[];
@@ -116,7 +120,12 @@ export type CoreEvent =
    * The guided flow finished: `did` are the Exercise Ids marked Did it. Only
    * Ids in the Reminder's Suggestion count; none left counts as a Skip.
    */
-  | { type: 'Response'; reminderId: string; kind: 'Done'; did: string[] };
+  | { type: 'Response'; reminderId: string; kind: 'Done'; did: string[] }
+  /**
+   * The guided screen opened on this Reminder. Not a Response: if it is the
+   * outstanding one with a Snooze re-fire pending, the re-fire is cancelled.
+   */
+  | { type: 'GuidedStarted'; reminderId: string };
 
 /** The notification actions, in order. */
 export type NotificationAction = 'start' | 'snooze' | 'skip';
