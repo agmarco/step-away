@@ -79,7 +79,7 @@ export interface Reminder {
   status: 'scheduled' | 'done' | 'skipped' | 'missed' | 'dropped';
   /** How many times it was snoozed (at most 2). Absent means 0. */
   snoozes?: number;
-  /** The pending or latest Snooze re-fire. Absent if never snoozed. */
+  /** The pending or latest Snooze re-fire. Absent if never snoozed, or if a Done or Skip cancelled it. */
   refiresAt?: Instant;
   /** The Exercises done, in Suggestion order. Present only when `status` is `done`. */
   done?: DoneExercise[];

@@ -5,7 +5,7 @@
  */
 
 import { addDays, instantAt, localDateOf, MINUTE, weekdayOf } from './localTime';
-import { effectiveFire, refirePending, refireScheduled, settle } from './settle';
+import { effectiveFire, refireScheduled, settle } from './settle';
 import type { CoreState, Instant, Reminder } from './types';
 
 const HORIZON_DAYS = 7;
@@ -63,15 +63,17 @@ function latestFired(state: CoreState, now: Instant): Reminder | undefined {
 
 /**
  * The Reminder a Response can still act on, once settled: the latest fired
- * one by effective fire, while it is still `scheduled` and its Snooze re-fire
- * (if any) has fired. Anything else (unknown, not fired yet, superseded by a
- * later fired one, already answered, Missed or dropped at closing, re-fire
- * still pending) is a guarded no-op. Adapters use it too, e.g. to dismiss
- * stale notifications.
+ * one by effective fire, while it is still `scheduled`, whether or not a
+ * Snooze re-fire is pending (a Done or Skip then cancels the re-fire; a Snooze
+ * also needs the re-fire to have fired). A snoozed Reminder whose re-fire
+ * lands past closing stays outstanding until its day's window end. Anything
+ * else (unknown, not fired yet, superseded by a later fired one, already
+ * answered, Missed or dropped at closing) is a guarded no-op. Adapters use it
+ * too, e.g. to dismiss stale notifications.
  */
 export function outstandingReminder(state: CoreState, now: Instant): Reminder | undefined {
   const latest = latestFired(settle(state, now), now);
-  return latest?.status === 'scheduled' && !refirePending(latest, now) ? latest : undefined;
+  return latest?.status === 'scheduled' ? latest : undefined;
 }
 
 /**

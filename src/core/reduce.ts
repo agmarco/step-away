@@ -1,13 +1,14 @@
 import { MAX_SNOOZES, notificationFor, refireNotificationFor } from './notification';
 import { chainTimes, outstandingReminder, reminderId } from './schedule';
 import { MINUTE } from './localTime';
-import { refireScheduled, settle } from './settle';
+import { refirePending, refireScheduled, settle } from './settle';
 import { suggest } from './suggest';
 import type {
   CoreDeps,
   CoreEvent,
   CoreResult,
   CoreState,
+  DoneExercise,
   Intent,
   Reminder,
   ScheduledNotification,
@@ -41,7 +42,10 @@ export const initialState: CoreState = {
  * Every event first settles the state (Missed and dropped Reminders, see
  * `settle`). An accepted event returns state built on the settled state; a
  * guarded Response returns the input state unchanged and only dismisses the
- * notification.
+ * notification. A Response acts only on the outstanding Reminder; a Snooze
+ * also needs its re-fire (if any) to have fired and fewer than 2 Snoozes. A
+ * Done or Skip is final: it cancels a pending re-fire and rebuilds the chain
+ * from now. A Done with none of its Ids in the Suggestion counts as a Skip.
  */
 export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): CoreResult {
   const now = deps.clock.now();
@@ -53,26 +57,43 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       return rearm(settle({ ...state, settings: { ...state.settings, timeZone } }, now), deps);
     }
     case 'Response': {
-      if (event.kind === 'Done') throw new Error('not implemented');
       const dismiss: Intent = { type: 'DismissNotification', reminderId: event.reminderId };
       const settled = settle(state, now);
       const target = outstandingReminder(settled, now);
       if (target?.id !== event.reminderId) return { state, intents: [dismiss] };
 
       let answered: CoreState;
-      if (event.kind === 'Skip') {
-        answered = { ...settled, lastResponseAt: now, reminders: replace(settled, { ...target, status: 'skipped' }) };
-      } else {
+      if (event.kind === 'Snooze') {
         const snoozes = target.snoozes ?? 0;
-        if (snoozes >= MAX_SNOOZES) return { state, intents: [dismiss] };
+        if (snoozes >= MAX_SNOOZES || refirePending(target, now)) return { state, intents: [dismiss] };
         const refiresAt = now + settled.settings.snoozeMinutes * MINUTE;
         // Not a final Response: lastResponseAt stays as it is.
         answered = { ...settled, reminders: replace(settled, { ...target, snoozes: snoozes + 1, refiresAt }) };
+      } else {
+        // A final Response before a pending re-fire cancels it; the Snooze count stays.
+        const { refiresAt: _cancelled, ...withoutRefire } = target;
+        const base: Reminder = refirePending(target, now) ? withoutRefire : target;
+        const done = event.kind === 'Done' ? doneExercises(target, event.did) : [];
+        const answer: Reminder = done.length > 0 ? { ...base, status: 'done', done } : { ...base, status: 'skipped' };
+        answered = { ...settled, lastResponseAt: now, reminders: replace(settled, answer) };
       }
       const rebuilt = rearm(answered, deps);
       return { state: rebuilt.state, intents: [dismiss, ...rebuilt.intents] };
     }
   }
+}
+
+/**
+ * What a Done records: the Ids marked Did it that are in the Reminder's
+ * Suggestion, each once, in Suggestion order, as text snapshots copied from
+ * the Suggestion (not the library). Empty means the Done counts as a Skip.
+ */
+function doneExercises(reminder: Reminder, did: readonly string[]): DoneExercise[] {
+  const marked = new Set(did);
+  // Deleting as it goes counts each Id once.
+  return reminder.suggestion
+    .filter(({ id }) => marked.delete(id))
+    .map(({ id, name, bodyArea }) => ({ id, name, bodyArea }));
 }
 
 function replace(state: CoreState, reminder: Reminder): Reminder[] {
@@ -105,7 +126,8 @@ function rearm(state: CoreState, deps: CoreDeps): CoreResult {
   const chain: Reminder[] = [];
   for (const firesAt of library.length > 0 ? chainTimes(state, now) : []) {
     const id = reminderId(firesAt);
-    const suggestion = previous.get(id)?.suggestion ?? suggest(library, deps.random);
+    const suggestion =
+      previous.get(id)?.suggestion ?? suggest(library, state.settings.exercisesPerSuggestion, deps.random);
     chain.push({ id, firesAt, suggestion, status: 'scheduled' });
   }
 
