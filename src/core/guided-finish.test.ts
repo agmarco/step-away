@@ -140,7 +140,7 @@ describe('guidedFinish: what finishing the guided screen records', () => {
     expect(outstandingReminder(result.state, AFTER_NEWER)?.id).toBe(NEWER);
   });
 
-  it('answered Skip from the shade meanwhile, finished with a Did it: a correction to Done (a finished workout wins)', () => {
+  it('answered Skip from the shade meanwhile, finished with a Did it: a correction to Done (a finish with a Did it wins)', () => {
     const state = withStarted('skipped');
 
     const event = guidedFinish(state, STARTED, ['Side_Neck_Stretch'], DURING);
