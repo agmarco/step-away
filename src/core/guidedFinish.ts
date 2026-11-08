@@ -31,12 +31,8 @@ export function guidedFinish(
     return { type: 'Response', reminderId, kind: 'Done', did: [...did] };
   }
 
-  // Late: read the settled status, since a replaced Reminder can still be stored as `scheduled`.
-  const settled = settle(state, now);
-  const target = settled.reminders.find((r) => r.id === reminderId);
-  if (!target || target.firesAt > now || target.status === 'scheduled') return null;
-  const { timeZone } = settled.settings;
-  if (!sameDate(dayOf(target, timeZone), localDateOf(now, timeZone))) return null;
+  const target = settledToday(state, reminderId, now);
+  if (!target) return null;
 
   const marked = new Set(did);
   if (target.suggestion.some(({ id }) => marked.has(id))) {
@@ -54,5 +50,21 @@ export function guidedFinish(
  * undefined otherwise (answered, another day, not fired, unknown).
  */
 export function guidedStart(state: CoreState, reminderId: string, now: Instant): Reminder | undefined {
-  throw new Error('not implemented');
+  const outstanding = outstandingReminder(state, now);
+  if (outstanding?.id === reminderId) return outstanding;
+  const target = settledToday(state, reminderId, now);
+  return target?.status === 'missed' || target?.status === 'dropped' ? target : undefined;
+}
+
+/**
+ * Today's fired Reminder `reminderId` with its settled status (a replaced Reminder can still be
+ * stored as `scheduled`), once it is no longer `scheduled`. undefined when it is unknown, not
+ * fired, still scheduled once settled, or from another day.
+ */
+function settledToday(state: CoreState, reminderId: string, now: Instant): Reminder | undefined {
+  const settled = settle(state, now);
+  const target = settled.reminders.find((r) => r.id === reminderId);
+  if (!target || target.firesAt > now || target.status === 'scheduled') return undefined;
+  const { timeZone } = settled.settings;
+  return sameDate(dayOf(target, timeZone), localDateOf(now, timeZone)) ? target : undefined;
 }
