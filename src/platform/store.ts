@@ -24,9 +24,6 @@ import { withBodyAreas } from './suggestionBackfill';
  */
 export type Source = 'bg-task' | 'fg-listener' | 'app';
 
-/** A Response as the log records it: what the core made of it (a Done with nothing done is logged as a Skip). */
-export type LoggedKind = ResponseKind | 'Done';
-
 interface ReminderRow {
   id: string;
   fires_at: number;
@@ -50,7 +47,7 @@ export async function loadState(d: Db): Promise<CoreState> {
   const meta = new Map(
     (await d.getAllAsync<{ key: string; value: string }>('SELECT key, value FROM meta')).map((m) => [m.key, m.value]),
   );
-  const rows = await d.getAllAsync<ReminderRow>('SELECT id, fires_at, suggestion, status, snoozes, refires_at, done_exercises FROM reminders ORDER BY fires_at',);
+  const rows = await d.getAllAsync<ReminderRow>('SELECT id, fires_at, suggestion, status, snoozes, refires_at, done_exercises FROM reminders ORDER BY fires_at');
   const instant = (key: string): Instant | null => (meta.has(key) ? Number(meta.get(key)) : null);
   const settings = meta.get(META.settings);
   return {
@@ -170,8 +167,12 @@ export async function guardedSnooze(d: Db, reminderId: string, refiresAt: Instan
   return res.changes === 1;
 }
 
-/** One row per accepted Response, for the device check. Write it only when the guarded update won. */
-export async function logResponse(d: Db, reminderId: string, kind: LoggedKind, source: Source, at: Instant) {
+/**
+ * One row per accepted Response, for the device check: what the core made of
+ * it (a Done with nothing done is logged as a Skip). Write it only when the
+ * guarded update won.
+ */
+export async function logResponse(d: Db, reminderId: string, kind: ResponseKind, source: Source, at: Instant) {
   await d.runAsync('INSERT INTO responses (reminder_id, kind, source, at) VALUES (?, ?, ?, ?)', reminderId, kind, source, at);
 }
 

@@ -36,6 +36,11 @@ function route(response: Notifications.NotificationResponse) {
   } catch (e) {
     console.warn(`[runtime] clear last response failed: ${e}`);
   }
+  openGuided(reminderId);
+}
+
+/** Opens the guided screen for a Reminder: from Start or a body tap here, and from Start on Today. */
+export function openGuided(reminderId: string) {
   router.push({ pathname: '/guided/[reminderId]', params: { reminderId } });
 }
 

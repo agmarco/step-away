@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -12,6 +12,7 @@ import {
   type Reminder,
 } from '../core';
 import { useCoreState } from '../platform/useCoreState';
+import { openGuided } from '../platform/useReminderRuntime';
 import { isDevelopment } from '../platform/variant';
 import { type Palette, useColors } from '../theme';
 
@@ -108,7 +109,7 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
             </View>
             {r.id === outstandingId && (
               <Pressable
-                onPress={() => router.push({ pathname: '/guided/[reminderId]', params: { reminderId: r.id } })}
+                onPress={() => openGuided(r.id)}
                 accessibilityRole="button"
                 style={[styles.start, { backgroundColor: colors.accent.hero }]}
               >

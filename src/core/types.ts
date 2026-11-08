@@ -56,11 +56,7 @@ export interface SuggestedExercise {
 }
 
 /** One Exercise the user did in a Done Response: a text snapshot copied from the Suggestion. */
-export interface DoneExercise {
-  id: string;
-  name: string;
-  bodyArea: BodyArea;
-}
+export type DoneExercise = Pick<SuggestedExercise, 'id' | 'name' | 'bodyArea'>;
 
 /**
  * A Reminder of the current chain. One whose `firesAt <= now` and status is
@@ -101,11 +97,12 @@ export interface CoreState {
 }
 
 /**
- * A Response the user can give from the notification or the Today screen.
- * Skip is final; Snooze is not (it re-fires the same Reminder later). Done
- * (from the guided flow) is its own event shape: it carries what was done.
+ * A Response the user can give: Done (from the guided flow), Skip and Snooze
+ * (from the notification or the guided screen). Done and Skip are final;
+ * Snooze is not (it re-fires the same Reminder later). Done is its own event
+ * shape: only it carries what was done.
  */
-export type ResponseKind = 'Skip' | 'Snooze';
+export type ResponseKind = 'Done' | 'Skip' | 'Snooze';
 
 /** Something that happened, fed into the core by an adapter or screen. */
 export type CoreEvent =
@@ -115,7 +112,7 @@ export type CoreEvent =
    * the device's IANA zone; when present it replaces `settings.timeZone`.
    */
   | { type: 'Rearm'; timeZone?: string }
-  | { type: 'Response'; reminderId: string; kind: ResponseKind }
+  | { type: 'Response'; reminderId: string; kind: Exclude<ResponseKind, 'Done'> }
   /**
    * The guided flow finished: `did` are the Exercise Ids marked Did it. Only
    * Ids in the Reminder's Suggestion count; none left counts as a Skip.

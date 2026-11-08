@@ -4,21 +4,24 @@
  * Start on Today). Each card is answered Did it or Not this one; after the
  * last, the Done goes through the shared handler with the Ids marked Did it
  * (the core counts none as a Skip). Snooze and Skip are break links across the
- * flow. Leaving early records nothing: the Reminder stays outstanding.
+ * flow. Opening the screen cancels a pending Snooze re-fire (the core's
+ * GuidedStarted, through the handler), so it can't arrive mid-flow. Leaving
+ * early records nothing and doesn't bring the re-fire back: the Reminder stays
+ * outstanding until the next Reminder replaces it.
  *
  * Thin: whether the Reminder can still be answered is the core's
- * `outstandingReminder`, asked once when the screen opens; the handler's guard
- * decides the rest. Swap (#24) and the celebration card (#28) aren't here yet.
+ * `outstandingReminder`, asked once when the screen opens, on the state
+ * `startGuided` returns; whether Snooze shows is the core's `canSnooze`; the
+ * handler's guard decides the rest. Swap (#24) and the celebration card (#28) aren't here yet.
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { formatDose, MAX_SNOOZES, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
+import { canSnooze, formatDose, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
 import { exercises, photoSource } from '../../library';
-import { respond } from '../../platform/handler';
+import { respond, startGuided } from '../../platform/handler';
 import { dismissReminder } from '../../platform/notifications';
-import { readState } from '../../platform/store';
 import { useCoreState } from '../../platform/useCoreState';
 import { type Palette, useColors } from '../../theme';
 
@@ -30,8 +33,9 @@ export default function Guided() {
   const { reminderId } = useLocalSearchParams<{ reminderId: string }>();
   // Only for `now`, refreshed once a minute: whether the Snooze link shows.
   const { now } = useCoreState();
-  // The Reminder as it was when the screen opened, from a fresh read: undefined
-  // until read, null if it isn't outstanding (or a Response turned out a no-op).
+  // The Reminder as it was when the screen opened, from the state startGuided
+  // returns: undefined until then, null if it isn't outstanding (or a Response
+  // turned out a no-op).
   const [reminder, setReminder] = useState<Reminder | null>();
   const [step, setStep] = useState(0);
   const [did, setDid] = useState<string[]>([]);
@@ -43,12 +47,13 @@ export default function Guided() {
 
   useEffect(() => {
     let alive = true;
-    readState()
+    // Once, on open, after the dismissal above: cancels a pending re-fire, if any.
+    startGuided(reminderId)
       .then((state) => {
         const outstanding = outstandingReminder(state, Date.now());
         if (alive) setReminder(outstanding?.id === reminderId ? outstanding : null);
       })
-      .catch((e) => console.warn(`[guided] read failed: ${e}`));
+      .catch((e) => console.warn(`[guided] open failed: ${e}`));
     return () => {
       alive = false;
     };
@@ -91,8 +96,7 @@ export default function Guided() {
   }
 
   const total = reminder.suggestion.length;
-  // The core's Snooze rule, for showing the link: fewer than 2 Snoozes and no re-fire pending.
-  const snoozeAllowed = (reminder.snoozes ?? 0) < MAX_SNOOZES && !(reminder.refiresAt !== undefined && reminder.refiresAt > now);
+  const snoozeAllowed = canSnooze(reminder, now);
 
   return (
     <ScrollView
