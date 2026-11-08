@@ -1,6 +1,8 @@
 /**
- * The one place JS turns platform happenings into core events: notification
- * action taps (from both delivery paths) and the app coming to the front.
+ * The one place JS turns platform happenings into core events: Responses
+ * (notification action taps from both delivery paths, and the guided screen's
+ * Done, Snooze and Skip), the guided screen opening, and the app coming to the
+ * front.
  * Each read-modify-write runs inside one `write()` transaction, so it sees the
  * latest committed state even when another JS context wrote in between.
  *
@@ -11,12 +13,20 @@
  * chain armed. If scheduling throws, the transaction rolls back and state and
  * alarms don't diverge. Dismissals are idempotent and run after the commit.
  */
-import * as Notifications from 'expo-notifications';
-import { outstandingReminder, reduce, type CoreDeps, type CoreResult, type CoreState, type ResponseKind } from '../core';
+import { outstandingReminder, reduce, type CoreDeps, type CoreEvent, type CoreResult, type CoreState, type ResponseKind } from '../core';
 import { exercises } from '../library';
 import { write, type Db } from './db';
-import { ACTION, dismissNotifications, dismissStale, scheduleChains } from './notifications';
-import { guardedSkip, guardedSnooze, loadState, logResponse, notifyStateChanged, saveState, type Source } from './store';
+import { ACTION, dismissNotifications, dismissReminder, dismissStale, scheduleChains } from './notifications';
+import {
+  guardedDone,
+  guardedSkip,
+  guardedSnooze,
+  loadState,
+  logResponse,
+  notifyStateChanged,
+  saveState,
+  type Source,
+} from './store';
 
 /**
  * The real randomness and library, with the clock frozen at one instant, so
@@ -52,65 +62,110 @@ export function reminderIdOf(content: unknown): string | undefined {
   return typeof id === 'string' ? id : undefined;
 }
 
-/** The notification actions that are Responses. Start isn't one: it opens the app. */
-const RESPONSE_OF: Partial<Record<string, ResponseKind>> = { [ACTION.skip]: 'Skip', [ACTION.snooze]: 'Snooze' };
+/** The notification actions that are Responses. Start isn't one: it opens the guided screen. */
+const RESPONSE_OF: Partial<Record<string, Exclude<ResponseKind, 'Done'>>> = { [ACTION.skip]: 'Skip', [ACTION.snooze]: 'Snooze' };
+
+/** A Response event: from a notification action, or from the guided screen. */
+export type ResponseEvent = Extract<CoreEvent, { type: 'Response' }>;
 
 /**
- * The guarded UPDATE for an accepted Response. A Snooze stores the re-fire
- * time the core computed (`next` is the reduced state).
+ * The guarded UPDATE for an accepted Response, chosen by what the core made of
+ * it (`next` is the reduced state): a Snooze stores the re-fire time the core
+ * computed; a Done stores the Exercises the core kept, or, with none kept, is
+ * a Skip. Returns what to log, or null when the guard lost the race.
  */
-async function guarded(d: Db, kind: ResponseKind, reminderId: string, next: CoreState, now: number): Promise<boolean> {
-  if (kind === 'Skip') return guardedSkip(d, reminderId, now);
-  const refiresAt = next.reminders.find((r) => r.id === reminderId)?.refiresAt;
-  return refiresAt !== undefined && guardedSnooze(d, reminderId, refiresAt, now);
+async function guarded(d: Db, event: ResponseEvent, next: CoreState, now: number): Promise<ResponseKind | null> {
+  const { reminderId } = event;
+  const answered = next.reminders.find((r) => r.id === reminderId);
+  if (event.kind === 'Snooze') {
+    const refiresAt = answered?.refiresAt;
+    return refiresAt !== undefined && (await guardedSnooze(d, reminderId, refiresAt, now)) ? 'Snooze' : null;
+  }
+  if (answered?.status === 'done') return (await guardedDone(d, reminderId, answered.done ?? [], now)) ? 'Done' : null;
+  return (await guardedSkip(d, reminderId, now)) ? 'Skip' : null;
 }
 
 /**
- * The shared action handler, called by the background task and by the
- * foreground response listener. When the app is alive in the background both
- * fire in this one JS context; the guard turns the second call into a no-op.
+ * The one guarded path for every Response, whoever delivers it. Dismiss
+ * first, then in one `write()`: load, the core's guard, reduce, the SQL guard,
+ * log, save and schedule the chain; after the commit, the dismissals. True
+ * when the Response was accepted, false for a no-op.
+ */
+export async function respond(event: ResponseEvent, source: Source): Promise<boolean> {
+  const { reminderId, kind } = event;
+  // Dismiss first: on a cold start JS takes seconds to reach the database.
+  await dismissReminder(reminderId);
+  const { deps, now } = frozenDeps();
+  let logged: ResponseKind | null = null;
+  const result = await write(async (d) => {
+    const state = await loadState(d);
+    // The core's guard, asked before reducing: only the outstanding Reminder
+    // takes a Response (a pending re-fire doesn't stop a Done or Skip). Anything
+    // else (duplicate, stale, unknown) is a no-op; its notification was already
+    // dismissed above.
+    if (outstandingReminder(state, now)?.id !== reminderId) return { state, intents: [] };
+    const next = reduce(state, event, deps);
+    // A guarded no-op returns the input state itself (e.g. a third Snooze, or a Snooze before the re-fire).
+    if (next.state === state) return { state, intents: [] };
+    // The same guard in SQL, accepted only when exactly one row changed.
+    logged = await guarded(d, event, next.state, now);
+    if (!logged) return { state, intents: [] };
+    await logResponse(d, reminderId, logged, source, now);
+    // Also persists what settling changed (Missed, dropped).
+    await saveState(d, next.state, now);
+    // Inside the lock, before COMMIT: see the header comment.
+    await scheduleChains(next.intents);
+    return next;
+  }).catch((e: unknown) => {
+    console.warn(`[handler] ${kind} ${reminderId} from ${source} rolled back: ${e}`);
+    throw e;
+  });
+  console.log(`[handler] ${kind} ${reminderId} from ${source}: ${logged ? `accepted as ${logged}` : 'no-op'}`);
+  if (logged) notifyStateChanged();
+  await dismissNotifications(result.intents);
+  await dismissStale(result.state, now).catch(() => {});
+  return logged !== null;
+}
+
+/**
+ * The guided screen opened on `reminderId`: GuidedStarted in one `write()`.
+ * On the outstanding Reminder with a Snooze re-fire pending, the core cancels
+ * the re-fire; the new state is saved and the chain rescheduled without it.
+ * Anything else is a no-op that writes nothing. Returns the resulting state.
+ */
+export async function startGuided(reminderId: string): Promise<CoreState> {
+  const { deps, now } = frozenDeps();
+  let changed = false;
+  const state = await write(async (d) => {
+    const loaded = await loadState(d);
+    const next = reduce(loaded, { type: 'GuidedStarted', reminderId }, deps);
+    if (next.state === loaded) return loaded;
+    changed = true;
+    await saveState(d, next.state, now);
+    // Inside the lock, before COMMIT: see the header comment.
+    await scheduleChains(next.intents);
+    return next.state;
+  }).catch((e: unknown) => {
+    console.warn(`[handler] GuidedStarted ${reminderId} rolled back: ${e}`);
+    throw e;
+  });
+  console.log(`[handler] GuidedStarted ${reminderId}: ${changed ? 'cancelled the re-fire' : 'no-op'}`);
+  if (changed) notifyStateChanged();
+  return state;
+}
+
+/**
+ * The shared notification-action handler, called by the background task and
+ * by the foreground response listener. When the app is alive in the
+ * background both fire in this one JS context; the guard turns the second
+ * call into a no-op. Start and a tap on the notification body record
+ * nothing: the foreground side opens the guided screen (useReminderRuntime.ts).
  */
 export async function handleAction(actionId: string, payload: { reminderId?: string }, source: Source) {
   const reminderId = payload.reminderId;
-  if (!reminderId) return;
-
   const kind = RESPONSE_OF[actionId];
-  if (kind) {
-    // Dismiss first: on a cold start JS takes seconds to reach the database.
-    await Notifications.dismissNotificationAsync(reminderId).catch(() => {});
-    const { deps, now } = frozenDeps();
-    let accepted = false;
-    const result = await write(async (d) => {
-      const state = await loadState(d);
-      // The core's guard, asked before reducing: only the outstanding Reminder
-      // takes a Response. Anything else (duplicate, stale, unknown, re-fire
-      // still pending) is a no-op; its notification was already dismissed above.
-      if (outstandingReminder(state, now)?.id !== reminderId) return { state, intents: [] };
-      const next = reduce(state, { type: 'Response', reminderId, kind }, deps);
-      // A guarded no-op returns the input state itself (e.g. a third Snooze).
-      if (next.state === state) return { state, intents: [] };
-      // The same guard in SQL, accepted only when exactly one row changed.
-      if (!(await guarded(d, kind, reminderId, next.state, now))) return { state, intents: [] };
-      await logResponse(d, reminderId, kind, source, now);
-      // Also persists what settling changed (Missed, dropped).
-      await saveState(d, next.state, now);
-      // Inside the lock, before COMMIT: see the header comment.
-      await scheduleChains(next.intents);
-      accepted = true;
-      return next;
-    }).catch((e: unknown) => {
-      console.warn(`[handler] ${kind} ${reminderId} from ${source} rolled back: ${e}`);
-      throw e;
-    });
-    console.log(`[handler] ${kind} ${reminderId} from ${source}: ${accepted ? 'accepted' : 'no-op'}`);
-    if (accepted) notifyStateChanged();
-    await dismissNotifications(result.intents);
-    await dismissStale(result.state, now).catch(() => {});
-    return;
-  }
-
-  // Start, or a tap on the notification body: the app opens. Nothing to record
-  // until the guided flow lands (#23).
+  if (!reminderId || !kind) return;
+  await respond({ type: 'Response', reminderId, kind }, source);
 }
 
 /**

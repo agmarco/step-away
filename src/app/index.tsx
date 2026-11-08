@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   effectiveFire,
@@ -12,12 +12,14 @@ import {
   type Reminder,
 } from '../core';
 import { useCoreState } from '../platform/useCoreState';
+import { openGuided } from '../platform/useReminderRuntime';
 import { isDevelopment } from '../platform/variant';
 import { type Palette, useColors } from '../theme';
 
 /**
- * Today, minimal (#21, #22): the next Reminder and today's fired Reminders
- * with their status. The real design lands in #25. The stored state is
+ * Today, minimal (#21, #22, #23): the next Reminder and today's fired
+ * Reminders with their status; the outstanding one has Start, which opens the
+ * guided screen. The real design lands in #25. The stored state is
  * settled at `now` first, so a Reminder shows Missed as soon as it is, even
  * before the next write persists it.
  */
@@ -95,7 +97,9 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
                 {r.suggestion.map((e) => e.name).join(', ')}
               </Text>
               <View style={styles.statusLine}>
-                <Text style={[styles.status, { color: status.color }]}>{status.label}</Text>
+                <Text style={[styles.status, styles.shrink, { color: status.color }]} numberOfLines={1}>
+                  {status.label}
+                </Text>
                 {snoozes > 0 && (
                   <Text style={[styles.tag, { color: colors.text.secondary, borderColor: colors.line.divider }]}>
                     snoozed ×{snoozes}
@@ -103,6 +107,15 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
                 )}
               </View>
             </View>
+            {r.id === outstandingId && (
+              <Pressable
+                onPress={() => openGuided(r.id)}
+                accessibilityRole="button"
+                style={[styles.start, { backgroundColor: colors.accent.hero }]}
+              >
+                <Text style={[styles.startText, { color: colors.text.onHero }]}>Start</Text>
+              </Pressable>
+            )}
           </View>
         );
       })}
@@ -110,9 +123,12 @@ function TodaysReminders({ state, now, colors }: { state: CoreState; now: number
   );
 }
 
-/** One fired Reminder's line, from its settled status. Done arrives with the guided flow (#23). */
+/** One fired Reminder's line, from its settled status. */
 function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefined, now: number, colors: Palette) {
   switch (r.status) {
+    case 'done':
+      // Which Exercises were done, on one line (#25 does the real design).
+      return { label: r.done?.length ? `Done: ${r.done.map((e) => e.name).join(', ')}` : 'Done', color: colors.outcome.done };
     case 'skipped':
       return { label: 'Skipped', color: colors.outcome.skip };
     case 'missed':
@@ -154,6 +170,9 @@ const styles = StyleSheet.create({
   exercise: { fontSize: 15 },
   statusLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   status: { fontSize: 13, fontWeight: '600' },
+  shrink: { flexShrink: 1 },
+  start: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  startText: { fontSize: 15, fontWeight: '700' },
   tag: {
     fontSize: 11,
     fontWeight: '600',

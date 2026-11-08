@@ -443,15 +443,26 @@ describe('Snooze: the re-fire notification', () => {
   });
 });
 
-describe('Skip: a guarded Response while a re-fire is pending', () => {
-  it('ignores a Skip before the Reminder’s re-fire has fired, only dismissing the notification', () => {
+describe('early Skip: a Skip before the re-fire counts and cancels it', () => {
+  it('accepts a Skip before the Reminder’s re-fire has fired, clearing the re-fire and rebuilding the chain from the Skip', () => {
     const first = reminderAt(morning().state, at('09:45'));
     const once = snooze(morning().state, first.id, at('10:00')).state;
+    const now = at('10:05');
 
-    // The re-fire is at 10:10; 10:05 is before it.
-    const result = skip(once, first.id, at('10:05'));
+    // The re-fire is at 10:10; Skip at 10:05, before it.
+    const result = skip(once, first.id, now);
 
-    expect(result.state).toEqual(once);
-    expect(result.intents).toEqual([dismiss(first.id)]);
+    // The re-fire is cancelled; the Snooze still counts.
+    expect(reminderAt(result.state, at('09:45'))).toEqual({ ...first, snoozes: 1, status: 'skipped' });
+    expect(result.state.lastResponseAt).toBe(now);
+    expect(result.intents).toHaveLength(2);
+    expect(result.intents).toContainEqual(dismiss(first.id));
+    // No re-fire notification is scheduled any more.
+    expect(chainOf(result).map((n) => n.reminderId)).not.toContain(first.id);
+    // 10:05 + 45 = 10:50, 11:35, 12:20; the 10:10 re-fire and the 10:55 fallback are gone.
+    expect(timesOf(result).slice(0, 3)).toEqual([at('10:50'), at('11:35'), at('12:20')]);
+    // 10:50 + 9·45 = 17:35; 17:35 + 45 = 18:20 is past the window end.
+    expect(mondayTimesOf(result).at(-1)).toBe(at('17:35'));
+    expect(result.state.reminders.filter((r) => r.firesAt > now).map((r) => r.firesAt)).toEqual(timesOf(result));
   });
 });

@@ -1,14 +1,28 @@
 /**
  * The core's state in SQLite. Thin: rows <-> CoreState, plus the guarded
- * Response updates (Skip, Snooze) and the Response log. The schema is in
+ * Response updates (Done, Skip, Snooze) and the Response log. The schema is in
  * migrations.ts. Every function taking a `Db` is meant
  * to run inside `write()` (one BEGIN IMMEDIATE transaction).
  */
-import { defaultSettings, MAX_SNOOZES, type CoreState, type Instant, type Reminder, type ResponseKind, type Settings } from '../core';
+import {
+  defaultSettings,
+  MAX_SNOOZES,
+  type CoreState,
+  type DoneExercise,
+  type Instant,
+  type Reminder,
+  type ResponseKind,
+  type Settings,
+} from '../core';
+import { exercises } from '../library';
 import { db, type Db } from './db';
+import { withBodyAreas } from './suggestionBackfill';
 
-/** Who handled an action tap: the background task or the foreground response listener. */
-export type Source = 'bg-task' | 'fg-listener';
+/**
+ * Who handled a Response: the background task or the foreground response
+ * listener (notification action taps), or the app's own screens (the guided flow).
+ */
+export type Source = 'bg-task' | 'fg-listener' | 'app';
 
 interface ReminderRow {
   id: string;
@@ -17,6 +31,7 @@ interface ReminderRow {
   status: string;
   snoozes: number;
   refires_at: number | null;
+  done_exercises: string | null;
 }
 
 const META = {
@@ -25,14 +40,14 @@ const META = {
   lastAppOpenAt: 'last_app_open_at',
 } as const;
 
-/** Rows per multi-row INSERT: 6 params each, well under SQLite's bound-parameter limit. */
+/** Rows per multi-row INSERT: 7 params each, well under SQLite's bound-parameter limit (999 before 3.32). */
 const BATCH = 100;
 
 export async function loadState(d: Db): Promise<CoreState> {
   const meta = new Map(
     (await d.getAllAsync<{ key: string; value: string }>('SELECT key, value FROM meta')).map((m) => [m.key, m.value]),
   );
-  const rows = await d.getAllAsync<ReminderRow>('SELECT id, fires_at, suggestion, status, snoozes, refires_at FROM reminders ORDER BY fires_at');
+  const rows = await d.getAllAsync<ReminderRow>('SELECT id, fires_at, suggestion, status, snoozes, refires_at, done_exercises FROM reminders ORDER BY fires_at');
   const instant = (key: string): Instant | null => (meta.has(key) ? Number(meta.get(key)) : null);
   const settings = meta.get(META.settings);
   return {
@@ -44,11 +59,13 @@ export async function loadState(d: Db): Promise<CoreState> {
       (r): Reminder => ({
         id: r.id,
         firesAt: r.fires_at,
-        suggestion: JSON.parse(r.suggestion) as Reminder['suggestion'],
+        // Suggestions stored before #23 lack `bodyArea`: filled in from the library by Id.
+        suggestion: withBodyAreas(JSON.parse(r.suggestion) as Reminder['suggestion'], exercises),
         status: r.status as Reminder['status'],
-        // The core's optional fields: absent means 0 Snoozes and no re-fire.
+        // The core's optional fields: absent means 0 Snoozes, no re-fire and nothing done.
         ...(r.snoozes > 0 && { snoozes: r.snoozes }),
         ...(r.refires_at !== null && { refiresAt: r.refires_at }),
+        ...(r.done_exercises !== null && { done: JSON.parse(r.done_exercises) as DoneExercise[] }),
       }),
     ),
   };
@@ -57,7 +74,7 @@ export async function loadState(d: Db): Promise<CoreState> {
 /**
  * Writes `state` back: Reminders after `now` (the chain ahead) are replaced by
  * the state's, fired ones are upserted with their settled status (Missed,
- * dropped), Snooze count and re-fire. `now` must be the clock time the core
+ * dropped), Snooze count, re-fire and the Exercises done. `now` must be the clock time the core
  * computed `state` at.
  */
 export async function saveState(d: Db, state: CoreState, now: Instant): Promise<void> {
@@ -73,35 +90,74 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
   for (let i = 0; i < state.reminders.length; i += BATCH) {
     const batch = state.reminders.slice(i, i + BATCH);
     await d.runAsync(
-      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at)
-       VALUES ${batch.map(() => '(?, ?, ?, ?, ?, ?)').join(', ')}
+      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, done_exercises)
+       VALUES ${batch.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ')}
        ON CONFLICT(id) DO UPDATE SET fires_at = excluded.fires_at, suggestion = excluded.suggestion,
-         status = excluded.status, snoozes = excluded.snoozes, refires_at = excluded.refires_at`,
-      batch.flatMap((r) => [r.id, r.firesAt, JSON.stringify(r.suggestion), r.status, r.snoozes ?? 0, r.refiresAt ?? null]),
+         status = excluded.status, snoozes = excluded.snoozes, refires_at = excluded.refires_at,
+         done_exercises = excluded.done_exercises`,
+      batch.flatMap((r) => [
+        r.id,
+        r.firesAt,
+        JSON.stringify(r.suggestion),
+        r.status,
+        r.snoozes ?? 0,
+        r.refiresAt ?? null,
+        r.done ? JSON.stringify(r.done) : null,
+      ]),
     );
   }
 }
 
 /**
- * The core's Response guard in SQL, binding (id, now, now): this fired
- * Reminder is still `scheduled` and its Snooze re-fire (if any) has fired too.
+ * The core's guard for a final Response (Done, Skip) in SQL, binding (id, now):
+ * this fired Reminder is still `scheduled`. A pending Snooze re-fire doesn't
+ * block it: the Response cancels the re-fire (CLEARS_PENDING_REFIRE).
  */
-const ACCEPTS_RESPONSE = `id = ? AND status = 'scheduled' AND fires_at <= ? AND (refires_at IS NULL OR refires_at <= ?)`;
+const ACCEPTS_FINAL = `id = ? AND status = 'scheduled' AND fires_at <= ?`;
+
+/** Binding (now): drops a re-fire still ahead, keeps one that has fired. `snoozes` stays. */
+const CLEARS_PENDING_REFIRE = `refires_at = CASE WHEN refires_at > ? THEN NULL ELSE refires_at END`;
+
+/**
+ * The core's Snooze guard in SQL, binding (id, now, now): the final guard,
+ * plus its Snooze re-fire (if any) has fired too.
+ */
+const ACCEPTS_SNOOZE = `${ACCEPTS_FINAL} AND (refires_at IS NULL OR refires_at <= ?)`;
 
 /** The guarded Skip. True only when exactly one row changed; anything else lost the race. */
 export async function guardedSkip(d: Db, reminderId: string, now: Instant): Promise<boolean> {
-  const res = await d.runAsync(`UPDATE reminders SET status = 'skipped' WHERE ${ACCEPTS_RESPONSE}`, reminderId, now, now);
+  const res = await d.runAsync(
+    `UPDATE reminders SET status = 'skipped', ${CLEARS_PENDING_REFIRE} WHERE ${ACCEPTS_FINAL}`,
+    now,
+    reminderId,
+    now,
+  );
   return res.changes === 1;
 }
 
 /**
- * The guarded Snooze: the Skip guard plus fewer than MAX_SNOOZES Snoozes so
+ * The guarded Done: the Skip guard; `done` is what the core recorded (at least
+ * one Exercise; none is a Skip). True only when exactly one row changed.
+ */
+export async function guardedDone(d: Db, reminderId: string, done: DoneExercise[], now: Instant): Promise<boolean> {
+  const res = await d.runAsync(
+    `UPDATE reminders SET status = 'done', done_exercises = ?, ${CLEARS_PENDING_REFIRE} WHERE ${ACCEPTS_FINAL}`,
+    JSON.stringify(done),
+    now,
+    reminderId,
+    now,
+  );
+  return res.changes === 1;
+}
+
+/**
+ * The guarded Snooze: the Snooze guard plus fewer than MAX_SNOOZES Snoozes so
  * far (core/notification.ts). `refiresAt` is the re-fire the core
  * computed. True only when exactly one row changed.
  */
 export async function guardedSnooze(d: Db, reminderId: string, refiresAt: Instant, now: Instant): Promise<boolean> {
   const res = await d.runAsync(
-    `UPDATE reminders SET snoozes = snoozes + 1, refires_at = ? WHERE ${ACCEPTS_RESPONSE} AND snoozes < ?`,
+    `UPDATE reminders SET snoozes = snoozes + 1, refires_at = ? WHERE ${ACCEPTS_SNOOZE} AND snoozes < ?`,
     refiresAt,
     reminderId,
     now,
@@ -111,7 +167,11 @@ export async function guardedSnooze(d: Db, reminderId: string, refiresAt: Instan
   return res.changes === 1;
 }
 
-/** One row per accepted Response, for the device check. Write it only when the guarded update won. */
+/**
+ * One row per accepted Response, for the device check: what the core made of
+ * it (a Done with nothing done is logged as a Skip). Write it only when the
+ * guarded update won.
+ */
 export async function logResponse(d: Db, reminderId: string, kind: ResponseKind, source: Source, at: Instant) {
   await d.runAsync('INSERT INTO responses (reminder_id, kind, source, at) VALUES (?, ?, ?, ?)', reminderId, kind, source, at);
 }

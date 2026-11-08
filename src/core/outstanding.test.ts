@@ -33,6 +33,13 @@ describe('outstandingReminder', () => {
     expect(outstandingReminder(state, T(100))).toBeUndefined();
   });
 
+  it('keeps a snoozed Reminder whose re-fire lands past closing outstanding until the window end', () => {
+    // Default Settings: Monday 09:00-18:00 UTC. Fired 17:15, re-fire 18:05 is past the 18:00 end.
+    const state = withReminders({ ...reminder(T(495)), snoozes: 1, refiresAt: T(545) });
+    expect(outstandingReminder(state, T(530))?.id).toBe(`reminder-${T(495)}`);
+    expect(outstandingReminder(state, T(540))).toBeUndefined();
+  });
+
   it('is none for an empty state', () => {
     expect(outstandingReminder(initialState, T(0))).toBeUndefined();
   });

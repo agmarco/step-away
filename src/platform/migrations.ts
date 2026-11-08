@@ -9,7 +9,7 @@
  *   second JS context opening at the same moment waits (busy_timeout) and then
  *   sees the new version instead of applying the step twice.
  *
- * How to add the next migration (v2 -> v3):
+ * How to add the next migration (v3 -> v4):
  * 1. Append one function to MIGRATIONS. Its index + 1 is the version it
  *    produces; never edit or reorder a step that has shipped to a device.
  * 2. Make it safe on any DB at the previous version: ADD COLUMN, CREATE TABLE
@@ -59,6 +59,10 @@ export const MIGRATIONS: readonly Migration[] = [
     await addColumnIfMissing(d, 'reminders', 'snoozes', 'INTEGER NOT NULL DEFAULT 0');
     await addColumnIfMissing(d, 'reminders', 'refires_at', 'INTEGER NULL');
   },
+  // v2 -> v3 (#23): the guided Done. The Exercises done, as a JSON array of
+  // `{ id, name, bodyArea }`; NULL for every Reminder that isn't `done`, which
+  // is every existing row (the status `done` is a plain TEXT value).
+  (d) => addColumnIfMissing(d, 'reminders', 'done_exercises', 'TEXT NULL'),
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;
