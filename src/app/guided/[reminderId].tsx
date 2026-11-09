@@ -51,7 +51,7 @@ import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { canSnooze, formatDose, guidedStart, isOutstanding, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
+import { FALLBACK_LINE, canSnooze, formatDose, guidedStart, isOutstanding, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
 import { exercises, photoSource } from '../../library';
 import { finishGuided, respond, startGuided, swap } from '../../platform/handler';
 import { dismissReminder } from '../../platform/notifications';
@@ -199,7 +199,7 @@ export default function Guided() {
 
       {reminder.fallback && (
         <View style={[styles.banner, { backgroundColor: colors.background.banner }]}>
-          <Text style={[styles.bannerText, { color: colors.text.primary }]}>No Exercises match your settings</Text>
+          <Text style={[styles.bannerText, { color: colors.text.primary }]}>{FALLBACK_LINE}</Text>
           <Pressable onPress={() => router.push('/settings')} accessibilityRole="link" hitSlop={8}>
             <Text style={[styles.bannerLink, { color: colors.accent.hero }]}>Settings</Text>
           </Pressable>

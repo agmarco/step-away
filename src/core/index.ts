@@ -5,7 +5,7 @@ export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isGoalDay, streak, todayTal
 export type { DayMark, Tally } from './days';
 export type { LocalDate } from './localTime';
 export { formatDose } from './dose';
-export { MAX_SNOOZES } from './notification';
+export { FALLBACK_LINE, MAX_SNOOZES } from './notification';
 export { isOutstanding, isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
 export { effectiveFire, refireScheduled, settle } from './settle';
