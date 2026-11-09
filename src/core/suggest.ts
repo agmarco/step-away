@@ -85,8 +85,10 @@ export interface SuggestionHistory {
  *
  * Relaxation, in order: repeated areas (keeping as many distinct as it can);
  * the window shrinks from 5 Suggestions to 1, keeping the largest that still
- * gives the full count; fewer Exercises (window 1); window 0 only when the
- * whole source was in the previous Suggestion.
+ * gives the full count; fewer Exercises (window 1); in Strict, when its
+ * areas have nothing left even at window 1, the rest of the source as Random
+ * draws it (the rotation still advances); window 0 only when the whole source
+ * was in the previous Suggestion.
  */
 export function buildSuggestion(
   { earlier, rotation: start, covered }: SuggestionHistory,
@@ -111,7 +113,14 @@ export function buildSuggestion(
   for (let size = WINDOW; size >= 1 && picks.length < count; size--) {
     picks = draw(without(source.exercises, windowIds(earlier, size)));
   }
-  if (picks.length === 0) picks = draw(source.exercises);
+  if (picks.length === 0) {
+    // Strict with its pinned areas used up: the rest of the source, areas first at weight 1, before window 0.
+    const unused = without(source.exercises, windowIds(earlier, 1));
+    picks =
+      settings.bodyAreaMode === 'Strict' && unused.length > 0
+        ? drawByWeight(unused, count, () => 1, random)
+        : draw(source.exercises);
+  }
 
   return {
     suggestion: picks.map(snapshotOf),

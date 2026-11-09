@@ -344,6 +344,23 @@ describe('Strict rotation', () => {
   });
 });
 
+describe('Strict relaxation when the pinned area is used up', () => {
+  it('draws from another area rather than repeat the previous Suggestion, and the rotation advances as before', () => {
+    // Neck's only Exercise was in the previous Suggestion (a Weighted one, so no rotation: Strict starts at Neck).
+    const neck = exercise('Neck_0', 'Neck');
+    const library = [neck, ...perArea(3).filter((e) => e.bodyArea !== 'Neck')];
+    const fired = earlier('done', neck);
+    const state = { ...cfg({ bodyAreaMode: 'Strict' }, [fired]), lastResponseAt: at('10:00') };
+
+    const ahead = rearm(state, at('10:00'), library).state.reminders.filter((r) => r.firesAt > at('10:00'));
+
+    expect(idsOf(ahead[0])).toHaveLength(1);
+    expect(idsOf(ahead[0])).not.toContain('Neck_0');
+    expect(ahead[0].rotation).toBe(1);
+    expect(ahead[1].suggestion.map((e) => e.bodyArea)).toEqual(['Shoulders & Upper Back']);
+  });
+});
+
 describe('the no-repeat window', () => {
   it.each([1, 2])(
     'no Exercise reappears within the next 5 Suggestions while the pool allows (Suggestions of %i)',
