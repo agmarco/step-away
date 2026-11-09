@@ -3,7 +3,9 @@ import { chainTimes, outstandingReminder, reminderId } from './schedule';
 import { dateKey, dayOf, sameDate } from './days';
 import { addDays, localDateOf, MINUTE } from './localTime';
 import { refirePending, refireScheduled, settle } from './settle';
-import { suggest } from './suggest';
+import { buildSuggestion, suggestionSource } from './suggest';
+import { swapReplacement } from './swap';
+import { guidedStart } from './guidedFinish';
 import type {
   CoreDeps,
   CoreEvent,
@@ -71,6 +73,14 @@ export const initialState: CoreState = {
  * correction is history: `lastResponseAt`, `snoozes`, `refiresAt` and the
  * chain stay. Anything else (a past day, outstanding, not fired, unknown)
  * returns the input state. Neither returns intents.
+ *
+ * Swap replaces one Exercise of a Suggestion in place (see `swapReplacement`)
+ * and appends it to `swappedOut`. Accepted, on the settled state, on the
+ * Reminders the guided screen can open (`guidedStart`) and only for an Id in
+ * the Suggestion. Not a Response: `lastResponseAt`, `snoozes`, `refiresAt`
+ * and `rotation` stay; the chain ahead is rebuilt (only `ScheduleChain`).
+ * With nothing to swap in, or anything else, it returns the input state
+ * unchanged, with no intents.
  */
 export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): CoreResult {
   const now = deps.clock.now();
@@ -142,8 +152,24 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       // History only: lastResponseAt and the chain stay, and there are no intents.
       return { state: { ...settled, reminders: replace(settled, corrected) }, intents: [] };
     }
-    case 'Swap':
-      throw new Error('Swap: not implemented (#24 CP2)');
+    case 'Swap': {
+      // Settled first, so a fired Reminder replaced but not yet persisted counts as Missed.
+      const settled = settle(state, now);
+      const target = guidedStart(settled, event.reminderId, now);
+      if (!target?.suggestion.some((e) => e.id === event.exerciseId)) return { state, intents: [] };
+      const earlier = settled.reminders.filter((r) => r.firesAt < target.firesAt);
+      const library = deps.library ?? [];
+      const replacement = swapReplacement(target, event.exerciseId, earlier, settled.settings, library, deps.random);
+      if (!replacement) return { state, intents: [] };
+      // Not a Response: lastResponseAt, snoozes, refiresAt and rotation stay.
+      const swapped: Reminder = {
+        ...target,
+        suggestion: target.suggestion.map((e) => (e.id === event.exerciseId ? replacement : e)),
+        swappedOut: [...(target.swappedOut ?? []), event.exerciseId],
+      };
+      // The window of the chain ahead changed, and a pending re-fire carries the new body.
+      return rearm({ ...settled, reminders: replace(settled, swapped) }, deps);
+    }
   }
 }
 
@@ -175,10 +201,12 @@ function replace(state: CoreState, reminder: Reminder): Reminder[] {
 
 /**
  * Rebuilds the chain ahead: fired Reminders stay in state as they are; the
- * future is replaced by the freshly computed chain. A Reminder whose fire time
- * is unchanged keeps its Id and its Suggestion; new ones get a Suggestion
- * picked now. With an empty library no Suggestion can be made, so nothing is
- * scheduled.
+ * future is replaced by the freshly computed chain. Every Reminder not yet
+ * fired gets its Suggestion rebuilt, in fire order, as if built when it fires
+ * (no JS runs then): its no-repeat window and Strict rotation include the
+ * chain Reminders before it, and Weighted coverage is its own local day's.
+ * With nothing eligible and no fallback candidate either, no Suggestion can
+ * be made, so nothing is scheduled.
  *
  * A pending Snooze re-fire is scheduled too (the chain intent replaces every
  * scheduled notification), unless it lands at or after its day's window end:
@@ -186,9 +214,7 @@ function replace(state: CoreState, reminder: Reminder): Reminder[] {
  */
 function rearm(state: CoreState, deps: CoreDeps): CoreResult {
   const now = deps.clock.now();
-  const library = deps.library ?? [];
   const fired = state.reminders.filter((r) => r.firesAt <= now);
-  const previous = new Map(state.reminders.filter((r) => r.firesAt > now).map((r) => [r.id, r]));
 
   const refires: ScheduledNotification[] = [];
   for (const r of fired) {
@@ -196,13 +222,7 @@ function rearm(state: CoreState, deps: CoreDeps): CoreResult {
     refires.push(refireNotificationFor({ ...r, refiresAt: r.refiresAt }));
   }
 
-  const chain: Reminder[] = [];
-  for (const firesAt of library.length > 0 ? chainTimes(state, now) : []) {
-    const id = reminderId(firesAt);
-    const suggestion =
-      previous.get(id)?.suggestion ?? suggest(library, state.settings.exercisesPerSuggestion, deps.random);
-    chain.push({ id, firesAt, suggestion, status: 'scheduled' });
-  }
+  const chain = chainAhead(state, fired, deps);
 
   return {
     state: { ...state, reminders: [...fired, ...chain] },
@@ -210,4 +230,20 @@ function rearm(state: CoreState, deps: CoreDeps): CoreResult {
       { type: 'ScheduleChain', reminders: [...refires, ...chain.map(notificationFor)].sort((a, b) => a.at - b.at) },
     ],
   };
+}
+
+/**
+ * The Reminders of the chain ahead, each with its Suggestion built in fire
+ * order after `fired` and the ones before it. Empty when nothing is eligible
+ * and there is no fallback candidate either.
+ */
+function chainAhead(state: CoreState, fired: readonly Reminder[], deps: CoreDeps): Reminder[] {
+  const source = suggestionSource(state.settings, deps.library ?? []);
+  if (!source) return [];
+  const chain: Reminder[] = [];
+  for (const firesAt of chainTimes(state, deps.clock.now())) {
+    const built = buildSuggestion(firesAt, [...fired, ...chain], source, state.settings, deps.random);
+    chain.push({ id: reminderId(firesAt), firesAt, status: 'scheduled', ...built });
+  }
+  return chain;
 }
