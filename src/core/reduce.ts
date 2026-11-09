@@ -3,7 +3,7 @@ import { chainTimes, outstandingReminder, reminderId } from './schedule';
 import { dateKey, dayOf, sameDate } from './days';
 import { addDays, localDateOf, MINUTE } from './localTime';
 import { refirePending, refireScheduled, settle } from './settle';
-import { buildSuggestion, suggestionSource } from './suggest';
+import { buildSuggestion, coverageOf, rotationStart, suggestionSource } from './suggest';
 import { swapReplacement } from './swap';
 import { guidedStart } from './guidedFinish';
 import type {
@@ -236,14 +236,24 @@ function rearm(state: CoreState, deps: CoreDeps): CoreResult {
  * The Reminders of the chain ahead, each with its Suggestion built in fire
  * order after `fired` and the ones before it. Empty when nothing is eligible
  * and there is no fallback candidate either.
+ *
+ * Linear: `earlier` grows by one per Reminder, the rotation is carried
+ * forward, and coverage comes from `fired` once (chain Reminders are never
+ * `done`), looked up by each Reminder's local day.
  */
 function chainAhead(state: CoreState, fired: readonly Reminder[], deps: CoreDeps): Reminder[] {
   const source = suggestionSource(state.settings, deps.library ?? []);
   if (!source) return [];
+  const coveredOn = coverageOf(fired, state.settings.timeZone);
+  const earlier = [...fired];
+  let rotation = rotationStart(fired);
   const chain: Reminder[] = [];
   for (const firesAt of chainTimes(state, deps.clock.now())) {
-    const built = buildSuggestion(firesAt, [...fired, ...chain], source, state.settings, deps.random);
-    chain.push({ id: reminderId(firesAt), firesAt, status: 'scheduled', ...built });
+    const built = buildSuggestion({ earlier, rotation, covered: coveredOn(firesAt) }, source, state.settings, deps.random);
+    const reminder: Reminder = { id: reminderId(firesAt), firesAt, status: 'scheduled', ...built };
+    earlier.push(reminder);
+    chain.push(reminder);
+    rotation = built.rotation ?? rotation;
   }
   return chain;
 }

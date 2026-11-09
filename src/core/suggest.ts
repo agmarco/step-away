@@ -4,8 +4,8 @@
  */
 
 import { BODY_AREAS, DIFFICULTIES, type BodyArea, type Exercise } from './exercise';
-import { localDateOf } from './localTime';
-import { dayOf, sameDate } from './days';
+import { addDays, instantAt, localDateOf } from './localTime';
+import { dateKey, dayOf } from './days';
 import type { Instant, Random, Reminder, Settings, SuggestedExercise } from './types';
 
 /** The no-repeat window: an Exercise can't reappear within this many Suggestions before. */
@@ -13,6 +13,9 @@ export const WINDOW = 5;
 
 /** In Weighted mode, a Body Area with no Done Exercise on the Reminder's day weighs this; a covered one 1. */
 const UNCOVERED_WEIGHT = 3;
+
+/** No Body Area covered. */
+const NONE: ReadonlySet<BodyArea> = new Set();
 
 /**
  * What Suggestions are drawn from under `settings`: the eligible pool, or,
@@ -57,11 +60,23 @@ export function fallbackSetOf(library: readonly Exercise[]): Exercise[] {
 export type BuiltSuggestion = Pick<Reminder, 'suggestion' | 'fallback' | 'rotation'>;
 
 /**
- * The Suggestion of the Reminder firing at `firesAt`, as if built when it
- * fires: `earlier` are the Reminders before it, oldest first (its window,
- * rotation and the day's coverage come from them), `source` is from
- * `suggestionSource`. A fallback goes through the same rules with a count
- * of 1: the window, the mode and, in Strict, the rotation.
+ * What a Suggestion is built from, besides its source and settings, as if
+ * built when its Reminder fires. The chain rebuild carries it forward from
+ * one Reminder to the next rather than rescanning, so it stays linear.
+ */
+export interface SuggestionHistory {
+  /** The Reminders before it, oldest first: its no-repeat window is their tail. */
+  earlier: readonly Reminder[];
+  /** Where a Strict rotation starts: the `rotation` of the latest of `earlier` that has one, else 0 (`rotationStart`). */
+  rotation: number;
+  /** Weighted coverage: the Body Areas Done on its local day, by the `done` Reminders of `earlier` (`coverageOf`). */
+  covered: ReadonlySet<BodyArea>;
+}
+
+/**
+ * The Suggestion of a Reminder from its `history` (see `SuggestionHistory`);
+ * `source` is from `suggestionSource`. A fallback goes through the same rules
+ * with a count of 1: the window, the mode and, in Strict, the rotation.
  *
  * Areas first: Weighted and Random pick a Body Area by weight among those
  * with a candidate, then an Exercise uniformly within it, each Exercise from
@@ -74,8 +89,7 @@ export type BuiltSuggestion = Pick<Reminder, 'suggestion' | 'fallback' | 'rotati
  * whole source was in the previous Suggestion.
  */
 export function buildSuggestion(
-  firesAt: Instant,
-  earlier: readonly Reminder[],
+  { earlier, rotation: start, covered }: SuggestionHistory,
   source: { exercises: Exercise[]; fallback: boolean },
   settings: Settings,
   random: Random,
@@ -84,13 +98,12 @@ export function buildSuggestion(
   let draw: (available: Exercise[]) => Exercise[];
   let rotation: number | undefined;
   if (settings.bodyAreaMode === 'Strict') {
-    const walk = strictAreas(source.exercises, count, rotationStart(earlier));
+    const walk = strictAreas(source.exercises, count, start);
     draw = (available) => drawPinned(available, walk.areas, random);
     rotation = walk.rotation;
   } else {
-    const weighted = settings.bodyAreaMode === 'Weighted';
-    const covered = weighted ? coveredAreas(firesAt, earlier, settings.timeZone) : new Set<BodyArea>();
-    const weight = (area: BodyArea) => (covered.has(area) ? 1 : UNCOVERED_WEIGHT);
+    const dayCovered = settings.bodyAreaMode === 'Weighted' ? covered : NONE;
+    const weight = (area: BodyArea) => (dayCovered.has(area) ? 1 : UNCOVERED_WEIGHT);
     draw = (available) => drawByWeight(available, count, weight, random);
   }
 
@@ -109,8 +122,12 @@ export function buildSuggestion(
 
 /** The Exercise Ids of the last `size` Suggestions of `earlier` (the newest), swapped-out ones included. */
 export function windowIds(earlier: readonly Reminder[], size: number): Set<string> {
-  const recent = size > 0 ? earlier.slice(-size) : [];
-  return new Set(recent.flatMap((r) => [...r.suggestion.map((e) => e.id), ...(r.swappedOut ?? [])]));
+  const ids = new Set<string>();
+  for (let i = Math.max(0, earlier.length - size); i < earlier.length; i++) {
+    for (const e of earlier[i].suggestion) ids.add(e.id);
+    for (const id of earlier[i].swappedOut ?? []) ids.add(id);
+  }
+  return ids;
 }
 
 /** `exercises` minus those whose Id is in `ids`. */
@@ -190,7 +207,7 @@ function strictAreas(
 }
 
 /** Where a Strict Suggestion starts: the `rotation` of the latest earlier Reminder that has one, else 0. */
-function rotationStart(earlier: readonly Reminder[]): number {
+export function rotationStart(earlier: readonly Reminder[]): number {
   for (let i = earlier.length - 1; i >= 0; i--) {
     const { rotation } = earlier[i];
     if (rotation !== undefined) return rotation;
@@ -198,13 +215,29 @@ function rotationStart(earlier: readonly Reminder[]): number {
   return 0;
 }
 
-/** Weighted coverage: the Body Areas in the `done` lists of the `done` Reminders of `firesAt`'s local day. */
-function coveredAreas(firesAt: Instant, earlier: readonly Reminder[], timeZone: string): Set<BodyArea> {
-  const day = localDateOf(firesAt, timeZone);
-  const covered = new Set<BodyArea>();
-  for (const r of earlier) {
-    if (r.status !== 'done' || !sameDate(dayOf(r, timeZone), day)) continue;
+/**
+ * Weighted coverage, computed once from `reminders`: for an instant, the Body
+ * Areas in the `done` lists of the `done` Reminders of its local day. It
+ * remembers the last day looked up, so instants in fire order resolve their
+ * local day (an Intl call) about once per day, not once each.
+ */
+export function coverageOf(reminders: readonly Reminder[], timeZone: string): (at: Instant) => ReadonlySet<BodyArea> {
+  const byDay = new Map<number, Set<BodyArea>>();
+  for (const r of reminders) {
+    if (r.status !== 'done') continue;
+    const day = dateKey(dayOf(r, timeZone));
+    const covered = byDay.get(day) ?? new Set<BodyArea>();
     for (const e of r.done ?? []) covered.add(e.bodyArea);
+    byDay.set(day, covered);
   }
-  return covered;
+  let last = { start: Infinity, end: -Infinity, covered: NONE };
+  return (at) => {
+    if (at < last.start || at >= last.end) {
+      const date = localDateOf(at, timeZone);
+      const start = instantAt(date, 0, timeZone);
+      const end = instantAt(addDays(date, 1), 0, timeZone);
+      last = { start, end, covered: byDay.get(dateKey(date)) ?? NONE };
+    }
+    return last.covered;
+  };
 }
