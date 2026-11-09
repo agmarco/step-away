@@ -37,6 +37,7 @@ export const defaultSettings: Settings = {
   floor: false,
   equipment: [],
   excluded: [],
+  appearance: 'System',
 };
 
 export const initialState: CoreState = {
@@ -170,6 +171,10 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       // The window of the chain ahead changed, and a pending re-fire carries the new body.
       return rearm({ ...settled, reminders: replace(settled, swapped) }, deps);
     }
+    case 'ChangeSettings':
+      throw new Error('ChangeSettings: not implemented (#29 CP2)');
+    case 'ResetSettings':
+      throw new Error('ResetSettings: not implemented (#29 CP2)');
   }
 }
 

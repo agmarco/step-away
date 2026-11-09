@@ -1,4 +1,6 @@
 export { canSnooze, defaultSettings, initialState, reduce } from './reduce';
+export { exerciseGroups } from './groups';
+export type { ExerciseGroups } from './groups';
 export { guidedFinish, guidedStart } from './guidedFinish';
 export type { GuidedFinishEvent } from './guidedFinish';
 export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isGoalDay, streak, todayTally, weekMarks } from './days';
@@ -11,6 +13,7 @@ export { seededRandom } from './random';
 export { effectiveFire, refireScheduled, settle } from './settle';
 export type {
   ActiveWindow,
+  AppearanceSetting,
   BodyAreaMode,
   Clock,
   CoreDeps,

@@ -35,6 +35,12 @@ export interface ActiveWindow {
  */
 export type BodyAreaMode = 'Weighted' | 'Random' | 'Strict';
 
+/**
+ * The app's colour scheme: follow the system, or force Light or Dark. Named
+ * `AppearanceSetting` so screens can still import React Native's `Appearance`.
+ */
+export type AppearanceSetting = 'System' | 'Light' | 'Dark';
+
 export interface Settings {
   /** `null` means no Active Hours that day. */
   activeHours: Record<Weekday, ActiveWindow | null>;
@@ -65,6 +71,8 @@ export interface Settings {
   equipment: Equipment[];
   /** The Excluded Exercises, by Exercise Id: never suggested. */
   excluded: string[];
+  /** The app's colour scheme. */
+  appearance: AppearanceSetting;
 }
 
 /** One Exercise of a Suggestion: a text snapshot, not a link to the library entry. */
@@ -188,7 +196,17 @@ export type CoreEvent =
    * Suggestion, in place, with another under the Suggestion rules. Not a
    * Response. Accepted on the Reminders the guided screen can open.
    */
-  | { type: 'Swap'; reminderId: string; exerciseId: string };
+  | { type: 'Swap'; reminderId: string; exerciseId: string }
+  /**
+   * A change on the Settings page: applies the validated change and rearms.
+   * An invalid change returns the input state with no intents.
+   */
+  | { type: 'ChangeSettings'; change: Partial<Omit<Settings, 'timeZone'>> }
+  /**
+   * Reset settings to defaults: every setting but `timeZone`, and the Daily
+   * Goal from tomorrow. Never touches the Activity Log. Then rearms.
+   */
+  | { type: 'ResetSettings' };
 
 /** The notification actions, in order. */
 export type NotificationAction = 'start' | 'snooze' | 'skip';
