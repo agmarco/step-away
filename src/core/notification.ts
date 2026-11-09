@@ -33,6 +33,11 @@ export function refireNotificationFor(reminder: Reminder & { refiresAt: number }
   };
 }
 
+/** The line a fallback Reminder's body ends with. */
+export const FALLBACK_LINE = 'No Exercises match your settings';
+
+/** One line per suggested Exercise, `Name · Dose · Cue`, then `FALLBACK_LINE` on a fallback Reminder. */
 function bodyOf(reminder: Reminder): string {
-  return reminder.suggestion.map((e) => `${e.name} · ${formatDose(e.dose)} · ${e.cue}`).join('\n');
+  const lines = reminder.suggestion.map((e) => `${e.name} · ${formatDose(e.dose)} · ${e.cue}`);
+  return [...lines, ...(reminder.fallback ? [FALLBACK_LINE] : [])].join('\n');
 }

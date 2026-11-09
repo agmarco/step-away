@@ -1,7 +1,8 @@
 /**
  * The guided Response flow (#23, #41): one full-screen card per Exercise of
  * the Reminder's Suggestion, opened by Start or a tap on the notification (or
- * Start on Today). Each card is answered Did it or Not this one. Opening the
+ * Start on Today). Each card is answered Did it or Not this one, and can be
+ * swapped for another Exercise first (#24). Opening the
  * screen cancels a pending Snooze re-fire (the core's GuidedStarted, through
  * the handler), so it can't arrive mid-flow.
  *
@@ -26,22 +27,33 @@
  * Today. A ref tracks the finish, so back during a finish doesn't finish
  * twice, and the finish's own navigation to Today is let through.
  *
+ * Swap (#24) replaces the current card's Exercise through the handler's
+ * `swap` (the core's `Swap`): the card shows the new Exercise, its timer
+ * reset, at the same position, and the cards already answered keep their
+ * marks; a later Did it records the swapped-in Id. Not a Response, so it
+ * doesn't count as an answer. A no-op (nothing else fits, or the Reminder no
+ * longer accepts a Swap) keeps the card and says so in one line. While a Swap
+ * is in flight the answers are disabled, so a double tap can't swap twice.
+ * A fallback Reminder (`fallback: true`, nothing matched the settings) shows a
+ * banner above the card for the whole flow, with a Settings link.
+ *
  * Thin: whether the Reminder can be opened is the core's `guidedStart`, asked
  * once when the screen opens, on the state `startGuided` returns; the screen
- * keeps that Reminder for the whole session. Whether Snooze shows is the
+ * keeps that Reminder for the whole session (replaced only by the one a
+ * Swap returns). Whether Snooze shows is the
  * core's `isOutstanding` and `canSnooze` on the latest snapshot; what a
  * finish records is the core's `guidedFinish`. The fallback ("isn't waiting
  * any more") shows when `guidedStart` refused the Reminder at open (already
  * answered, from another day, or unknown), when its Suggestion is empty, or
- * when a Snooze wasn't accepted. Swap (#24) and the celebration card (#28) aren't here yet.
+ * when a Snooze wasn't accepted. The celebration card (#28) isn't here yet.
  */
 import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { canSnooze, formatDose, guidedStart, isOutstanding, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
+import { FALLBACK_LINE, canSnooze, formatDose, guidedStart, isOutstanding, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
 import { exercises, photoSource } from '../../library';
-import { finishGuided, respond, startGuided } from '../../platform/handler';
+import { finishGuided, respond, startGuided, swap } from '../../platform/handler';
 import { dismissReminder } from '../../platform/notifications';
 import { useCoreState } from '../../platform/useCoreState';
 import { type Palette, useColors } from '../../theme';
@@ -61,6 +73,9 @@ export default function Guided() {
   const [step, setStep] = useState(0);
   const [did, setDid] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  // A Swap in flight (a ref, so a second tap in the same tick is ignored), and the no-op line.
+  const swapping = useRef(false);
+  const [nothingToSwap, setNothingToSwap] = useState(false);
   // Where a finish is: a second one while it runs (back during End here) is ignored, and once it is
   // done its own navigation back to Today is let through instead of being turned into another finish.
   // A ref, so the back handler sees it in the same tick; `finished` lifts the prevention on render.
@@ -120,8 +135,23 @@ export default function Guided() {
   // The ‹ Today link: the same as back.
   const leave = () => (step > 0 ? finish(did) : backToToday());
 
+  const swapCard = () => {
+    if (!reminder || swapping.current) return;
+    swapping.current = true;
+    setBusy(true);
+    setNothingToSwap(false);
+    swap(reminderId, reminder.suggestion[step].id)
+      .then((swapped) => (swapped ? setReminder(swapped) : setNothingToSwap(true)))
+      .catch((e) => console.warn(`[guided] swap on ${reminderId} failed: ${e}`))
+      .finally(() => {
+        swapping.current = false;
+        setBusy(false);
+      });
+  };
+
   const answer = (done: boolean) => {
     if (!reminder) return;
+    setNothingToSwap(false);
     const exercise = reminder.suggestion[step];
     const next = done ? [...did, exercise.id] : did;
     if (step + 1 < reminder.suggestion.length) {
@@ -149,6 +179,7 @@ export default function Guided() {
   }
 
   const total = reminder.suggestion.length;
+  const exercise = reminder.suggestion[step];
   const outstanding = state && isOutstanding(state, reminderId, now) ? outstandingReminder(state, now) : undefined;
   const snoozeAllowed = outstanding !== undefined && canSnooze(outstanding, now);
 
@@ -166,17 +197,30 @@ export default function Guided() {
         </Text>
       </View>
 
-      <Card key={`${reminder.id}-${step}`} exercise={reminder.suggestion[step]} colors={colors} />
+      {reminder.fallback && (
+        <View style={[styles.banner, { backgroundColor: colors.background.banner }]}>
+          <Text style={[styles.bannerText, { color: colors.text.primary }]}>{FALLBACK_LINE}</Text>
+          <Pressable onPress={() => router.push('/settings')} accessibilityRole="link" hitSlop={8}>
+            <Text style={[styles.bannerLink, { color: colors.accent.hero }]}>Settings</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Keyed by the Exercise too, so a Swap remounts the card and resets its timer. */}
+      <Card key={`${reminder.id}-${step}-${exercise.id}`} exercise={exercise} colors={colors} />
 
       <View style={styles.answers}>
         <Pressable
-          onPress={() => answer(true)}
+          onPress={swapCard}
           disabled={busy}
           accessibilityRole="button"
-          style={[styles.button, { backgroundColor: colors.accent.hero, opacity: busy ? 0.5 : 1 }]}
+          style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
         >
-          <Text style={[styles.buttonText, { color: colors.text.onHero }]}>Did it ✓</Text>
+          <Text style={[styles.buttonText, { color: colors.text.primary }]}>Swap</Text>
         </Pressable>
+        {nothingToSwap && (
+          <Text style={[styles.body, styles.centered, { color: colors.text.secondary }]}>Nothing else fits your settings</Text>
+        )}
         <Pressable
           onPress={() => answer(false)}
           disabled={busy}
@@ -184,6 +228,14 @@ export default function Guided() {
           style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
         >
           <Text style={[styles.buttonText, { color: colors.text.primary }]}>Not this one</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => answer(true)}
+          disabled={busy}
+          accessibilityRole="button"
+          style={[styles.button, { backgroundColor: colors.accent.hero, opacity: busy ? 0.5 : 1 }]}
+        >
+          <Text style={[styles.buttonText, { color: colors.text.onHero }]}>Did it ✓</Text>
         </Pressable>
       </View>
 
@@ -327,4 +379,8 @@ const styles = StyleSheet.create({
   ended: { justifyContent: 'center', gap: 12 },
   endedTitle: { fontSize: 24, fontWeight: '800' },
   body: { fontSize: 14, lineHeight: 20 },
+  centered: { textAlign: 'center' },
+  banner: { borderRadius: 12, padding: 14, gap: 6 },
+  bannerText: { fontSize: 15, fontWeight: '600' },
+  bannerLink: { fontSize: 15, fontWeight: '700' },
 });

@@ -300,9 +300,20 @@ describe('early Start: a Done before the Snooze re-fire counts and cancels it', 
 
 describe('Suggestion: exercisesPerSuggestion distinct Exercises', () => {
   it('gives every Reminder that many distinct Exercises from the library, each a text snapshot with its Body Area', () => {
-    const snapshots = library.map(({ id, name, dose, cue, bodyArea }) => ({ id, name, dose, cue, bodyArea }));
+    // A 6th Exercise, in Core & Lower Back, so 3 + 3 fits the window of 1 (no-repeat relaxation, #24).
+    const sixAreas = [
+      ...library,
+      exercise({
+        id: 'Seated_Torso_Twist',
+        name: 'Seated Torso Twist',
+        dose: { kind: 'reps', amount: 10, eachSide: true },
+        cue: 'Turn from the waist, hips stay square',
+        bodyArea: 'Core & Lower Back',
+      }),
+    ];
+    const snapshots = sixAreas.map(({ id, name, dose, cue, bodyArea }) => ({ id, name, dose, cue, bodyArea }));
 
-    const result = rearm(start, at('08:00'));
+    const result = reduce(start, { type: 'Rearm' }, depsAt(at('08:00'), sixAreas));
 
     expect(result.state.reminders.length).toBeGreaterThan(0);
     for (const reminder of result.state.reminders) {

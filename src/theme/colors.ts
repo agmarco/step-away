@@ -15,6 +15,8 @@ export interface Palette {
     selected: string;
     /** Dims the screen behind a sheet. Translucent. */
     scrim: string;
+    /** A notice above the content (the guided screen's fallback banner); text.primary and accent.hero on it. */
+    banner: string;
   };
   text: {
     primary: string;
@@ -48,7 +50,7 @@ export interface Palette {
 // at least 4.5:1 on its background, marks (dots, week cells) at least 3:1.
 
 export const light: Palette = {
-  background: { screen: '#f8fafc', card: '#ffffff', selected: '#eef2ff', scrim: 'rgba(15, 23, 42, 0.4)' },
+  background: { screen: '#f8fafc', card: '#ffffff', selected: '#eef2ff', scrim: 'rgba(15, 23, 42, 0.4)', banner: '#fef3c7' },
   text: { primary: '#0f172a', secondary: '#64748b', onHero: '#ffffff' },
   line: { divider: '#e2e8f0' },
   accent: { hero: '#4f46e5', heroPanel: '#4338ca' },
@@ -64,7 +66,7 @@ export const light: Palette = {
 };
 
 export const dark: Palette = {
-  background: { screen: '#0b1120', card: '#1e293b', selected: '#312e81', scrim: 'rgba(0, 0, 0, 0.6)' },
+  background: { screen: '#0b1120', card: '#1e293b', selected: '#312e81', scrim: 'rgba(0, 0, 0, 0.6)', banner: '#422006' },
   text: { primary: '#f1f5f9', secondary: '#94a3b8', onHero: '#0b1120' },
   line: { divider: '#334155' },
   accent: { hero: '#818cf8', heroPanel: '#a5b4fc' },

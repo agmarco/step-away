@@ -7,7 +7,7 @@
  * intents described in the v1 spec (#17, Modules -> Domain core).
  */
 
-import type { BodyArea, Dose, Exercise } from './exercise';
+import type { BodyArea, Difficulty, Dose, Equipment, Exercise } from './exercise';
 import type { LocalDate } from './localTime';
 
 /** Epoch milliseconds. */
@@ -27,6 +27,14 @@ export interface ActiveWindow {
   end: Minutes;
 }
 
+/**
+ * How a Suggestion's Body Areas are chosen across Suggestions: Weighted
+ * favours (3:1) the areas with no Done Exercise on the Reminder's day; Random
+ * weighs every area alike; Strict walks `BODY_AREAS` in order, advancing on
+ * every Suggestion whatever the Response.
+ */
+export type BodyAreaMode = 'Weighted' | 'Random' | 'Strict';
+
 export interface Settings {
   /** `null` means no Active Hours that day. */
   activeHours: Record<Weekday, ActiveWindow | null>;
@@ -40,11 +48,23 @@ export interface Settings {
   /** The Snooze delay: a Snooze re-fires the same Reminder this many minutes later. */
   snoozeMinutes: number;
   /**
-   * Dev only, temporary: how many distinct Exercises a Suggestion has. Test
-   * mode raises it to try the guided flow; #24 replaces it with the real
-   * Suggestion rules.
+   * How many Exercises a Suggestion has, 1-3, each from a different Body Area
+   * where the pool allows. The real setting (#24); fewer only when the pool
+   * runs short.
    */
   exercisesPerSuggestion: number;
+  /** How a Suggestion's Body Areas are chosen across Suggestions. */
+  bodyAreaMode: BodyAreaMode;
+  /** The Difficulty ceiling: only Exercises at or below it (Beginner < Intermediate < Expert) are suggested. */
+  difficulty: Difficulty;
+  /** Whether Energetic Exercises are suggested. */
+  energetic: boolean;
+  /** Whether Floor Exercises (Position Floor) are suggested. */
+  floor: boolean;
+  /** The Equipment owned: an Exercise needing other Equipment is never suggested. */
+  equipment: Equipment[];
+  /** The Excluded Exercises, by Exercise Id: never suggested. */
+  excluded: string[];
 }
 
 /** One Exercise of a Suggestion: a text snapshot, not a link to the library entry. */
@@ -84,6 +104,23 @@ export interface Reminder {
   refiresAt?: Instant;
   /** The Exercises done, in Suggestion order. Present only when `status` is `done`. */
   done?: DoneExercise[];
+  /**
+   * Present (and true) only when nothing matched the settings: the Suggestion
+   * is 1 fallback Exercise from the base set (no Equipment, Position not
+   * Floor), chosen ignoring Exclusions, the Difficulty ceiling and Energetic.
+   */
+  fallback?: true;
+  /**
+   * The Exercise Ids swapped out of this Suggestion, in Swap order. They count
+   * in the no-repeat window of the Suggestions after it.
+   */
+  swappedOut?: string[];
+  /**
+   * Only on a Reminder built in Strict mode: the `BODY_AREAS` index the next
+   * Strict Suggestion starts from. The next Strict Suggestion starts from the
+   * latest earlier Reminder that has it, else from 0.
+   */
+  rotation?: number;
 }
 
 /** Everything the core knows. Adapters persist it; the core never does. */
@@ -145,7 +182,13 @@ export type CoreEvent =
    * already Done, skipped, Missed or dropped. To Done, `did` must keep at
    * least one Id of the Suggestion. History only: no Response, no intents.
    */
-  | { type: 'Correct'; reminderId: string; to: Outcome; did?: string[] };
+  | { type: 'Correct'; reminderId: string; to: Outcome; did?: string[] }
+  /**
+   * Swap on the guided card: replaces `exerciseId` in the Reminder's
+   * Suggestion, in place, with another under the Suggestion rules. Not a
+   * Response. Accepted on the Reminders the guided screen can open.
+   */
+  | { type: 'Swap'; reminderId: string; exerciseId: string };
 
 /** The notification actions, in order. */
 export type NotificationAction = 'start' | 'snooze' | 'skip';

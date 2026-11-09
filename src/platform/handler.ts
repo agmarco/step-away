@@ -1,8 +1,8 @@
 /**
  * The one place JS turns platform happenings into core events: Responses
  * (notification action taps from both delivery paths, and the guided screen's
- * Snooze and Skip), the guided screen opening and finishing, corrections from
- * Today, and the app coming to the front.
+ * Snooze and Skip), the guided screen opening, swapping and finishing,
+ * corrections from Today, and the app coming to the front.
  * Each read-modify-write runs inside one `write()` transaction, so it sees the
  * latest committed state even when another JS context wrote in between.
  *
@@ -23,6 +23,7 @@ import {
   type CoreResult,
   type CoreState,
   type Outcome,
+  type Reminder,
   type ResponseKind,
 } from '../core';
 import { exercises } from '../library';
@@ -165,6 +166,33 @@ export async function startGuided(reminderId: string): Promise<{ state: CoreStat
   console.log(`[handler] GuidedStarted ${reminderId}: ${changed ? 'cancelled the re-fire' : 'no-op'}`);
   if (changed) notifyStateChanged();
   return { state, now };
+}
+
+/**
+ * Swap on the guided card: the core's `Swap` in one `write()`. Only if the
+ * core changed the state (it accepts a Swap on the Reminders `guidedStart`
+ * opens, for an Id in the Suggestion, when it has a replacement), it is saved
+ * and the chain ahead rescheduled inside the lock, then notified after the
+ * commit. Not a Response: no `responses` row. Returns the swapped Reminder,
+ * or null for a no-op (nothing else fits, or the Reminder no longer accepts it).
+ */
+export async function swap(reminderId: string, exerciseId: string): Promise<Reminder | null> {
+  const { deps, now } = frozenDeps();
+  const swapped = await write(async (d) => {
+    const state = await loadState(d);
+    const next = reduce(state, { type: 'Swap', reminderId, exerciseId }, deps);
+    if (next.state === state) return null;
+    await saveState(d, next.state, now);
+    // Inside the lock, before COMMIT: see the header comment.
+    await scheduleChains(next.intents);
+    return next.state.reminders.find((r) => r.id === reminderId) ?? null;
+  }).catch((e: unknown) => {
+    console.warn(`[handler] Swap ${exerciseId} on ${reminderId} rolled back: ${e}`);
+    throw e;
+  });
+  console.log(`[handler] Swap ${exerciseId} on ${reminderId}: ${swapped ? 'accepted' : 'no-op'}`);
+  if (swapped) notifyStateChanged();
+  return swapped;
 }
 
 /**
