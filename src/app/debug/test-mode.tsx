@@ -7,9 +7,15 @@
  * and dropped can't happen here; Missed on replacement can. Remove it once
  * Settings (#2x) can set the schedule.
  *
- * Also TEMPORARY (#23, until #24's Suggestion rules): a 1 / 3 choice of
+ * Also TEMPORARY (#23, until #29's Settings page): a 1 / 3 choice of
  * Exercises per Suggestion, so the guided flow can be walked with both. On
  * sets 3; off restores the default 1.
+ *
+ * Also TEMPORARY (#24, until #29's Settings page): an Empty pool switch. On
+ * Excludes every library Exercise and Rearms, so every Reminder ahead is a
+ * fallback (the guided screen's banner, the notification's fallback line).
+ * Off restores no Exclusions and Rearms. The test mode switch above resets it
+ * too, as it stores whole settings.
  *
  * It writes settings straight into the stored state, because the core has no
  * settings event yet; the Rearm that follows goes through the core as usual.
@@ -19,6 +25,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { defaultSettings, type ActiveWindow, type CoreState, type Settings } from '../../core';
+import { exercises } from '../../library';
 import { rearmOnOpen } from '../../platform/handler';
 import { useCoreState } from '../../platform/useCoreState';
 import { isDevelopment } from '../../platform/variant';
@@ -42,18 +49,27 @@ const isTestMode = (s: Settings) =>
 const COUNTS = [1, 3] as const;
 
 /**
- * Sets Exercises per Suggestion and drops the chain ahead, so the Rearm that
- * follows picks new Suggestions at once (a Rearm keeps the Suggestion of a
- * Reminder whose fire time is unchanged). Fired Reminders stay as they are.
+ * Sets Exercises per Suggestion. The Rearm that follows rebuilds the
+ * Suggestion of every Reminder not yet fired; fired ones keep theirs.
  */
-const withCount = (count: number) => (state: CoreState): CoreState => {
-  const now = Date.now();
-  return {
-    ...state,
-    settings: { ...state.settings, exercisesPerSuggestion: count },
-    reminders: state.reminders.filter((r) => r.firesAt <= now),
-  };
-};
+const withCount = (count: number) => (state: CoreState): CoreState => ({
+  ...state,
+  settings: { ...state.settings, exercisesPerSuggestion: count },
+});
+
+/** Every library Id. */
+const ALL_IDS = exercises.map((e) => e.id);
+
+const isEmptyPool = (s: Settings) => ALL_IDS.length > 0 && ALL_IDS.every((id) => s.excluded.includes(id));
+
+/**
+ * Excludes every library Exercise (on) or none (off). The Rearm that follows
+ * rebuilds every Reminder ahead: with the pool empty, each is a fallback.
+ */
+const withEmptyPool = (empty: boolean) => (state: CoreState): CoreState => ({
+  ...state,
+  settings: { ...state.settings, excluded: empty ? ALL_IDS : [] },
+});
 
 /** Keeps the stored time zone; Rearm replaces it with the device's anyway. */
 const withSettings = (settings: Omit<Settings, 'timeZone'>) => (state: CoreState): CoreState => ({
@@ -76,6 +92,7 @@ export default function TestMode() {
   };
   const toggle = (value: boolean) => run(withSettings(value ? TEST_SETTINGS : defaultSettings));
   const count = state?.settings.exercisesPerSuggestion;
+  const emptyPool = state ? isEmptyPool(state.settings) : false;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.screen, paddingTop: insets.top + 24 }]}>
@@ -125,6 +142,20 @@ export default function TestMode() {
           <Text style={[styles.body, { color: colors.text.secondary }]}>
             How many Exercises each new Suggestion has, for walking the guided flow. Changing it re-picks the
             Suggestions of every Reminder ahead; fired ones keep theirs. Test mode on sets 3, off sets 1.
+          </Text>
+          <View style={[styles.row, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>Empty pool (fallback)</Text>
+            <Switch
+              value={emptyPool}
+              disabled={busy || !state}
+              onValueChange={(value) => run(withEmptyPool(value))}
+              trackColor={{ true: colors.accent.hero, false: colors.line.divider }}
+            />
+          </View>
+          <Text style={[styles.body, { color: colors.text.secondary }]}>
+            On: every Exercise is Excluded, then a Rearm, so every Reminder ahead is a fallback (one Exercise from
+            the base set, the banner on the guided screen and the fallback line in the notification). Off: no
+            Exclusions, then a Rearm. Fired Reminders keep theirs. The test mode switch above resets it.
           </Text>
         </>
       ) : (

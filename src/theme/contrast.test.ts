@@ -47,6 +47,9 @@ function textPairs(p: Palette): Pair[] {
   return [
     ...onSurfaces.flatMap(([n, fg]) => surfaces.map(([bn, bg]): Pair => [`${n} on ${bn}`, fg, bg])),
     ['text.primary on background.selected', p.text.primary, p.background.selected],
+    // The guided screen's fallback banner: its line and its Settings link.
+    ['text.primary on background.banner', p.text.primary, p.background.banner],
+    ['accent.hero on background.banner', p.accent.hero, p.background.banner],
     ['text.onHero on accent.hero', p.text.onHero, p.accent.hero],
     ['text.onHero on accent.heroPanel', p.text.onHero, p.accent.heroPanel],
   ];
