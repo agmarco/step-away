@@ -1,4 +1,4 @@
-import type { Equipment, Exercise } from './exercise';
+import { EQUIPMENT, type Equipment, type Exercise } from './exercise';
 
 /** The Exercise groups a library has at least one Exercise in. */
 export interface ExerciseGroups {
@@ -13,6 +13,10 @@ export interface ExerciseGroups {
  * shows the Floor toggle and an Equipment chip only for a group in it. An
  * Exercise that is both Floor and Equipment counts for both.
  */
-export function exerciseGroups(_library: readonly Exercise[]): ExerciseGroups {
-  throw new Error('exerciseGroups: not implemented (#29 CP2)');
+export function exerciseGroups(library: readonly Exercise[]): ExerciseGroups {
+  const needed = new Set(library.map((e) => e.equipment));
+  return {
+    floor: library.some((e) => e.position === 'Floor'),
+    equipment: EQUIPMENT.filter((item) => needed.has(item)),
+  };
 }

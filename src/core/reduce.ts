@@ -1,9 +1,10 @@
 import { MAX_SNOOZES, notificationFor, refireNotificationFor } from './notification';
 import { chainTimes, outstandingReminder, reminderId } from './schedule';
-import { dateKey, dayOf, sameDate } from './days';
+import { dateKey, dayOf, DEFAULT_DAILY_GOAL, sameDate } from './days';
 import { addDays, localDateOf, MINUTE } from './localTime';
 import { refirePending, refireScheduled, settle } from './settle';
 import { buildSuggestion, coverageOf, rotationStart, suggestionSource } from './suggest';
+import { isValidChange } from './settingsChange';
 import { swapReplacement } from './swap';
 import { guidedStart } from './guidedFinish';
 import type {
@@ -82,6 +83,12 @@ export const initialState: CoreState = {
  * and `rotation` stay; the chain ahead is rebuilt (only `ScheduleChain`).
  * With nothing to swap in, or anything else, it returns the input state
  * unchanged, with no intents.
+ *
+ * ChangeSettings merges a valid change (`isValidChange`) into the settled
+ * settings and rebuilds the chain; an invalid one returns the input state with
+ * no intents. ResetSettings sets every setting but `timeZone` back to
+ * `defaultSettings` and the Daily Goal to the default from tomorrow (the
+ * SetDailyGoal rule), then rebuilds the chain; the Activity Log stays.
  */
 export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): CoreResult {
   const now = deps.clock.now();
@@ -126,11 +133,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
     }
     case 'SetDailyGoal': {
       if (!Number.isInteger(event.goal) || event.goal < 1) return { state, intents: [] };
-      const settled = settle(state, now);
-      // From tomorrow: today's goal never moves. A change dated tomorrow or later is replaced.
-      const from = addDays(localDateOf(now, settled.settings.timeZone), 1);
-      const kept = settled.goalChanges.filter((c) => dateKey(c.from) < dateKey(from));
-      return { state: { ...settled, goalChanges: [...kept, { from, goal: event.goal }] }, intents: [] };
+      return { state: goalFromTomorrow(settle(state, now), event.goal, now), intents: [] };
     }
     case 'Correct': {
       // Settled first, so a fired Reminder superseded but not yet persisted counts as Missed.
@@ -171,10 +174,18 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       // The window of the chain ahead changed, and a pending re-fire carries the new body.
       return rearm({ ...settled, reminders: replace(settled, swapped) }, deps);
     }
-    case 'ChangeSettings':
-      throw new Error('ChangeSettings: not implemented (#29 CP2)');
-    case 'ResetSettings':
-      throw new Error('ResetSettings: not implemented (#29 CP2)');
+    case 'ChangeSettings': {
+      if (!isValidChange(event.change)) return { state, intents: [] };
+      const settled = settle(state, now);
+      // Rearmed even for a Suggestion-only change: the chain ahead is rebuilt under the new rules.
+      return rearm({ ...settled, settings: { ...settled.settings, ...event.change } }, deps);
+    }
+    case 'ResetSettings': {
+      const settled = settle(state, now);
+      // Every setting but the time zone; the Activity Log is never touched.
+      const settings: Settings = { ...defaultSettings, timeZone: settled.settings.timeZone };
+      return rearm(goalFromTomorrow({ ...settled, settings }, DEFAULT_DAILY_GOAL, now), deps);
+    }
   }
 }
 
@@ -198,6 +209,16 @@ function doneExercises(reminder: Reminder, did: readonly string[]): DoneExercise
   return reminder.suggestion
     .filter(({ id }) => marked.delete(id))
     .map(({ id, name, bodyArea }) => ({ id, name, bodyArea }));
+}
+
+/**
+ * Sets the Daily Goal from tomorrow (Settings' time zone): today's goal never
+ * moves. A change dated tomorrow or later is replaced.
+ */
+function goalFromTomorrow(state: CoreState, goal: number, now: Instant): CoreState {
+  const from = addDays(localDateOf(now, state.settings.timeZone), 1);
+  const kept = state.goalChanges.filter((c) => dateKey(c.from) < dateKey(from));
+  return { ...state, goalChanges: [...kept, { from, goal }] };
 }
 
 function replace(state: CoreState, reminder: Reminder): Reminder[] {
