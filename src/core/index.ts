@@ -11,6 +11,7 @@ export { seededRandom } from './random';
 export { effectiveFire, refireScheduled, settle } from './settle';
 export type {
   ActiveWindow,
+  BodyAreaMode,
   Clock,
   CoreDeps,
   CoreEvent,

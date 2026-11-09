@@ -26,6 +26,7 @@ import { useColors } from '../../theme';
 
 const ALL_DAY: ActiveWindow = { start: 0, end: 24 * 60 };
 const TEST_SETTINGS: Omit<Settings, 'timeZone'> = {
+  ...defaultSettings,
   activeHours: { mon: ALL_DAY, tue: ALL_DAY, wed: ALL_DAY, thu: ALL_DAY, fri: ALL_DAY, sat: ALL_DAY, sun: ALL_DAY },
   intervalMinutes: 2,
   snoozeMinutes: 1,

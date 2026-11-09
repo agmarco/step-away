@@ -29,6 +29,12 @@ export const defaultSettings: Settings = {
   timeZone: 'UTC',
   snoozeMinutes: 10,
   exercisesPerSuggestion: 1,
+  bodyAreaMode: 'Weighted',
+  difficulty: 'Intermediate',
+  energetic: false,
+  floor: false,
+  equipment: [],
+  excluded: [],
 };
 
 export const initialState: CoreState = {
@@ -136,6 +142,8 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       // History only: lastResponseAt and the chain stay, and there are no intents.
       return { state: { ...settled, reminders: replace(settled, corrected) }, intents: [] };
     }
+    case 'Swap':
+      throw new Error('Swap: not implemented (#24 CP2)');
   }
 }
 
