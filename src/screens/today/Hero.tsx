@@ -1,12 +1,24 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { effectiveFire, nextReminder, refireScheduled, type CoreState } from '../../core';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { heroStatus, type CoreState, type HeroStatus } from '../../core';
 import { useColors } from '../../theme';
 import { dateOf, longDateOf, timeOf, weekdayOf } from './format';
+import { endsAtMidnight } from './pauseDisplay';
+
+/** What the status line's action does: Pause (opens the sheet), Resume, or Undo the Day Off. */
+export type HeroAction = 'pause' | 'resume' | 'undoDayOff';
+
+const ACTION_OF: Record<HeroStatus['kind'], { action: HeroAction; label: string } | null> = {
+  next: { action: 'pause', label: 'Pause' },
+  paused: { action: 'resume', label: 'Resume' },
+  dayOff: { action: 'undoDayOff', label: 'Undo' },
+  none: null,
+};
 
 /**
  * Today's hero (B4): the date, the Streak, the Daily Goal dots ("N of G
- * today") and the status line with the next Reminder. Pause and Day Off join
- * the status line in #26.
+ * today") and the status line from `heroStatus` with its action: the next
+ * Reminder with Pause, a running Pause with Resume, a Day Off with Undo, or
+ * nothing scheduled. The action is disabled while `busy`.
  */
 export function Hero({
   state,
@@ -15,6 +27,8 @@ export function Hero({
   done,
   goal,
   topInset,
+  busy,
+  onAction,
 }: {
   state: CoreState;
   now: number;
@@ -22,9 +36,13 @@ export function Hero({
   done: number;
   goal: number;
   topInset: number;
+  busy: boolean;
+  onAction: (action: HeroAction) => void;
 }) {
   const colors = useColors();
   const onHero = { color: colors.text.onHero };
+  const status = heroStatus(state, now);
+  const action = ACTION_OF[status.kind];
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero, paddingTop: topInset + 16 }]}>
       <Text style={[styles.date, onHero]}>{longDateOf(now)}</Text>
@@ -46,23 +64,42 @@ export function Hero({
       </View>
 
       <View style={[styles.status, { backgroundColor: colors.accent.heroPanel }]}>
-        <Text style={[styles.statusText, onHero]}>{statusLine(state, now)}</Text>
+        <Text style={[styles.statusText, onHero]}>{statusLine(status, state, now)}</Text>
+        {action && (
+          <Pressable
+            onPress={() => onAction(action.action)}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: busy }}
+            style={[styles.action, { borderColor: colors.text.onHero }, busy && styles.disabled]}
+          >
+            <Text style={[styles.actionText, onHero]}>{action.label}</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
 }
 
 /**
- * The next Reminder, a snoozed one coming back at its re-fire. The weekday is
- * shown when its calendar date (in the Settings' time zone) is not today's.
+ * The status line. The next Reminder (a snoozed one at its re-fire) shows its
+ * weekday when its calendar date (in the Settings' time zone) is not today's;
+ * a Pause ending at local midnight is for the rest of today.
  */
-function statusLine(state: CoreState, now: number): string {
-  const next = nextReminder(state, now);
-  if (!next) return 'No Reminders scheduled';
-  const { settings } = state;
-  const at = effectiveFire(next);
-  const day = dateOf(at, settings.timeZone) === dateOf(now, settings.timeZone) ? '' : `${weekdayOf(at)} `;
-  return `Next Reminder ${day}${timeOf(at)}${refireScheduled(next, settings, now) ? ' (snoozed)' : ''}`;
+function statusLine(status: HeroStatus, state: CoreState, now: number): string {
+  const { timeZone } = state.settings;
+  switch (status.kind) {
+    case 'dayOff':
+      return 'Day Off today';
+    case 'paused':
+      return endsAtMidnight(status.until, timeZone) ? 'Paused for the rest of today' : `Paused until ${timeOf(status.until)}`;
+    case 'next': {
+      const day = dateOf(status.at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(status.at)} `;
+      return `Next Reminder ${day}${timeOf(status.at)}${status.snoozed ? ' (snoozed)' : ''}`;
+    }
+    case 'none':
+      return 'No Reminders scheduled';
+  }
 }
 
 const styles = StyleSheet.create({
@@ -74,6 +111,9 @@ const styles = StyleSheet.create({
   goalRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 16 },
   goalDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2 },
   goalText: { fontSize: 15, fontWeight: '700', marginLeft: 4 },
-  status: { marginTop: 18, padding: 12, borderRadius: 12 },
-  statusText: { fontSize: 15, fontWeight: '600' },
+  status: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 18, padding: 12, borderRadius: 12 },
+  statusText: { flex: 1, fontSize: 15, fontWeight: '600' },
+  action: { borderWidth: 2, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 6 },
+  actionText: { fontSize: 15, fontWeight: '700' },
+  disabled: { opacity: 0.5 },
 });
