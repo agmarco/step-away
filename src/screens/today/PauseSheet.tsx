@@ -30,6 +30,7 @@ export function PauseSheet({
             key={length}
             label={label}
             selected={false}
+            role="button"
             onPress={() => {
               onClose();
               onPick(length);

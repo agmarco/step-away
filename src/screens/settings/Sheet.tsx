@@ -62,14 +62,27 @@ export function SheetButtons({
   );
 }
 
-/** One option of a sheet's list: highlighted with a tick when it is the current value. */
-export function Option({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+/**
+ * One option of a sheet's list: highlighted with a tick when it is the current
+ * value. A radio by default; `role` 'button' for a list of actions (the Pause sheet).
+ */
+export function Option({
+  label,
+  selected,
+  onPress,
+  role = 'radio',
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  role?: 'radio' | 'button';
+}) {
   const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
+      accessibilityRole={role}
+      accessibilityState={role === 'radio' ? { checked: selected } : undefined}
       style={[styles.option, selected && { backgroundColor: colors.background.selected }]}
     >
       <Text style={[styles.optionText, { color: colors.text.primary }]}>{label}</Text>
