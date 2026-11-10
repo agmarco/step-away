@@ -1,24 +1,25 @@
 /**
- * TEMPORARY, development build only (#21): a test mode for the owner's device
- * check. On, it stores Interval 2 min, Snooze delay 1 min and Active Hours
- * 00:00-24:00 every day, and Rearms, so a Reminder arrives within 2 minutes
- * (and a snoozed one is back within 1) through the real core path. Off
- * restores the default settings. With the window all day, Missed at closing
- * and dropped can't happen here; Missed on replacement can. Remove it once
- * Settings (#2x) can set the schedule.
+ * Development build only: a test mode for the owner's device checks. The
+ * Settings page (#29) now sets the schedule, but within 15–120 min; this page
+ * stays for 2-minute Reminders, which are below that range.
  *
- * Also TEMPORARY (#23, until #29's Settings page): a 1 / 3 choice of
- * Exercises per Suggestion, so the guided flow can be walked with both. On
- * sets 3; off restores the default 1.
+ * On, it sets Interval 2 min, Snooze delay 1 min, Active Hours 00:00-24:00
+ * every day and 3 Exercises per Suggestion, and Rearms, so a Reminder arrives
+ * within 2 minutes (and a snoozed one is back within 1) through the real core
+ * path. Off restores only those four fields to their defaults; every other
+ * setting (Suggestions, What I can do, Appearance, Exclusions) is kept. With
+ * the window all day, Missed at closing and dropped can't happen here; Missed
+ * on replacement can.
  *
- * Also TEMPORARY (#24, until #29's Settings page): an Empty pool switch. On
- * Excludes every library Exercise and Rearms, so every Reminder ahead is a
- * fallback (the guided screen's banner, the notification's fallback line).
- * Off restores no Exclusions and Rearms. The test mode switch above resets it
- * too, as it stores whole settings.
+ * Also a 1 / 3 choice of Exercises per Suggestion, so the guided flow can be
+ * walked with both, and an Empty pool switch: on Excludes every library
+ * Exercise and Rearms, so every Reminder ahead is a fallback (the guided
+ * screen's banner, the notification's fallback line); off restores no
+ * Exclusions and Rearms, keeping every other setting.
  *
- * It writes settings straight into the stored state, because the core has no
- * settings event yet; the Rearm that follows goes through the core as usual.
+ * It writes settings straight into the stored state, because its 2-min
+ * Interval and 1-min Snooze delay are values ChangeSettings rejects; the Rearm
+ * that follows goes through the core as usual.
  */
 import { Link } from 'expo-router';
 import { useState } from 'react';
@@ -32,12 +33,22 @@ import { isDevelopment } from '../../platform/variant';
 import { useColors } from '../../theme';
 
 const ALL_DAY: ActiveWindow = { start: 0, end: 24 * 60 };
-const TEST_SETTINGS: Omit<Settings, 'timeZone'> = {
-  ...defaultSettings,
+
+/** The fields test mode sets, and so the only ones turning it off restores. */
+type TestFields = Pick<Settings, 'activeHours' | 'intervalMinutes' | 'snoozeMinutes' | 'exercisesPerSuggestion'>;
+
+const TEST_SETTINGS: TestFields = {
   activeHours: { mon: ALL_DAY, tue: ALL_DAY, wed: ALL_DAY, thu: ALL_DAY, fri: ALL_DAY, sat: ALL_DAY, sun: ALL_DAY },
   intervalMinutes: 2,
   snoozeMinutes: 1,
   exercisesPerSuggestion: 3,
+};
+
+const DEFAULT_FIELDS: TestFields = {
+  activeHours: defaultSettings.activeHours,
+  intervalMinutes: defaultSettings.intervalMinutes,
+  snoozeMinutes: defaultSettings.snoozeMinutes,
+  exercisesPerSuggestion: defaultSettings.exercisesPerSuggestion,
 };
 
 const isTestMode = (s: Settings) =>
@@ -71,10 +82,10 @@ const withEmptyPool = (empty: boolean) => (state: CoreState): CoreState => ({
   settings: { ...state.settings, excluded: empty ? ALL_IDS : [] },
 });
 
-/** Keeps the stored time zone; Rearm replaces it with the device's anyway. */
-const withSettings = (settings: Omit<Settings, 'timeZone'>) => (state: CoreState): CoreState => ({
+/** Sets only test mode's fields; every other setting, the time zone included, is kept. */
+const withFields = (fields: TestFields) => (state: CoreState): CoreState => ({
   ...state,
-  settings: { ...settings, timeZone: state.settings.timeZone },
+  settings: { ...state.settings, ...fields },
 });
 
 export default function TestMode() {
@@ -90,7 +101,7 @@ export default function TestMode() {
       .catch((e) => console.warn(`[test-mode] ${e}`))
       .finally(() => setBusy(false));
   };
-  const toggle = (value: boolean) => run(withSettings(value ? TEST_SETTINGS : defaultSettings));
+  const toggle = (value: boolean) => run(withFields(value ? TEST_SETTINGS : DEFAULT_FIELDS));
   const count = state?.settings.exercisesPerSuggestion;
   const emptyPool = state ? isEmptyPool(state.settings) : false;
 
@@ -112,8 +123,10 @@ export default function TestMode() {
             />
           </View>
           <Text style={[styles.body, { color: colors.text.secondary }]}>
-            On: Interval 2 min, Snooze delay 1 min, Active Hours 00:00–24:00 every day, then a Rearm. Off: the
-            default settings (Mon–Fri 09:00–18:00, 45 min, 10-min Snooze). Development build only.
+            On: Interval 2 min, Snooze delay 1 min, Active Hours 00:00–24:00 every day, 3 Exercises per Suggestion,
+            then a Rearm. Off: those four back to their defaults (Mon–Fri 09:00–18:00, 45 min, 10-min Snooze, 1
+            Exercise); every other setting is kept. Settings sets the schedule too, but only from 15 min.
+            Development build only.
           </Text>
           <View style={[styles.row, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Exercises per Suggestion</Text>
@@ -155,7 +168,7 @@ export default function TestMode() {
           <Text style={[styles.body, { color: colors.text.secondary }]}>
             On: every Exercise is Excluded, then a Rearm, so every Reminder ahead is a fallback (one Exercise from
             the base set, the banner on the guided screen and the fallback line in the notification). Off: no
-            Exclusions, then a Rearm. Fired Reminders keep theirs. The test mode switch above resets it.
+            Exclusions, then a Rearm. Fired Reminders keep theirs. Other settings are kept either way.
           </Text>
         </>
       ) : (

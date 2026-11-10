@@ -2,7 +2,8 @@
  * The one place JS turns platform happenings into core events: Responses
  * (notification action taps from both delivery paths, and the guided screen's
  * Snooze and Skip), the guided screen opening, swapping and finishing,
- * corrections from Today, and the app coming to the front.
+ * corrections from Today, changes on the Settings page, and the app coming
+ * to the front.
  * Each read-modify-write runs inside one `write()` transaction, so it sees the
  * latest committed state even when another JS context wrote in between.
  *
@@ -25,6 +26,7 @@ import {
   type Outcome,
   type Reminder,
   type ResponseKind,
+  type SettingsChange,
 } from '../core';
 import { exercises } from '../library';
 import { write, type Db } from './db';
@@ -271,6 +273,57 @@ export async function correct(reminderId: string, to: Outcome, did?: string[]): 
   console.log(`[handler] Correct ${reminderId} to ${to}: ${accepted ? 'accepted' : 'no-op'}`);
   if (accepted) notifyStateChanged();
   return accepted;
+}
+
+/**
+ * A Settings page event in one `write()`: load, `reduce`, and only if the core
+ * accepted it (a new state), save it and schedule the chain inside the lock;
+ * after the commit, notify. Not a Response: no `responses` row. True when it
+ * was accepted.
+ */
+async function settingsEvent(event: CoreEvent, label: string): Promise<boolean> {
+  const { deps, now } = frozenDeps();
+  const accepted = await write(async (d) => {
+    const state = await loadState(d);
+    const next = reduce(state, event, deps);
+    if (next.state === state) return false;
+    await saveState(d, next.state, now);
+    // Inside the lock, before COMMIT: see the header comment.
+    await scheduleChains(next.intents);
+    return true;
+  }).catch((e: unknown) => {
+    console.warn(`[handler] ${label} rolled back: ${e}`);
+    throw e;
+  });
+  console.log(`[handler] ${label}: ${accepted ? 'accepted' : 'no-op'}`);
+  if (accepted) notifyStateChanged();
+  return accepted;
+}
+
+/**
+ * ChangeSettings from the Settings page. The core validates the change (an
+ * invalid one writes nothing) and rearms: the chain is rescheduled at once.
+ * True when the change was accepted.
+ */
+export function changeSettings(change: SettingsChange): Promise<boolean> {
+  return settingsEvent({ type: 'ChangeSettings', change }, `ChangeSettings ${Object.keys(change).join(', ')}`);
+}
+
+/**
+ * ResetSettings from the Settings page: every setting back to its default
+ * (Appearance to System, the Daily Goal from tomorrow), the time zone kept and
+ * the Activity Log untouched, then the chain rescheduled. True when accepted.
+ */
+export function resetSettings(): Promise<boolean> {
+  return settingsEvent({ type: 'ResetSettings' }, 'ResetSettings');
+}
+
+/**
+ * SetDailyGoal from the Settings page, applied from tomorrow. It has no
+ * intents, so nothing is scheduled. True when the goal was accepted.
+ */
+export function setDailyGoal(goal: number): Promise<boolean> {
+  return settingsEvent({ type: 'SetDailyGoal', goal }, `SetDailyGoal ${goal}`);
 }
 
 /**
