@@ -2,8 +2,8 @@
  * The one place JS turns platform happenings into core events: Responses
  * (notification action taps from both delivery paths, and the guided screen's
  * Snooze and Skip), the guided screen opening, swapping and finishing,
- * corrections from Today, changes on the Settings page, and the app coming
- * to the front.
+ * corrections, Pause, Resume and Day Off from Today, changes on the Settings
+ * page, and the app coming to the front.
  * Each read-modify-write runs inside one `write()` transaction, so it sees the
  * latest committed state even when another JS context wrote in between.
  *
@@ -23,7 +23,9 @@ import {
   type CoreEvent,
   type CoreResult,
   type CoreState,
+  type LocalDate,
   type Outcome,
+  type PauseLength,
   type Reminder,
   type ResponseKind,
   type SettingsChange,
@@ -276,28 +278,31 @@ export async function correct(reminderId: string, to: Outcome, did?: string[]): 
 }
 
 /**
- * A Settings page event in one `write()`: load, `reduce`, and only if the core
- * accepted it (a new state), save it and schedule the chain inside the lock;
- * after the commit, notify. Not a Response: no `responses` row. True when it
- * was accepted.
+ * A Settings page, Pause or Day Off event in one `write()`: load, `reduce`,
+ * and only if the core accepted it (a new state), save it and schedule the
+ * chain inside the lock; after the commit, apply the dismissals (a Pause or a
+ * Day Off drops the waiting Reminder) and notify. Not a Response: no
+ * `responses` row. True when it was accepted.
  */
-async function settingsEvent(event: CoreEvent, label: string): Promise<boolean> {
+async function stateEvent(event: CoreEvent, label: string): Promise<boolean> {
   const { deps, now } = frozenDeps();
-  const accepted = await write(async (d) => {
+  const intents = await write(async (d) => {
     const state = await loadState(d);
     const next = reduce(state, event, deps);
-    if (next.state === state) return false;
+    if (next.state === state) return null;
     await saveState(d, next.state, now);
     // Inside the lock, before COMMIT: see the header comment.
     await scheduleChains(next.intents);
-    return true;
+    return next.intents;
   }).catch((e: unknown) => {
     console.warn(`[handler] ${label} rolled back: ${e}`);
     throw e;
   });
-  console.log(`[handler] ${label}: ${accepted ? 'accepted' : 'no-op'}`);
-  if (accepted) notifyStateChanged();
-  return accepted;
+  console.log(`[handler] ${label}: ${intents ? 'accepted' : 'no-op'}`);
+  if (!intents) return false;
+  await dismissNotifications(intents);
+  notifyStateChanged();
+  return true;
 }
 
 /**
@@ -306,7 +311,7 @@ async function settingsEvent(event: CoreEvent, label: string): Promise<boolean> 
  * True when the change was accepted.
  */
 export function changeSettings(change: SettingsChange): Promise<boolean> {
-  return settingsEvent({ type: 'ChangeSettings', change }, `ChangeSettings ${Object.keys(change).join(', ')}`);
+  return stateEvent({ type: 'ChangeSettings', change }, `ChangeSettings ${Object.keys(change).join(', ')}`);
 }
 
 /**
@@ -315,7 +320,7 @@ export function changeSettings(change: SettingsChange): Promise<boolean> {
  * the Activity Log untouched, then the chain rescheduled. True when accepted.
  */
 export function resetSettings(): Promise<boolean> {
-  return settingsEvent({ type: 'ResetSettings' }, 'ResetSettings');
+  return stateEvent({ type: 'ResetSettings' }, 'ResetSettings');
 }
 
 /**
@@ -323,7 +328,34 @@ export function resetSettings(): Promise<boolean> {
  * intents, so nothing is scheduled. True when the goal was accepted.
  */
 export function setDailyGoal(goal: number): Promise<boolean> {
-  return settingsEvent({ type: 'SetDailyGoal', goal }, `SetDailyGoal ${goal}`);
+  return stateEvent({ type: 'SetDailyGoal', goal }, `SetDailyGoal ${goal}`);
+}
+
+/**
+ * Pause from Today: no Reminder for 1 hour, 2 hours or the rest of today. A
+ * Pause already running is replaced from now; rejected on a Day Off. The
+ * waiting Reminder is dropped and its notification dismissed after the
+ * commit. True when accepted.
+ */
+export function pause(length: PauseLength): Promise<boolean> {
+  return stateEvent({ type: 'Pause', length }, `Pause ${length}`);
+}
+
+/** Resume from Today: ends the running Pause now and rearms. True when accepted (a Pause was running). */
+export function resume(): Promise<boolean> {
+  return stateEvent({ type: 'Resume' }, 'Resume');
+}
+
+/**
+ * Take a day off, or undo it (`off` false). Today or a future date only; a
+ * no-op (already in that state) is rejected. Today off drops the waiting
+ * Reminder and dismisses its notification after the commit. True when accepted.
+ */
+export function setDayOff(date: LocalDate, off: boolean): Promise<boolean> {
+  return stateEvent(
+    { type: 'SetDayOff', date, off },
+    `SetDayOff ${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')} ${off}`,
+  );
 }
 
 /**
