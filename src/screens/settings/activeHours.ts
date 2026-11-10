@@ -1,9 +1,6 @@
-import type { ActiveWindow, Settings, Weekday } from '../../core';
+import { WEEKDAYS, type ActiveWindow, type Settings, type Weekday } from '../../core';
 
 export type ActiveHours = Settings['activeHours'];
-
-/** Mon–Sun, in the order the page shows them and ties are broken in. */
-export const WEEKDAYS: readonly Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
 const sameWindow = (a: ActiveWindow | null, b: ActiveWindow | null) =>
   a !== null && b !== null && a.start === b.start && a.end === b.end;

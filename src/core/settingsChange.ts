@@ -5,28 +5,42 @@
  */
 
 import { DIFFICULTIES, EQUIPMENT } from './exercise';
-import type { Settings, Weekday } from './types';
+import type { AppearanceSetting, BodyAreaMode, SettingsChange, Weekday } from './types';
 
-export type SettingsChange = Partial<Omit<Settings, 'timeZone'>>;
+/**
+ * A list naming every member of `T`: one missing is a type error at the list,
+ * one not in `T` too. `allOf<T>()([...])` keeps the literal tuple type.
+ */
+const allOf =
+  <T>() =>
+  <const L extends readonly T[]>(list: L & ([Exclude<T, L[number]>] extends [never] ? unknown : never)): L =>
+    list;
 
-const SNOOZE_DELAYS: readonly number[] = [5, 10, 15, 20, 30];
-const BODY_AREA_MODES: readonly unknown[] = ['Weighted', 'Random', 'Strict'];
-const APPEARANCES: readonly unknown[] = ['System', 'Light', 'Dark'];
+/** The Interval choices: 15–120 min in 5-min steps. */
+export const INTERVALS: readonly number[] = Array.from({ length: 22 }, (_, i) => 15 + i * 5);
+/** The Snooze delay choices, in minutes. */
+export const SNOOZE_DELAYS: readonly number[] = [5, 10, 15, 20, 30];
+/** Every Body Area mode, in the order the Settings page lists them. */
+export const BODY_AREA_MODES = allOf<BodyAreaMode>()(['Weighted', 'Random', 'Strict']);
+/** Every Appearance setting, in the order the Settings page lists them. */
+export const APPEARANCE_SETTINGS = allOf<AppearanceSetting>()(['System', 'Light', 'Dark']);
+/** Mon–Sun: the order the Settings page shows the days in and its main-window ties are broken in. */
+export const WEEKDAYS = allOf<Weekday>()(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+
 const DAY_MINUTES = 24 * 60;
-const WEEKDAYS: readonly string[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] satisfies Weekday[];
 
 const isIntegerIn = (value: unknown, min: number, max: number): value is number =>
   Number.isInteger(value) && (value as number) >= min && (value as number) <= max;
 
-const isInterval = (value: unknown) => isIntegerIn(value, 15, 120) && (value as number) % 5 === 0;
-
 const isBoolean = (value: unknown) => typeof value === 'boolean';
 
-const isOneOf = (options: readonly unknown[]) => (value: unknown) => options.includes(value);
+const isOneOf =
+  <T>(options: readonly T[]) =>
+  (value: unknown) => options.some((option) => option === value);
 
 const isEquipmentList = (value: unknown) =>
   Array.isArray(value) &&
-  value.every((item) => (EQUIPMENT as readonly unknown[]).includes(item)) &&
+  value.every(isOneOf(EQUIPMENT)) &&
   new Set(value).size === value.length;
 
 const isStringList = (value: unknown) => Array.isArray(value) && value.every((item) => typeof item === 'string');
@@ -51,7 +65,7 @@ const isActiveHours = (value: unknown) => {
 
 const RULES: Record<keyof SettingsChange, (value: unknown) => boolean> = {
   activeHours: isActiveHours,
-  intervalMinutes: isInterval,
+  intervalMinutes: isOneOf(INTERVALS),
   snoozeMinutes: isOneOf(SNOOZE_DELAYS),
   exercisesPerSuggestion: (value) => isIntegerIn(value, 1, 3),
   bodyAreaMode: isOneOf(BODY_AREA_MODES),
@@ -60,7 +74,7 @@ const RULES: Record<keyof SettingsChange, (value: unknown) => boolean> = {
   floor: isBoolean,
   equipment: isEquipmentList,
   excluded: isStringList,
-  appearance: isOneOf(APPEARANCES),
+  appearance: isOneOf(APPEARANCE_SETTINGS),
 };
 
 /** Whether every field of `change` is valid. Any other key, `timeZone` included, makes it invalid. */

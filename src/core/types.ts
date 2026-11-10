@@ -75,6 +75,9 @@ export interface Settings {
   appearance: AppearanceSetting;
 }
 
+/** A change on the Settings page: any subset of the settings but the time zone. */
+export type SettingsChange = Partial<Omit<Settings, 'timeZone'>>;
+
 /** One Exercise of a Suggestion: a text snapshot, not a link to the library entry. */
 export interface SuggestedExercise {
   id: string;
@@ -201,7 +204,7 @@ export type CoreEvent =
    * A change on the Settings page: applies the validated change and rearms.
    * An invalid change returns the input state with no intents.
    */
-  | { type: 'ChangeSettings'; change: Partial<Omit<Settings, 'timeZone'>> }
+  | { type: 'ChangeSettings'; change: SettingsChange }
   /**
    * Reset settings to defaults: every setting but `timeZone`, and the Daily
    * Goal from tomorrow. Never touches the Activity Log. Then rearms.

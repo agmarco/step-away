@@ -3,17 +3,21 @@ import { useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  APPEARANCE_SETTINGS,
+  BODY_AREA_MODES,
   DIFFICULTIES,
   EQUIPMENT,
   exerciseGroups,
-  type AppearanceSetting,
+  INTERVALS,
+  SNOOZE_DELAYS,
   type BodyAreaMode,
   type Equipment,
+  type SettingsChange,
 } from '../core';
 import { exercises } from '../library';
-import { changeSettings, resetSettings, setDailyGoal, type SettingsChange } from '../platform/handler';
+import { changeSettings, resetSettings, setDailyGoal } from '../platform/handler';
 import { useCoreState } from '../platform/useCoreState';
-import { openSystemSettings, useNotificationsOn } from '../platform/useNotificationStatus';
+import { openSystemSettings, useNotificationsOn } from '../platform/notificationPermission';
 import { appVariant, isDevelopment } from '../platform/variant';
 import { ActiveHoursRows } from '../screens/settings/ActiveHoursRows';
 import { dailyGoalRow } from '../screens/settings/dailyGoal';
@@ -21,17 +25,14 @@ import { Chip, ChipsRow, Divider, PageHeader, RadioRow, Row, Section, SwitchRow 
 import { PickerSheet } from '../screens/settings/PickerSheet';
 import { useColors } from '../theme';
 
-/** Interval: 15–120 min in 5-min steps. */
-const INTERVALS = Array.from({ length: 22 }, (_, i) => 15 + i * 5);
-const SNOOZE_DELAYS = [5, 10, 15, 20, 30];
 const GOALS = Array.from({ length: 12 }, (_, i) => i + 1);
 const COUNTS = [1, 2, 3];
-const MODES: { mode: BodyAreaMode; label: string; note: string }[] = [
-  { mode: 'Weighted', label: 'Weighted', note: "Favours the Body Areas you haven't done today." },
-  { mode: 'Random', label: 'Random', note: 'Any Body Area, all equally likely.' },
-  { mode: 'Strict', label: 'Strict rotation', note: 'Goes through the Body Areas in order.' },
-];
-const APPEARANCES: AppearanceSetting[] = ['System', 'Light', 'Dark'];
+/** Each Body Area mode's label and note: a mode missing here is a type error. */
+const MODE_TEXT: Record<BodyAreaMode, { label: string; note: string }> = {
+  Weighted: { label: 'Weighted', note: "Favours the Body Areas you haven't done today." },
+  Random: { label: 'Random', note: 'Any Body Area, all equally likely.' },
+  Strict: { label: 'Strict rotation', note: 'Goes through the Body Areas in order.' },
+};
 
 /** The groups that have Exercises: Floor and each Equipment chip show only for these. */
 const GROUPS = exerciseGroups(exercises);
@@ -153,14 +154,14 @@ export default function Settings() {
           <View style={styles.subheading}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Body Area mode</Text>
           </View>
-          {MODES.map((m) => (
+          {BODY_AREA_MODES.map((mode) => (
             <RadioRow
-              key={m.mode}
-              label={m.label}
-              note={m.note}
-              selected={s.bodyAreaMode === m.mode}
+              key={mode}
+              label={MODE_TEXT[mode].label}
+              note={MODE_TEXT[mode].note}
+              selected={s.bodyAreaMode === mode}
               disabled={busy}
-              onPress={() => s.bodyAreaMode !== m.mode && change({ bodyAreaMode: m.mode })}
+              onPress={() => s.bodyAreaMode !== mode && change({ bodyAreaMode: mode })}
             />
           ))}
         </Section>
@@ -244,7 +245,7 @@ export default function Settings() {
           </View>
           <Divider />
           <ChipsRow label="Appearance">
-            {APPEARANCES.map((a) => (
+            {APPEARANCE_SETTINGS.map((a) => (
               <Chip
                 key={a}
                 label={a}

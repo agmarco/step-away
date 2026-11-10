@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react';
-import type { Weekday } from '../../core';
+import { WEEKDAYS, type Weekday } from '../../core';
 import {
   dayRows,
   formatWindow,
@@ -7,7 +7,6 @@ import {
   withDay,
   withDayWindow,
   withMainWindow,
-  WEEKDAYS,
   type ActiveHours,
 } from './activeHours';
 import { Chip, ChipsRow, Divider, Row } from './parts';

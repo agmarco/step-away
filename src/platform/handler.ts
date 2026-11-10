@@ -26,6 +26,7 @@ import {
   type Outcome,
   type Reminder,
   type ResponseKind,
+  type SettingsChange,
 } from '../core';
 import { exercises } from '../library';
 import { write, type Db } from './db';
@@ -273,9 +274,6 @@ export async function correct(reminderId: string, to: Outcome, did?: string[]): 
   if (accepted) notifyStateChanged();
   return accepted;
 }
-
-/** A change on the Settings page: any subset of the settings but the time zone. */
-export type SettingsChange = Extract<CoreEvent, { type: 'ChangeSettings' }>['change'];
 
 /**
  * A Settings page event in one `write()`: load, `reduce`, and only if the core
