@@ -4,6 +4,7 @@
  * Recomputed whenever JS runs, because nothing runs when a notification fires.
  */
 
+import { dateKey } from './days';
 import { addDays, instantAt, localDateOf, MINUTE, weekdayOf } from './localTime';
 import { effectiveFire, refireScheduled, settle } from './settle';
 import type { CoreState, Instant, Reminder } from './types';
@@ -92,6 +93,13 @@ export function isOutstanding(state: CoreState, reminderId: string, now: Instant
  * (start + Interval + k·Interval) from the next slot after `now`, with no
  * backfill. Every other day starts one Interval after its Active Hours begin.
  * Each day stops before its window end.
+ *
+ * Days Off have no Reminders. A Pause `[from, until)` overlapping the gap
+ * before the next time (from the anchor, or the previous time, up to and
+ * including the next one) moves the anchor to its `until`: no time falls
+ * inside a Pause, and the first one after it is `until` + Interval, or
+ * nothing more that day if that is at or past the window end. So the chain
+ * built when a Pause starts already holds the times after it.
  */
 export function chainTimes(state: CoreState, now: Instant): Instant[] {
   const { activeHours, intervalMinutes, timeZone } = state.settings;
@@ -101,21 +109,32 @@ export function chainTimes(state: CoreState, now: Instant): Instant[] {
   const times: Instant[] = [];
   const latest = latestFired(state, now);
   const latestFire = latest ? effectiveFire(latest) : -Infinity;
+  const daysOff = new Set(state.daysOff.map(dateKey));
+  // Oldest first and never overlapping; only those ending after today's midnight can matter.
+  const todayStart = instantAt(today, 0, timeZone);
+  const pauses = state.pauses.filter((p) => p.until > todayStart);
+  let p = 0;
 
   for (let offset = 0; offset <= HORIZON_DAYS; offset++) {
     const date = addDays(today, offset);
     const window = activeHours[weekdayOf(date)];
-    if (!window) continue;
+    if (!window || daysOff.has(dateKey(date))) continue;
     const start = instantAt(date, window.start, timeZone);
     const end = instantAt(date, window.end, timeZone);
 
-    let first = start + step;
+    let anchor = start;
     if (offset === 0) {
-      const anchor = Math.max(state.lastResponseAt ?? -Infinity, latestFire);
-      if (anchor >= start && anchor < end) first = anchor + step;
+      const last = Math.max(state.lastResponseAt ?? -Infinity, latestFire);
+      if (last >= start && last < end) anchor = last;
     }
-    for (let t = first; t < end && t < horizon; t += step) {
+    for (let t = anchor + step; t < end && t < horizon; t = anchor + step) {
+      while (p < pauses.length && pauses[p].until <= anchor) p++;
+      if (p < pauses.length && pauses[p].from <= t) {
+        anchor = pauses[p].until;
+        continue;
+      }
       if (t > now) times.push(t);
+      anchor = t;
     }
   }
   return times;

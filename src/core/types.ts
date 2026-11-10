@@ -98,7 +98,8 @@ export type DoneExercise = Pick<SuggestedExercise, 'id' | 'name' | 'bodyArea'>;
  * (a Done Response), `skipped` (a Skip Response), `missed` (no Response
  * before a later Reminder fired, or before its day's Active Hours ended) and
  * `dropped` (a pending Snooze re-fire that would land at or after its day's
- * window end).
+ * window end, or the outstanding Reminder when a Pause starts or today is
+ * taken off). Dropped is never counted.
  */
 export interface Reminder {
   /** Deterministic from `firesAt`. A Snooze re-fire keeps it. */
