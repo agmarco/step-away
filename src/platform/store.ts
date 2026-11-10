@@ -11,6 +11,8 @@ import {
   type DoneExercise,
   type GoalChange,
   type Instant,
+  type LocalDate,
+  type Pause,
   type Reminder,
   type ResponseKind,
   type Settings,
@@ -45,6 +47,8 @@ const META = {
   lastResponseAt: 'last_response_at',
   lastAppOpenAt: 'last_app_open_at',
   goalChanges: 'goal_changes',
+  pauses: 'pauses',
+  daysOff: 'days_off',
 } as const;
 
 /**
@@ -64,6 +68,8 @@ export async function loadState(d: Db): Promise<CoreState> {
   const instant = (key: string): Instant | null => (meta.has(key) ? Number(meta.get(key)) : null);
   const settings = meta.get(META.settings);
   const goalChanges = meta.get(META.goalChanges);
+  const pauses = meta.get(META.pauses);
+  const daysOff = meta.get(META.daysOff);
   return {
     // Over the defaults: settings stored before a field existed (e.g. #21's, without `snoozeMinutes`) get its default.
     settings: settings ? { ...defaultSettings, ...(JSON.parse(settings) as Partial<Settings>) } : defaultSettings,
@@ -71,9 +77,9 @@ export async function loadState(d: Db): Promise<CoreState> {
     lastAppOpenAt: instant(META.lastAppOpenAt),
     // Absent before #25: no Daily Goal change recorded, so the default goal.
     goalChanges: goalChanges ? (JSON.parse(goalChanges) as GoalChange[]) : [],
-    // TODO(#26 CP3): stored as meta JSON
-    pauses: [],
-    daysOff: [],
+    // Absent before #26: no Pause and no Day Off recorded.
+    pauses: pauses ? (JSON.parse(pauses) as Pause[]) : [],
+    daysOff: daysOff ? (JSON.parse(daysOff) as LocalDate[]) : [],
     reminders: rows.map(
       (r): Reminder => ({
         id: r.id,
@@ -110,6 +116,8 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
   await setMeta(META.lastResponseAt, state.lastResponseAt === null ? null : String(state.lastResponseAt));
   await setMeta(META.lastAppOpenAt, state.lastAppOpenAt === null ? null : String(state.lastAppOpenAt));
   await setMeta(META.goalChanges, JSON.stringify(state.goalChanges));
+  await setMeta(META.pauses, JSON.stringify(state.pauses));
+  await setMeta(META.daysOff, JSON.stringify(state.daysOff));
 
   await d.runAsync('DELETE FROM reminders WHERE fires_at > ?', now);
   for (let i = 0; i < state.reminders.length; i += BATCH) {

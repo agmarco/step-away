@@ -176,3 +176,36 @@ describe('saveState and loadState', () => {
     expect(maxBound).toBeLessThanOrEqual(MAX_PARAMS);
   });
 });
+
+describe('Pauses and Days Off', () => {
+  it('round-trips the Pause history and the Days Off', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    const saved: CoreState = {
+      ...state([]),
+      pauses: [
+        { from: NOW + 60_000, until: NOW + 120_000 },
+        { from: NOW + 600_000, until: NOW + 4_200_000 },
+      ],
+      daysOff: [
+        { year: 2026, month: 11, day: 10 },
+        { year: 2026, month: 11, day: 12 },
+      ],
+    };
+    await saveState(d, saved, NOW);
+    const loaded = await loadState(d);
+    expect(loaded.pauses).toEqual(saved.pauses);
+    expect(loaded.daysOff).toEqual(saved.daysOff);
+  });
+
+  it('reads no Pauses and no Days Off from a DB stored before #26', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    // As a pre-#26 DB: neither key was ever written.
+    await d.runAsync(`DELETE FROM meta WHERE key IN ('pauses', 'days_off')`);
+    const loaded = await loadState(d);
+    expect(loaded.pauses).toEqual([]);
+    expect(loaded.daysOff).toEqual([]);
+  });
+});
