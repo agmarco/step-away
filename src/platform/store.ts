@@ -71,6 +71,9 @@ export async function loadState(d: Db): Promise<CoreState> {
     lastAppOpenAt: instant(META.lastAppOpenAt),
     // Absent before #25: no Daily Goal change recorded, so the default goal.
     goalChanges: goalChanges ? (JSON.parse(goalChanges) as GoalChange[]) : [],
+    // TODO(#26 CP3): stored as meta JSON
+    pauses: [],
+    daysOff: [],
     reminders: rows.map(
       (r): Reminder => ({
         id: r.id,

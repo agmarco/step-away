@@ -47,6 +47,8 @@ export const initialState: CoreState = {
   reminders: [],
   lastResponseAt: null,
   goalChanges: [],
+  pauses: [],
+  daysOff: [],
 };
 
 /**
@@ -186,6 +188,12 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const settings: Settings = { ...defaultSettings, timeZone: settled.settings.timeZone };
       return rearm(goalFromTomorrow({ ...settled, settings }, DEFAULT_DAILY_GOAL, now), deps);
     }
+    case 'Pause':
+      throw new Error('Pause: not implemented (#26 CP2)');
+    case 'Resume':
+      throw new Error('Resume: not implemented (#26 CP2)');
+    case 'SetDayOff':
+      throw new Error('SetDayOff: not implemented (#26 CP2)');
   }
 }
 

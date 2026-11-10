@@ -9,6 +9,8 @@ export { addDays } from './localTime';
 export type { LocalDate } from './localTime';
 export { formatDose } from './dose';
 export { FALLBACK_LINE, MAX_SNOOZES } from './notification';
+export { heroStatus, todaysPauses } from './pause';
+export type { HeroStatus } from './pause';
 export { isOutstanding, isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
 export { APPEARANCE_SETTINGS, BODY_AREA_MODES, INTERVALS, SNOOZE_DELAYS, WEEKDAYS } from './settingsChange';
@@ -29,6 +31,8 @@ export type {
   Minutes,
   NotificationAction,
   Outcome,
+  Pause,
+  PauseLength,
   Random,
   Reminder,
   ResponseKind,

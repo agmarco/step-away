@@ -20,7 +20,7 @@ export interface Tally {
 }
 
 /** One day of the week panel. */
-export type DayMark = 'goal' | 'missed' | 'off' | 'today' | 'future';
+export type DayMark = 'goal' | 'missed' | 'off' | 'today' | 'future' | 'dayOff';
 
 /**
  * The Daily Goal a day is judged against: the last change whose `from` is on

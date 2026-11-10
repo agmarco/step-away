@@ -11,6 +11,7 @@ const MARK_LABEL: Record<DayMark, string> = {
   off: 'no Active Hours',
   today: 'today',
   future: 'still ahead',
+  dayOff: 'Day Off',
 };
 
 /** A week cell's look by mark: Goal Day and missed are filled; today has a ring; the rest are empty. */

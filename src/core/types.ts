@@ -148,7 +148,23 @@ export interface CoreState {
    * with `from` on or before it; with none it is 4.
    */
   goalChanges: GoalChange[];
+  /**
+   * The Pause history, oldest first. Resume shortens the running one's
+   * `until` to the Resume time.
+   */
+  pauses: Pause[];
+  /** The Days Off (local dates in the Settings' time zone): no Reminder fires on them. */
+  daysOff: LocalDate[];
 }
+
+/** A Pause: no Reminder fires in [from, until), and nothing in it is Missed. */
+export interface Pause {
+  from: Instant;
+  until: Instant;
+}
+
+/** How long a Pause runs from now: 1 hour, 2 hours, or until the next local midnight. */
+export type PauseLength = 'hour' | 'twoHours' | 'restOfToday';
 
 /** From `from` on (a local date in the Settings' time zone), the Daily Goal is `goal`. */
 export interface GoalChange {
@@ -209,7 +225,19 @@ export type CoreEvent =
    * Reset settings to defaults: every setting but `timeZone`, and the Daily
    * Goal from tomorrow. Never touches the Activity Log. Then rearms.
    */
-  | { type: 'ResetSettings' };
+  | { type: 'ResetSettings' }
+  /**
+   * Pause Reminders from now. A Pause already running has its `until`
+   * replaced. Rejected on a Day Off. Drops the outstanding Reminder, then rearms.
+   */
+  | { type: 'Pause'; length: PauseLength }
+  /** End the running Pause now, then rearm. Rejected with no Pause running. */
+  | { type: 'Resume' }
+  /**
+   * Mark `date` (today or later) as a Day Off, or undo it. Taking today off
+   * drops the outstanding Reminder. Rejected for a past date or a no-op.
+   */
+  | { type: 'SetDayOff'; date: LocalDate; off: boolean };
 
 /** The notification actions, in order. */
 export type NotificationAction = 'start' | 'snooze' | 'skip';
