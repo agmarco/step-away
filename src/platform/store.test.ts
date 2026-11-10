@@ -62,6 +62,8 @@ const state = (reminders: Reminder[]): CoreState => ({
   lastResponseAt: null,
   lastAppOpenAt: null,
   goalChanges: [],
+  pauses: [],
+  daysOff: [],
   reminders,
 });
 
