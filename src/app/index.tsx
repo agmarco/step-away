@@ -1,4 +1,4 @@
-import { Link, useIsFocused } from "expo-router";
+import { Link, Redirect, useIsFocused } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -13,6 +13,7 @@ import {
   type Reminder,
 } from "../core";
 import { pause, resume, setDayOff } from "../platform/handler";
+import { useOnboardingDone } from "../platform/onboarding";
 import { useCoreState } from "../platform/useCoreState";
 import { isDevelopment } from "../platform/variant";
 import { CorrectionSheet } from "../screens/today/CorrectionSheet";
@@ -34,7 +35,8 @@ import { useColors, useScheme } from "../theme";
  * so a Reminder shows Missed as soon as it is, even before the next write
  * persists it. One Pause or Day Off change at a time: the actions are
  * disabled while one is in flight, and a ref drops a second tap in the same
- * tick.
+ * tick. On a fresh install, Today redirects to onboarding (#31) until it is
+ * done, showing nothing until the flag is read.
  */
 export default function Today() {
   const colors = useColors();
@@ -42,6 +44,7 @@ export default function Today() {
   const focused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { state: stored, now } = useCoreState();
+  const onboardingDone = useOnboardingDone();
   const [correcting, setCorrecting] = useState<Reminder | null>(null);
   const [pausing, setPausing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,7 +64,8 @@ export default function Today() {
       });
   };
 
-  if (!state)
+  if (onboardingDone === false) return <Redirect href="/onboarding" />;
+  if (!state || onboardingDone === null)
     return (
       <View
         style={[styles.root, { backgroundColor: colors.background.screen }]}
