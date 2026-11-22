@@ -78,10 +78,10 @@ export default function Onboarding() {
     return (
       <View style={[styles.root, styles.fallback, { backgroundColor: colors.background.screen }]}>
         <Text style={[styles.title, { color: colors.text.primary }]} accessibilityRole="header">
-          Setup can't start
+          {"Setup can't start"}
         </Text>
         <Text style={[styles.body, { color: colors.text.secondary }]}>
-          Your settings couldn't be read. You can set things up later in Settings.
+          {"Your settings couldn't be read. You can set things up later in Settings."}
         </Text>
         <Pressable
           onPress={() => run('Go to Today', finish)}
