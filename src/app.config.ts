@@ -71,7 +71,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       predictiveBackGestureEnabled: false,
     },
     web: { favicon: './assets/favicon.png' },
-    plugins: ['expo-router', 'expo-status-bar', 'expo-sqlite', 'expo-notifications', 'expo-task-manager'],
+    plugins: [
+      'expo-router',
+      'expo-status-bar',
+      'expo-sqlite',
+      'expo-notifications',
+      'expo-task-manager',
+      // The launcher's Pause shortcuts open this variant's pause deep link.
+      ['./plugins/withPauseShortcuts', { scheme: v.scheme, package: v.package }],
+    ],
     owner: 'agmarco',
     extra: {
       ...config.extra,
