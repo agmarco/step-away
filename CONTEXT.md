@@ -78,7 +78,7 @@ The run of consecutive Goal Days. Days with no Active Hours, and Days Off, neith
 _Avoid_: chain, combo
 
 **Day Off**:
-A whole day the user marks as off, ahead of time or on the day. No Reminders fire, and the Streak skips it like a day without Active Hours. Unlike a Pause, which covers only part of a day, it leaves the Streak untouched.
+A whole day the user marks as off, ahead of time or at any point on the day itself, even after its Reminders have fired or its Daily Goal is out of reach: it is the user's word, never checked. No Reminders fire, and the Streak skips it like a day without Active Hours. Unlike a Pause, which covers only part of a day, it leaves the Streak untouched.
 _Avoid_: vacation, sick day, rest day
 
 **Badge**:
