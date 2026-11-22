@@ -44,7 +44,11 @@ export const ACTION = { start: 'start', snooze: 'snooze', skip: 'skip' } as cons
   [A in NotificationAction]: A;
 };
 
-/** UI context only: permission, channel, the two categories, and how to show a Reminder while the app is in front. */
+/**
+ * UI context only: the channel, the two categories, and how to show a Reminder
+ * while the app is in front. It doesn't ask for the permission: onboarding's
+ * Permissions step does (notificationPermission.ts `requestNotifications`).
+ */
 export async function setup() {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -54,7 +58,6 @@ export async function setup() {
       shouldSetBadge: false,
     }),
   });
-  await Notifications.requestPermissionsAsync();
   await Notifications.setNotificationChannelAsync(CHANNEL, {
     name: 'Reminders',
     // eslint-plugin-import can't follow this enum through the package's export *; TypeScript can.

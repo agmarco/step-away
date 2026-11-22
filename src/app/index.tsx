@@ -1,4 +1,4 @@
-import { Link, useIsFocused } from "expo-router";
+import { Link, Redirect, useIsFocused } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -13,11 +13,14 @@ import {
   type Reminder,
 } from "../core";
 import { pause, resume, setDayOff } from "../platform/handler";
+import { useNotificationsOn } from "../platform/notificationPermission";
+import { useOnboardingDone } from "../platform/onboarding";
 import { useCoreState } from "../platform/useCoreState";
 import { isDevelopment } from "../platform/variant";
 import { CorrectionSheet } from "../screens/today/CorrectionSheet";
 import { localDateIn } from "../screens/today/format";
 import { Hero, type HeroAction } from "../screens/today/Hero";
+import { NotificationsBanner } from "../screens/today/NotificationsBanner";
 import { PauseSheet } from "../screens/today/PauseSheet";
 import { ReminderList } from "../screens/today/ReminderList";
 import { Tiles } from "../screens/today/Tiles";
@@ -34,7 +37,11 @@ import { useColors, useScheme } from "../theme";
  * so a Reminder shows Missed as soon as it is, even before the next write
  * persists it. One Pause or Day Off change at a time: the actions are
  * disabled while one is in flight, and a ref drops a second tap in the same
- * tick.
+ * tick. While notifications are blocked (re-read whenever the app comes to
+ * the front), the hero reads "Reminders are off" and a banner above the list
+ * offers Turn on; scheduling carries on underneath. On a fresh install, Today
+ * redirects to onboarding (#31) until it is done, showing nothing until the
+ * flag is read.
  */
 export default function Today() {
   const colors = useColors();
@@ -42,6 +49,8 @@ export default function Today() {
   const focused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { state: stored, now } = useCoreState();
+  const onboardingDone = useOnboardingDone();
+  const notifications = useNotificationsOn();
   const [correcting, setCorrecting] = useState<Reminder | null>(null);
   const [pausing, setPausing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,7 +70,8 @@ export default function Today() {
       });
   };
 
-  if (!state)
+  if (onboardingDone === false) return <Redirect href="/onboarding" />;
+  if (!state || onboardingDone === null)
     return (
       <View
         style={[styles.root, { backgroundColor: colors.background.screen }]}
@@ -86,6 +96,8 @@ export default function Today() {
         <Hero
           state={state}
           now={now}
+          // Not read yet counts as allowed, so the hero doesn't flash "off".
+          notifications={notifications}
           streak={streak(state, now)}
           done={tally.done}
           goal={goal}
@@ -95,6 +107,7 @@ export default function Today() {
         />
         <Tiles />
         <View style={styles.body}>
+          {notifications === "blocked" && <NotificationsBanner />}
           <ReminderList
             state={state}
             now={now}

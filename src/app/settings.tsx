@@ -2,27 +2,17 @@ import Constants from 'expo-constants';
 import { useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  APPEARANCE_SETTINGS,
-  BODY_AREA_MODES,
-  DIFFICULTIES,
-  EQUIPMENT,
-  exerciseGroups,
-  INTERVALS,
-  SNOOZE_DELAYS,
-  type BodyAreaMode,
-  type Equipment,
-  type SettingsChange,
-} from '../core';
-import { exercises } from '../library';
+import { APPEARANCE_SETTINGS, BODY_AREA_MODES, SNOOZE_DELAYS, type BodyAreaMode, type SettingsChange } from '../core';
 import { changeSettings, resetSettings, setDailyGoal } from '../platform/handler';
 import { useCoreState } from '../platform/useCoreState';
 import { openSystemSettings, useNotificationsOn } from '../platform/notificationPermission';
 import { appVariant, isDevelopment } from '../platform/variant';
-import { ActiveHoursRows } from '../screens/settings/ActiveHoursRows';
 import { dailyGoalRow } from '../screens/settings/dailyGoal';
-import { Chip, ChipsRow, Divider, PageHeader, RadioRow, Row, Section, SwitchRow } from '../screens/settings/parts';
+import { minutes } from '../screens/settings/format';
+import { Chip, ChipsRow, Divider, PageHeader, RadioRow, Row, Section } from '../screens/settings/parts';
 import { PickerSheet } from '../screens/settings/PickerSheet';
+import { ScheduleRows } from '../screens/settings/ScheduleRows';
+import { WhatICanDoRows } from '../screens/settings/WhatICanDoRows';
 import { useColors } from '../theme';
 
 const GOALS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -34,13 +24,7 @@ const MODE_TEXT: Record<BodyAreaMode, { label: string; note: string }> = {
   Strict: { label: 'Strict rotation', note: 'Goes through the Body Areas in order.' },
 };
 
-/** The groups that have Exercises: Floor and each Equipment chip show only for these. */
-const GROUPS = exerciseGroups(exercises);
-
-const minutes = (n: number) => `${n} min`;
-const capitalised = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-type Picker = 'interval' | 'snooze' | 'goal' | null;
+type Picker = 'snooze' | 'goal' | null;
 
 /**
  * Settings (#29): one scrolling page, every row showing its current value
@@ -55,7 +39,7 @@ export default function Settings() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { state, now } = useCoreState();
-  const notificationsOn = useNotificationsOn();
+  const notifications = useNotificationsOn();
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [picker, setPicker] = useState<Picker>(null);
@@ -80,13 +64,6 @@ export default function Settings() {
   const goal = dailyGoalRow(state, now);
   const closePicker = () => setPicker(null);
 
-  const toggleEquipment = (item: Equipment) => {
-    const owned = new Set(s.equipment);
-    if (owned.has(item)) owned.delete(item);
-    else owned.add(item);
-    change({ equipment: EQUIPMENT.filter((e) => owned.has(e)) });
-  };
-
   const confirmReset = () =>
     Alert.alert(
       'Reset settings to defaults?',
@@ -105,15 +82,7 @@ export default function Settings() {
         <PageHeader title="Settings" />
 
         <Section title="Schedule">
-          <ActiveHoursRows hours={s.activeHours} disabled={busy} onChange={(activeHours) => change({ activeHours })} />
-          <Divider />
-          <Row
-            label="Interval"
-            note="Time between Reminders."
-            value={minutes(s.intervalMinutes)}
-            onPress={() => setPicker('interval')}
-            disabled={busy}
-          />
+          <ScheduleRows settings={s} disabled={busy} onChange={change} />
           <Divider />
           <Row
             label="Snooze delay"
@@ -167,54 +136,7 @@ export default function Settings() {
         </Section>
 
         <Section title="What I can do">
-          <ChipsRow label="Difficulty ceiling" note="Only Exercises at or below it.">
-            {DIFFICULTIES.map((d) => (
-              <Chip
-                key={d}
-                label={d}
-                selected={s.difficulty === d}
-                disabled={busy}
-                onPress={() => s.difficulty !== d && change({ difficulty: d })}
-              />
-            ))}
-          </ChipsRow>
-          <Divider />
-          <SwitchRow
-            label="Energetic Exercises"
-            note="Jumping, skipping and other bursts."
-            value={s.energetic}
-            disabled={busy}
-            onChange={(energetic) => change({ energetic })}
-          />
-          {GROUPS.floor && (
-            <>
-              <Divider />
-              <SwitchRow
-                label="Floor Exercises"
-                note="Lying, kneeling or in a plank."
-                value={s.floor}
-                disabled={busy}
-                onChange={(floor) => change({ floor })}
-              />
-            </>
-          )}
-          <Divider />
-          {GROUPS.equipment.length > 0 ? (
-            <ChipsRow label="Equipment" note="What you own. Exercises needing other Equipment aren't suggested.">
-              {GROUPS.equipment.map((item) => (
-                <Chip
-                  key={item}
-                  label={capitalised(item)}
-                  role="checkbox"
-                  selected={s.equipment.includes(item)}
-                  disabled={busy}
-                  onPress={() => toggleEquipment(item)}
-                />
-              ))}
-            </ChipsRow>
-          ) : (
-            <Row label="Equipment" note="No Equipment Exercises yet." />
-          )}
+          <WhatICanDoRows settings={s} disabled={busy} showDifficulty onChange={change} />
         </Section>
 
         <Section title="Exercise Library">
@@ -226,14 +148,14 @@ export default function Settings() {
           <View style={styles.row}>
             <View style={styles.rowText}>
               <Text style={[styles.label, { color: colors.text.primary }]}>Notifications</Text>
-              {notificationsOn === false && (
+              {notifications === 'blocked' && (
                 <Text style={[styles.note, { color: colors.text.secondary }]}>{"Reminders can't reach you."}</Text>
               )}
             </View>
             <Text style={[styles.value, { color: colors.text.secondary }]}>
-              {notificationsOn === null ? '…' : notificationsOn ? 'On' : 'Off'}
+              {notifications === 'allowed' ? 'On' : 'Off'}
             </Text>
-            {notificationsOn === false && (
+            {notifications === 'blocked' && (
               <Pressable
                 onPress={openSystemSettings}
                 accessibilityRole="button"
@@ -264,16 +186,6 @@ export default function Settings() {
         </Section>
       </ScrollView>
 
-      <PickerSheet
-        visible={picker === 'interval'}
-        title="Interval"
-        sub="Time between Reminders."
-        options={INTERVALS}
-        value={s.intervalMinutes}
-        label={minutes}
-        onPick={(intervalMinutes) => change({ intervalMinutes })}
-        onClose={closePicker}
-      />
       <PickerSheet
         visible={picker === 'snooze'}
         title="Snooze delay"
