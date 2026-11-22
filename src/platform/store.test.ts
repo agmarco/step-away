@@ -15,6 +15,7 @@ vi.mock('expo-sqlite', () => ({}));
 vi.mock('../library', () => ({ exercises: [] }));
 
 const { loadState, saveState } = await import('./store');
+const { isOnboardingDone, markOnboardingDone } = await import('./store');
 
 /** expo-sqlite takes bound parameters spread or as one array. */
 const paramsOf = (params: unknown[]) => (params.length === 1 && Array.isArray(params[0]) ? params[0] : params) as SQLInputValue[];
@@ -309,5 +310,54 @@ describe('Pauses and Days Off', () => {
     const loaded = await loadState(d);
     expect(loaded.pauses).toEqual([]);
     expect(loaded.daysOff).toEqual([]);
+  });
+});
+
+describe('the onboarding flag (#31)', () => {
+  it('is not done on a fresh DB', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    expect(await isOnboardingDone(d)).toBe(false);
+  });
+
+  it('is done on an install whose settings were stored before #31', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    // As a pre-#31 DB: the flag was never written.
+    await d.runAsync(`DELETE FROM meta WHERE key = 'onboarding_done'`);
+    expect(await isOnboardingDone(d)).toBe(true);
+  });
+
+  it('is done once marked', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await markOnboardingDone(d);
+    expect(await isOnboardingDone(d)).toBe(true);
+  });
+
+  it('stays not done on a fresh DB after the first save (the Rearm at launch stores the settings)', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    await saveState(d, state([]), NOW + 1);
+    expect(await isOnboardingDone(d)).toBe(false);
+  });
+
+  it('stays done on an install stored before #31 after a later save', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    await d.runAsync(`DELETE FROM meta WHERE key = 'onboarding_done'`);
+    await saveState(d, state([]), NOW + 1);
+    expect(await isOnboardingDone(d)).toBe(true);
+  });
+
+  it('is done once marked after the first save on a fresh DB', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    await markOnboardingDone(d);
+    expect(await isOnboardingDone(d)).toBe(true);
   });
 });

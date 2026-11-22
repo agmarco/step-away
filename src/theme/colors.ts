@@ -15,7 +15,7 @@ export interface Palette {
     selected: string;
     /** Dims the screen behind a sheet. Translucent. */
     scrim: string;
-    /** A notice above the content (the guided screen's fallback banner); text.primary and accent.hero on it. */
+    /** A notice above the content (the guided screen's fallback banner, Today's notifications banner); text.primary and accent.hero on it. */
     banner: string;
   };
   text: {
