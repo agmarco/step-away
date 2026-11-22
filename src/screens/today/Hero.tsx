@@ -10,7 +10,8 @@ export type HeroAction = 'pause' | 'resume' | 'undoDayOff';
  * Today's hero (B4): the date, the Streak, the Daily Goal dots ("N of G
  * today") and the status line from `heroStatus` with its action: the next
  * Reminder with Pause (only when `canPause`), a running Pause with Resume, a
- * Day Off with Undo, or nothing scheduled. The action is disabled while `busy`.
+ * Day Off with Undo, or nothing scheduled (with Pause when `canPause`: a
+ * Reminder is outstanding). The action is disabled while `busy`.
  */
 export function Hero({
   state,
@@ -33,7 +34,7 @@ export function Hero({
 }) {
   const colors = useColors();
   const onHero = { color: colors.text.onHero };
-  const { line, action } = shown(heroStatus(state, now), state, now);
+  const { line, action } = statusView(heroStatus(state, now), state, now);
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero, paddingTop: topInset + 16 }]}>
       <Text style={[styles.date, onHero]}>{longDateOf(now)}</Text>
@@ -72,34 +73,40 @@ export function Hero({
   );
 }
 
-type Shown = { line: string; action?: { action: HeroAction; label: string } };
+/** The hero's status line and its action, if any. */
+type StatusView = { line: string; action?: { action: HeroAction; label: string } };
+
+const PAUSE: StatusView['action'] = { action: 'pause', label: 'Pause' };
 
 /**
- * What the hero shows for each `HeroStatus` kind: the status line and its
- * action. The next Reminder (a snoozed one at its re-fire) shows its weekday
- * when its calendar date (in the Settings' time zone) is not today's, and
- * Pause only when the core's `canPause` says a Pause would do something; a
- * Pause ending at local midnight is for the rest of today.
+ * What the hero shows for a `HeroStatus`: the status line and its action,
+ * decided together in one case per kind. The next Reminder (a snoozed one at
+ * its re-fire) shows its weekday when its calendar date (in the Settings' time
+ * zone) is not today's; Pause, under `next` or `none`, only when the core's
+ * `canPause` says a Pause would do something; a Pause ending at local midnight
+ * is for the rest of today.
  */
-const SHOWN: { [K in HeroStatus['kind']]: (status: Extract<HeroStatus, { kind: K }>, state: CoreState, now: number) => Shown } = {
-  dayOff: () => ({ line: 'Day Off today', action: { action: 'undoDayOff', label: 'Undo' } }),
-  paused: ({ until }, { settings }) => ({
-    line: endsAtMidnight(until, settings.timeZone) ? 'Paused for the rest of today' : `Paused until ${timeOf(until)}`,
-    action: { action: 'resume', label: 'Resume' },
-  }),
-  next: ({ at, snoozed }, state, now) => {
-    const { timeZone } = state.settings;
-    const day = dateOf(at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(at)} `;
-    return {
-      line: `Next Reminder ${day}${timeOf(at)}${snoozed ? ' (snoozed)' : ''}`,
-      action: canPause(state, now) ? { action: 'pause', label: 'Pause' } : undefined,
-    };
-  },
-  none: () => ({ line: 'No Reminders scheduled' }),
-};
-
-function shown(status: HeroStatus, state: CoreState, now: number): Shown {
-  return (SHOWN[status.kind] as (s: HeroStatus, state: CoreState, now: number) => Shown)(status, state, now);
+function statusView(status: HeroStatus, state: CoreState, now: number): StatusView {
+  const { timeZone } = state.settings;
+  switch (status.kind) {
+    case 'dayOff':
+      return { line: 'Day Off today', action: { action: 'undoDayOff', label: 'Undo' } };
+    case 'paused':
+      return {
+        line: endsAtMidnight(status.until, timeZone) ? 'Paused for the rest of today' : `Paused until ${timeOf(status.until)}`,
+        action: { action: 'resume', label: 'Resume' },
+      };
+    case 'next': {
+      const { at, snoozed } = status;
+      const day = dateOf(at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(at)} `;
+      return {
+        line: `Next Reminder ${day}${timeOf(at)}${snoozed ? ' (snoozed)' : ''}`,
+        action: canPause(state, now, status) ? PAUSE : undefined,
+      };
+    }
+    case 'none':
+      return { line: 'No Reminders scheduled', action: canPause(state, now, status) ? PAUSE : undefined };
+  }
 }
 
 const styles = StyleSheet.create({
