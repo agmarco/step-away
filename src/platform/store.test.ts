@@ -87,8 +87,7 @@ describe('migrations', () => {
 
     await migrate(d);
 
-    expect(SCHEMA_VERSION).toBe(4);
-    expect(await userVersion(d)).toBe(4);
+    expect(await userVersion(d)).toBe(SCHEMA_VERSION);
     const columns = await columnsOf(d, 'reminders');
     expect(columns.find((c) => c.name === 'fallback')).toMatchObject({ dflt_value: '0', notnull: 1 });
     expect(columns.find((c) => c.name === 'swapped_out')).toMatchObject({ dflt_value: null, notnull: 0 });
@@ -109,10 +108,57 @@ describe('migrations', () => {
 
     await migrate(d);
 
-    expect(await userVersion(d)).toBe(4);
+    expect(await userVersion(d)).toBe(SCHEMA_VERSION);
     const names = (await columnsOf(d, 'reminders')).map((c) => c.name);
     expect(names.filter((n) => n === 'fallback')).toHaveLength(1);
     expect(names).toEqual(expect.arrayContaining(['swapped_out', 'rotation']));
+  });
+
+  it('v4 -> v5 adds dropped_by to an existing DB and keeps its rows', async () => {
+    const d = fakeDb();
+    // A DB as #24 left it: the first four steps, at user_version 4, with history.
+    for (const step of MIGRATIONS.slice(0, 4)) await step(d);
+    await d.execAsync('PRAGMA user_version = 4');
+    await d.runAsync(
+      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, fallback, swapped_out, rotation)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      'r1',
+      NOW - 1,
+      JSON.stringify([exercise('A')]),
+      'dropped',
+      1,
+      NOW + 1,
+      0,
+      JSON.stringify(['B']),
+      2,
+    );
+    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('r1', 'Snooze', 'app', 1)`);
+
+    await migrate(d);
+
+    expect(SCHEMA_VERSION).toBe(5);
+    expect(await userVersion(d)).toBe(5);
+    const columns = await columnsOf(d, 'reminders');
+    expect(columns.find((c) => c.name === 'dropped_by')).toMatchObject({ dflt_value: null, notnull: 0 });
+    expect(await d.getAllAsync('SELECT id, status, snoozes, swapped_out, rotation, dropped_by FROM reminders')).toEqual([
+      { id: 'r1', status: 'dropped', snoozes: 1, swapped_out: '["B"]', rotation: 2, dropped_by: null },
+    ]);
+    expect(await d.getAllAsync('SELECT reminder_id, kind FROM responses')).toEqual([{ reminder_id: 'r1', kind: 'Snooze' }]);
+    // The existing dropped Reminder loads with no stored reason (read as closing).
+    expect((await loadState(d)).reminders[0]).not.toHaveProperty('droppedBy');
+  });
+
+  it('v4 -> v5 adds dropped_by only if it is missing', async () => {
+    const d = fakeDb();
+    for (const step of MIGRATIONS.slice(0, 4)) await step(d);
+    await d.execAsync('PRAGMA user_version = 4');
+    await d.execAsync('ALTER TABLE reminders ADD COLUMN dropped_by TEXT NULL');
+
+    await migrate(d);
+
+    expect(await userVersion(d)).toBe(5);
+    const names = (await columnsOf(d, 'reminders')).map((c) => c.name);
+    expect(names.filter((n) => n === 'dropped_by')).toHaveLength(1);
   });
 });
 
@@ -151,6 +197,41 @@ describe('saveState and loadState', () => {
     expect(Object.keys(loaded)).toEqual(Object.keys(plain));
   });
 
+  it('round-trips a dropped Reminder with each droppedBy, and one with none stored', async () => {
+    const dropped = (id: string, i: number): Reminder => ({
+      id,
+      firesAt: NOW - (i + 1) * 60_000,
+      suggestion: [exercise('A')],
+      status: 'dropped',
+    });
+    const reminders: Reminder[] = [
+      { ...dropped('closing', 3), droppedBy: 'closing' },
+      { ...dropped('pause', 2), droppedBy: 'pause' },
+      { ...dropped('dayOff', 1), droppedBy: 'dayOff' },
+      dropped('none', 0),
+    ];
+    const loaded = await roundTrip(reminders);
+    expect(loaded).toEqual(reminders);
+    expect(loaded[3]).not.toHaveProperty('droppedBy');
+  });
+
+  it('clears dropped_by when a later save no longer has droppedBy (a Correct)', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    const dropped: Reminder = {
+      id: 'fired',
+      firesAt: NOW - 60_000,
+      suggestion: [exercise('A')],
+      status: 'dropped',
+      droppedBy: 'pause',
+    };
+    await saveState(d, state([dropped]), NOW);
+    const corrected: Reminder = { id: 'fired', firesAt: NOW - 60_000, suggestion: [exercise('A')], status: 'skipped' };
+    await saveState(d, state([corrected]), NOW);
+    expect(await d.getAllAsync('SELECT dropped_by FROM reminders')).toEqual([{ dropped_by: null }]);
+    expect((await loadState(d)).reminders).toEqual([corrected]);
+  });
+
   it('writes a Swap on a fired Reminder over its stored row', async () => {
     const d = fakeDb();
     await migrate(d);
@@ -173,6 +254,27 @@ describe('saveState and loadState', () => {
       rotation: i % 6,
     }));
     expect(await roundTrip(many)).toEqual(many);
+    expect(maxBound).toBeLessThanOrEqual(MAX_PARAMS);
+  });
+
+  it('saves more dropped Reminders, each with its droppedBy, than one multi-row INSERT holds, within the limit', async () => {
+    maxBound = 0;
+    const reasons = ['closing', 'pause', 'dayOff'] as const;
+    // All fired, so every row goes through the upsert; 250 crosses two batch boundaries.
+    const many: Reminder[] = Array.from({ length: 250 }, (_, i) => ({
+      id: `r${i}`,
+      firesAt: NOW - (250 - i) * 60_000,
+      suggestion: [exercise('A')],
+      status: 'dropped',
+      snoozes: 1,
+      refiresAt: NOW - (250 - i) * 60_000 + 1,
+      fallback: true,
+      swappedOut: ['B'],
+      rotation: i % 6,
+      droppedBy: reasons[i % 3],
+    }));
+    expect(await roundTrip(many)).toEqual(many);
+    expect(maxBound).toBeGreaterThan(900);
     expect(maxBound).toBeLessThanOrEqual(MAX_PARAMS);
   });
 });
