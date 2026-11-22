@@ -9,6 +9,7 @@ import {
   MAX_SNOOZES,
   type CoreState,
   type DoneExercise,
+  type DropReason,
   type GoalChange,
   type Instant,
   type LocalDate,
@@ -40,6 +41,7 @@ interface ReminderRow {
   fallback: number;
   swapped_out: string | null;
   rotation: number | null;
+  dropped_by: string | null;
 }
 
 const META = {
@@ -52,8 +54,8 @@ const META = {
 } as const;
 
 /**
- * Rows per multi-row INSERT: 90 rows of 10 params bind 900, under SQLite's
- * bound-parameter limit (999 before 3.32). 100 rows would bind 1000.
+ * Rows per multi-row INSERT: 90 rows of 11 params bind 990, under SQLite's
+ * bound-parameter limit (999 before 3.32). 91 rows would bind 1001.
  */
 const BATCH = 90;
 
@@ -62,7 +64,7 @@ export async function loadState(d: Db): Promise<CoreState> {
     (await d.getAllAsync<{ key: string; value: string }>('SELECT key, value FROM meta')).map((m) => [m.key, m.value]),
   );
   const rows = await d.getAllAsync<ReminderRow>(
-    `SELECT id, fires_at, suggestion, status, snoozes, refires_at, done_exercises, fallback, swapped_out, rotation
+    `SELECT id, fires_at, suggestion, status, snoozes, refires_at, done_exercises, fallback, swapped_out, rotation, dropped_by
      FROM reminders ORDER BY fires_at`,
   );
   const instant = (key: string): Instant | null => (meta.has(key) ? Number(meta.get(key)) : null);
@@ -88,13 +90,15 @@ export async function loadState(d: Db): Promise<CoreState> {
         suggestion: withBodyAreas(JSON.parse(r.suggestion) as Reminder['suggestion'], exercises),
         status: r.status as Reminder['status'],
         // The core's optional fields: absent means 0 Snoozes, no re-fire, nothing done,
-        // not a fallback, nothing swapped out and no Strict rotation.
+        // not a fallback, nothing swapped out, no Strict rotation and no stored drop
+        // reason (read as closing).
         ...(r.snoozes > 0 && { snoozes: r.snoozes }),
         ...(r.refires_at !== null && { refiresAt: r.refires_at }),
         ...(r.done_exercises !== null && { done: JSON.parse(r.done_exercises) as DoneExercise[] }),
         ...(r.fallback === 1 && { fallback: true as const }),
         ...(r.swapped_out !== null && { swappedOut: JSON.parse(r.swapped_out) as string[] }),
         ...(r.rotation !== null && { rotation: r.rotation }),
+        ...(r.dropped_by !== null && { droppedBy: r.dropped_by as DropReason }),
       }),
     ),
   };
@@ -103,8 +107,9 @@ export async function loadState(d: Db): Promise<CoreState> {
 /**
  * Writes `state` back: Reminders after `now` (the chain ahead) are replaced by
  * the state's, fired ones are upserted with their settled status (Missed,
- * dropped), Snooze count, re-fire, the Exercises done, and a Swap's new
- * Suggestion and `swappedOut`. `now` must be the clock time the core
+ * dropped, with what dropped it), Snooze count, re-fire, the Exercises
+ * done, and a Swap's new Suggestion and `swappedOut`. A Correct out of
+ * dropped clears `dropped_by`. `now` must be the clock time the core
  * computed `state` at.
  */
 export async function saveState(d: Db, state: CoreState, now: Instant): Promise<void> {
@@ -123,12 +128,12 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
   for (let i = 0; i < state.reminders.length; i += BATCH) {
     const batch = state.reminders.slice(i, i + BATCH);
     await d.runAsync(
-      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, done_exercises, fallback, swapped_out, rotation)
-       VALUES ${batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}
+      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, done_exercises, fallback, swapped_out, rotation, dropped_by)
+       VALUES ${batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}
        ON CONFLICT(id) DO UPDATE SET fires_at = excluded.fires_at, suggestion = excluded.suggestion,
          status = excluded.status, snoozes = excluded.snoozes, refires_at = excluded.refires_at,
          done_exercises = excluded.done_exercises, fallback = excluded.fallback,
-         swapped_out = excluded.swapped_out, rotation = excluded.rotation`,
+         swapped_out = excluded.swapped_out, rotation = excluded.rotation, dropped_by = excluded.dropped_by`,
       batch.flatMap((r) => [
         r.id,
         r.firesAt,
@@ -140,6 +145,7 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
         r.fallback ? 1 : 0,
         r.swappedOut ? JSON.stringify(r.swappedOut) : null,
         r.rotation ?? null,
+        r.droppedBy ?? null,
       ]),
     );
   }
