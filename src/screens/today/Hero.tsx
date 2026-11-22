@@ -106,6 +106,8 @@ function statusView(status: HeroStatus, state: CoreState, now: number): StatusVi
     }
     case 'none':
       return { line: 'No Reminders scheduled', action: canPause(state, now, status) ? PAUSE : undefined };
+    case 'off':
+      return { line: 'Reminders are off' };
   }
 }
 

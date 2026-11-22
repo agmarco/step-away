@@ -17,14 +17,19 @@ export type HeroStatus =
   | { kind: 'dayOff' }
   | { kind: 'paused'; until: Instant }
   | { kind: 'next'; at: Instant; snoozed: boolean }
-  | { kind: 'none' };
+  | { kind: 'none' }
+  | { kind: 'off' };
+
+/** Whether the device lets the app post notifications: a device fact, not stored state. */
+export type NotificationsState = 'allowed' | 'blocked';
 
 /**
  * The hero's status at `now`. When states overlap: `dayOff` (today is a Day
  * Off) > `paused` (a Pause is running: `from <= now < until`; one not started
  * yet doesn't count) > `next` (`nextReminder`) > `none`.
  */
-export function heroStatus(state: CoreState, now: Instant): HeroStatus {
+// CP1 stub: `notifications` is accepted but not read yet.
+export function heroStatus(state: CoreState, now: Instant, _notifications?: NotificationsState): HeroStatus {
   if (isDayOff(state, localDateOf(now, state.settings.timeZone))) return { kind: 'dayOff' };
   const running = runningPause(state, now);
   if (running) return { kind: 'paused', until: running.until };
