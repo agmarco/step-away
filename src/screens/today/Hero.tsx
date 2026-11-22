@@ -1,23 +1,16 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { endsAtMidnight, heroStatus, type CoreState, type HeroStatus } from '../../core';
+import { canPause, endsAtMidnight, heroStatus, type CoreState, type HeroStatus } from '../../core';
 import { useColors } from '../../theme';
 import { dateOf, longDateOf, timeOf, weekdayOf } from './format';
 
 /** What the status line's action does: Pause (opens the sheet), Resume, or Undo the Day Off. */
 export type HeroAction = 'pause' | 'resume' | 'undoDayOff';
 
-const ACTION_OF: Record<HeroStatus['kind'], { action: HeroAction; label: string } | null> = {
-  next: { action: 'pause', label: 'Pause' },
-  paused: { action: 'resume', label: 'Resume' },
-  dayOff: { action: 'undoDayOff', label: 'Undo' },
-  none: null,
-};
-
 /**
  * Today's hero (B4): the date, the Streak, the Daily Goal dots ("N of G
  * today") and the status line from `heroStatus` with its action: the next
- * Reminder with Pause, a running Pause with Resume, a Day Off with Undo, or
- * nothing scheduled. The action is disabled while `busy`.
+ * Reminder with Pause (only when `canPause`), a running Pause with Resume, a
+ * Day Off with Undo, or nothing scheduled. The action is disabled while `busy`.
  */
 export function Hero({
   state,
@@ -40,8 +33,7 @@ export function Hero({
 }) {
   const colors = useColors();
   const onHero = { color: colors.text.onHero };
-  const status = heroStatus(state, now);
-  const action = ACTION_OF[status.kind];
+  const { line, action } = shown(heroStatus(state, now), state, now);
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero, paddingTop: topInset + 16 }]}>
       <Text style={[styles.date, onHero]}>{longDateOf(now)}</Text>
@@ -63,7 +55,7 @@ export function Hero({
       </View>
 
       <View style={[styles.status, { backgroundColor: colors.accent.heroPanel }]}>
-        <Text style={[styles.statusText, onHero]}>{statusLine(status, state, now)}</Text>
+        <Text style={[styles.statusText, onHero]}>{line}</Text>
         {action && (
           <Pressable
             onPress={() => onAction(action.action)}
@@ -80,25 +72,34 @@ export function Hero({
   );
 }
 
+type Shown = { line: string; action?: { action: HeroAction; label: string } };
+
 /**
- * The status line. The next Reminder (a snoozed one at its re-fire) shows its
- * weekday when its calendar date (in the Settings' time zone) is not today's;
- * a Pause ending at local midnight is for the rest of today.
+ * What the hero shows for each `HeroStatus` kind: the status line and its
+ * action. The next Reminder (a snoozed one at its re-fire) shows its weekday
+ * when its calendar date (in the Settings' time zone) is not today's, and
+ * Pause only when the core's `canPause` says a Pause would do something; a
+ * Pause ending at local midnight is for the rest of today.
  */
-function statusLine(status: HeroStatus, state: CoreState, now: number): string {
-  const { timeZone } = state.settings;
-  switch (status.kind) {
-    case 'dayOff':
-      return 'Day Off today';
-    case 'paused':
-      return endsAtMidnight(status.until, timeZone) ? 'Paused for the rest of today' : `Paused until ${timeOf(status.until)}`;
-    case 'next': {
-      const day = dateOf(status.at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(status.at)} `;
-      return `Next Reminder ${day}${timeOf(status.at)}${status.snoozed ? ' (snoozed)' : ''}`;
-    }
-    case 'none':
-      return 'No Reminders scheduled';
-  }
+const SHOWN: { [K in HeroStatus['kind']]: (status: Extract<HeroStatus, { kind: K }>, state: CoreState, now: number) => Shown } = {
+  dayOff: () => ({ line: 'Day Off today', action: { action: 'undoDayOff', label: 'Undo' } }),
+  paused: ({ until }, { settings }) => ({
+    line: endsAtMidnight(until, settings.timeZone) ? 'Paused for the rest of today' : `Paused until ${timeOf(until)}`,
+    action: { action: 'resume', label: 'Resume' },
+  }),
+  next: ({ at, snoozed }, state, now) => {
+    const { timeZone } = state.settings;
+    const day = dateOf(at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(at)} `;
+    return {
+      line: `Next Reminder ${day}${timeOf(at)}${snoozed ? ' (snoozed)' : ''}`,
+      action: canPause(state, now) ? { action: 'pause', label: 'Pause' } : undefined,
+    };
+  },
+  none: () => ({ line: 'No Reminders scheduled' }),
+};
+
+function shown(status: HeroStatus, state: CoreState, now: number): Shown {
+  return (SHOWN[status.kind] as (s: HeroStatus, state: CoreState, now: number) => Shown)(status, state, now);
 }
 
 const styles = StyleSheet.create({
