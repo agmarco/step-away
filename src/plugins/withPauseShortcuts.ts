@@ -61,7 +61,7 @@ ${shortcuts}</shortcuts>
 }
 
 /** The strings.xml contents with the shortcut labels added (replacing any of the same name). */
-export function withPauseShortcutStrings(strings: ResourceXML): ResourceXML {
+export function addPauseShortcutStrings(strings: ResourceXML): ResourceXML {
   const labels = PAUSE_SHORTCUTS.flatMap(({ id, short, long }) => [
     AndroidConfig.Resources.buildResourceItem({ name: `${id}_short`, value: short }),
     AndroidConfig.Resources.buildResourceItem({ name: `${id}_long`, value: long }),
@@ -70,7 +70,7 @@ export function withPauseShortcutStrings(strings: ResourceXML): ResourceXML {
 }
 
 /** The activity with the `android.app.shortcuts` meta-data pointing at @xml/shortcuts, added once. */
-export function withShortcutsMetaData(activity: ManifestActivity): ManifestActivity {
+export function addShortcutsMetaData(activity: ManifestActivity): ManifestActivity {
   const others = (activity['meta-data'] ?? []).filter((m) => m.$['android:name'] !== SHORTCUTS_META_DATA);
   return {
     ...activity,
@@ -91,12 +91,12 @@ const withPauseShortcuts: ConfigPlugin<ShortcutTarget> = (config, target) => {
     },
   ]);
   config = withStringsXml(config, (config) => {
-    config.modResults = withPauseShortcutStrings(config.modResults);
+    config.modResults = addPauseShortcutStrings(config.modResults);
     return config;
   });
   config = withAndroidManifest(config, (config) => {
-    const main = AndroidConfig.Manifest.getMainActivityOrThrow(config.modResults);
-    Object.assign(main, withShortcutsMetaData(main));
+    const main: ManifestActivity = AndroidConfig.Manifest.getMainActivityOrThrow(config.modResults);
+    main['meta-data'] = addShortcutsMetaData(main)['meta-data'];
     return config;
   });
   return config;

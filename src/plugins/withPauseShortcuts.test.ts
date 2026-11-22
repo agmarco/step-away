@@ -1,6 +1,6 @@
 import { XML } from 'expo/config-plugins';
 import { describe, expect, it } from 'vitest';
-import { pauseShortcutsXml, withPauseShortcutStrings, withShortcutsMetaData } from './withPauseShortcuts';
+import { pauseShortcutsXml, addPauseShortcutStrings, addShortcutsMetaData } from './withPauseShortcuts';
 
 const PREVIEW = { scheme: 'activityreminder', package: 'com.agmarco.activityreminder' };
 const DEV = { scheme: 'activityreminder-dev', package: 'com.agmarco.activityreminder.dev' };
@@ -86,9 +86,9 @@ describe('pauseShortcutsXml, for the preview variant', () => {
   });
 });
 
-describe('withPauseShortcutStrings', () => {
+describe('addPauseShortcutStrings', () => {
   it('adds the short and long label of each shortcut, keeping the strings already there', () => {
-    const strings = withPauseShortcutStrings({
+    const strings = addPauseShortcutStrings({
       resources: { string: [{ $: { name: 'app_name' }, _: 'Activity Reminder' }] },
     });
     expect(strings.resources.string?.map((s) => [s.$.name, s._])).toEqual([
@@ -103,7 +103,7 @@ describe('withPauseShortcutStrings', () => {
   });
 });
 
-describe('withShortcutsMetaData', () => {
+describe('addShortcutsMetaData', () => {
   const SHORTCUTS = { $: { 'android:name': 'android.app.shortcuts', 'android:resource': '@xml/shortcuts' } };
   const activity = () => ({
     $: { 'android:name': '.MainActivity' },
@@ -111,12 +111,12 @@ describe('withShortcutsMetaData', () => {
   });
 
   it('points the activity at @xml/shortcuts, keeping its intent filters', () => {
-    const result = withShortcutsMetaData(activity());
+    const result = addShortcutsMetaData(activity());
     expect(result['meta-data']).toEqual([SHORTCUTS]);
     expect(result['intent-filter']).toEqual(activity()['intent-filter']);
   });
 
   it('adds it once, however many times the plugin runs', () => {
-    expect(withShortcutsMetaData(withShortcutsMetaData(activity()))['meta-data']).toEqual([SHORTCUTS]);
+    expect(addShortcutsMetaData(addShortcutsMetaData(activity()))['meta-data']).toEqual([SHORTCUTS]);
   });
 });
