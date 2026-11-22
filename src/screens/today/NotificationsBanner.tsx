@@ -12,7 +12,7 @@ export function NotificationsBanner() {
   const colors = useColors();
   return (
     <View style={[styles.banner, { backgroundColor: colors.background.banner }]}>
-      <Text style={[styles.text, { color: colors.text.primary }]}>Notifications are off, so no Reminders will reach you.</Text>
+      <Text style={[styles.text, { color: colors.text.primary }]}>Reminders are off: notifications are blocked</Text>
       <Pressable
         onPress={openSystemSettings}
         accessibilityRole="button"
