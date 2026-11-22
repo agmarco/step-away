@@ -39,7 +39,7 @@ export default function Settings() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { state, now } = useCoreState();
-  const notificationsOn = useNotificationsOn();
+  const notifications = useNotificationsOn();
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [picker, setPicker] = useState<Picker>(null);
@@ -148,14 +148,14 @@ export default function Settings() {
           <View style={styles.row}>
             <View style={styles.rowText}>
               <Text style={[styles.label, { color: colors.text.primary }]}>Notifications</Text>
-              {notificationsOn === false && (
+              {notifications === 'blocked' && (
                 <Text style={[styles.note, { color: colors.text.secondary }]}>{"Reminders can't reach you."}</Text>
               )}
             </View>
             <Text style={[styles.value, { color: colors.text.secondary }]}>
-              {notificationsOn === null ? '…' : notificationsOn ? 'On' : 'Off'}
+              {notifications === 'allowed' ? 'On' : 'Off'}
             </Text>
-            {notificationsOn === false && (
+            {notifications === 'blocked' && (
               <Pressable
                 onPress={openSystemSettings}
                 accessibilityRole="button"

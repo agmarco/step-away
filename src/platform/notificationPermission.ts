@@ -9,16 +9,21 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { AppState, Linking } from 'react-native';
+import type { NotificationsState } from '../core';
 import { exactAlarmGrantNeededFor } from './exactAlarm';
 
-/** True when notifications are allowed, false when not, null until the first read. */
-export function useNotificationsOn(): boolean | null {
-  const [on, setOn] = useState<boolean | null>(null);
+/**
+ * The core's `NotificationsState`: 'blocked' only once a read says not
+ * granted; 'allowed' before the first read and after a failed one, so
+ * nothing flashes "off".
+ */
+export function useNotificationsOn(): NotificationsState {
+  const [on, setOn] = useState<NotificationsState>('allowed');
   useEffect(() => {
     let alive = true;
     const check = () => {
       Notifications.getPermissionsAsync()
-        .then((p) => alive && setOn(p.granted))
+        .then((p) => alive && setOn(p.granted ? 'allowed' : 'blocked'))
         .catch((e) => console.warn(`[notifications] permission read failed: ${e}`));
     };
     check();

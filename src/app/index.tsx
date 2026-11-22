@@ -49,7 +49,7 @@ export default function Today() {
   const insets = useSafeAreaInsets();
   const { state: stored, now } = useCoreState();
   const onboardingDone = useOnboardingDone();
-  const notificationsOn = useNotificationsOn();
+  const notifications = useNotificationsOn();
   const [correcting, setCorrecting] = useState<Reminder | null>(null);
   const [pausing, setPausing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -96,7 +96,7 @@ export default function Today() {
           state={state}
           now={now}
           // Not read yet counts as allowed, so the hero doesn't flash "off".
-          notifications={notificationsOn === false ? "blocked" : "allowed"}
+          notifications={notifications}
           streak={streak(state, now)}
           done={tally.done}
           goal={goal}
@@ -106,7 +106,7 @@ export default function Today() {
         />
         <Tiles />
         <View style={styles.body}>
-          {notificationsOn === false && <NotificationsBanner />}
+          {notifications === "blocked" && <NotificationsBanner />}
           <ReminderList
             state={state}
             now={now}
