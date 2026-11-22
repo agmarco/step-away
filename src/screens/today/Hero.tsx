@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { canPause, endsAtMidnight, heroStatus, type CoreState, type HeroStatus } from '../../core';
+import { canPause, endsAtMidnight, heroStatus, type CoreState, type HeroStatus, type NotificationsState } from '../../core';
 import { useColors } from '../../theme';
 import { dateOf, longDateOf, timeOf, weekdayOf } from './format';
 
@@ -10,12 +10,15 @@ export type HeroAction = 'pause' | 'resume' | 'undoDayOff';
  * Today's hero (B4): the date, the Streak, the Daily Goal dots ("N of G
  * today") and the status line from `heroStatus` with its action: the next
  * Reminder with Pause (only when `canPause`), a running Pause with Resume, a
- * Day Off with Undo, or nothing scheduled (with Pause when `canPause`: a
- * Reminder is outstanding). The action is disabled while `busy`.
+ * Day Off with Undo, nothing scheduled (with Pause when `canPause`: a
+ * Reminder is outstanding), or, over all of these while `notifications` is
+ * blocked, "Reminders are off" with no action (Today's banner has Turn on).
+ * The action is disabled while `busy`.
  */
 export function Hero({
   state,
   now,
+  notifications,
   streak,
   done,
   goal,
@@ -25,6 +28,7 @@ export function Hero({
 }: {
   state: CoreState;
   now: number;
+  notifications: NotificationsState;
   streak: number;
   done: number;
   goal: number;
@@ -34,7 +38,7 @@ export function Hero({
 }) {
   const colors = useColors();
   const onHero = { color: colors.text.onHero };
-  const { line, action } = statusView(heroStatus(state, now), state, now);
+  const { line, action } = statusView(heroStatus(state, now, notifications), state, now);
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero, paddingTop: topInset + 16 }]}>
       <Text style={[styles.date, onHero]}>{longDateOf(now)}</Text>
@@ -107,6 +111,7 @@ function statusView(status: HeroStatus, state: CoreState, now: number): StatusVi
     case 'none':
       return { line: 'No Reminders scheduled', action: canPause(state, now, status) ? PAUSE : undefined };
     case 'off':
+      // No action: Today's banner carries Turn on.
       return { line: 'Reminders are off' };
   }
 }
