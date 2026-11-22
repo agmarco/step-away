@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { defaultSettings, initialState, type CoreState, type LocalDate, type Pause, type Reminder } from '../../core';
-import { droppedBecause, endsAtMidnight, todayLines } from './pauseDisplay';
+import type { Pause, Reminder } from '../../core';
+import { dropReason, endsAtMidnight, todayLines } from './pauseDisplay';
 
 const reminder = (id: string, firesAt: number): Reminder => ({ id, firesAt, suggestion: [], status: 'done' });
 const MIN = 60_000;
@@ -52,30 +52,15 @@ describe('a Pause for the rest of today', () => {
 });
 
 describe('why a Reminder was dropped', () => {
-  const MADRID = { ...defaultSettings, timeZone: 'Europe/Madrid' };
-  const stateWith = (pauses: Pause[], daysOff: LocalDate[]): CoreState => ({ ...initialState, settings: MADRID, pauses, daysOff });
-  // Tuesday 2026-11-10, 10:00 in Madrid (09:00 UTC).
-  const tenAm = Date.UTC(2026, 10, 10, 9, 0);
-  const dropped: Reminder = { id: 'r', firesAt: tenAm, suggestion: [], status: 'dropped' };
-  const tuesday: LocalDate = { year: 2026, month: 11, day: 10 };
+  const dropped: Reminder = { id: 'r', firesAt: 10 * MIN, suggestion: [], status: 'dropped' };
 
-  it('is the Day Off when its day is off', () => {
-    expect(droppedBecause(dropped, stateWith([], [tuesday]))).toBe('dayOff');
+  it('is the reason stored on it', () => {
+    expect(dropReason({ ...dropped, droppedBy: 'pause' })).toBe('pause');
+    expect(dropReason({ ...dropped, droppedBy: 'dayOff' })).toBe('dayOff');
+    expect(dropReason({ ...dropped, droppedBy: 'closing' })).toBe('closing');
   });
 
-  it('is a Pause started at or after it fired, on its day', () => {
-    expect(droppedBecause(dropped, stateWith([{ from: tenAm + 5 * MIN, until: tenAm + 65 * MIN }], []))).toBe('pause');
-  });
-
-  it('is closing with no Day Off and no Pause after it on its day', () => {
-    const earlier: Pause = { from: tenAm - 120 * MIN, until: tenAm - 60 * MIN };
-    // A Pause the next day doesn't count.
-    const nextDay: Pause = { from: tenAm + 24 * 60 * MIN, until: tenAm + 25 * 60 * MIN };
-    expect(droppedBecause(dropped, stateWith([earlier, nextDay], [{ year: 2026, month: 11, day: 11 }]))).toBe('closing');
-  });
-
-  it('is the Pause for a snoozed Reminder a Pause dropped', () => {
-    const snoozed: Reminder = { ...dropped, snoozes: 1 };
-    expect(droppedBecause(snoozed, stateWith([{ from: tenAm + 7 * MIN, until: tenAm + 67 * MIN }], []))).toBe('pause');
+  it('is closing when none is stored (dropped before the reason was stored)', () => {
+    expect(dropReason(dropped)).toBe('closing');
   });
 });

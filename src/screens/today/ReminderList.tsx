@@ -6,6 +6,7 @@ import {
   todaysPauses,
   todaysReminders,
   type CoreState,
+  type DropReason,
   type Pause,
   type Reminder,
   type Tally,
@@ -13,7 +14,7 @@ import {
 import { openGuided } from '../../platform/useReminderRuntime';
 import { type Palette, useColors } from '../../theme';
 import { timeOf } from './format';
-import { droppedBecause, todayLines } from './pauseDisplay';
+import { dropReason, todayLines } from './pauseDisplay';
 
 /**
  * The tally line, then today's fired Reminders and today's Pauses, newest
@@ -137,7 +138,7 @@ function PauseRow({ pause, now, divided, colors }: { pause: Pause; now: number; 
 }
 
 /** A dropped Reminder's status, by what dropped it. */
-const DROPPED_LABEL: Record<ReturnType<typeof droppedBecause>, string> = {
+const DROPPED_LABEL: Record<DropReason, string> = {
   pause: 'Ended by Pause',
   dayOff: 'Ended: Day Off',
   closing: 'Snoozed past closing',
@@ -154,7 +155,7 @@ function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefin
       return { label: 'Missed', color: colors.outcome.missed };
     // Dropped is not an Activity Log outcome (not Missed), so it takes no outcome colour.
     case 'dropped':
-      return { label: DROPPED_LABEL[droppedBecause(r, state)], color: colors.text.secondary };
+      return { label: DROPPED_LABEL[dropReason(r)], color: colors.text.secondary };
     case 'scheduled':
       if (refireScheduled(r, state.settings, now)) {
         return { label: `Snoozed, back at ${timeOf(effectiveFire(r))}`, color: colors.text.secondary };

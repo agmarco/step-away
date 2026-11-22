@@ -1,5 +1,4 @@
-import type { CoreState, Pause, Reminder } from '../../core';
-import { dateOf } from './format';
+import type { DropReason, Pause, Reminder } from '../../core';
 
 /** One line of Today's list: a fired Reminder, or a Pause. */
 export type TodayLine = { kind: 'reminder'; reminder: Reminder } | { kind: 'pause'; pause: Pause };
@@ -35,16 +34,10 @@ export function endsAtMidnight(until: number, timeZone: string): boolean {
 }
 
 /**
- * Why a dropped Reminder was dropped, for its line on Today: its day (in the
- * Settings' time zone) is a Day Off; else a Pause that started on its day at
- * or after it fired ended it; else its Snooze re-fire landed past closing.
+ * Why a dropped Reminder was dropped, for its line on Today: the reason the
+ * core stored when it dropped it. None stored means closing: every Reminder
+ * dropped before the reason was stored was a Snooze re-fire past closing.
  */
-export function droppedBecause(reminder: Reminder, state: CoreState): 'dayOff' | 'pause' | 'closing' {
-  const { timeZone } = state.settings;
-  const day = dateOf(reminder.firesAt, timeZone);
-  const key = ({ year, month, day: d }: { year: number; month: number; day: number }) =>
-    `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-  if (state.daysOff.some((d) => key(d) === day)) return 'dayOff';
-  if (state.pauses.some((p) => p.from >= reminder.firesAt && dateOf(p.from, timeZone) === day)) return 'pause';
-  return 'closing';
+export function dropReason(reminder: Reminder): DropReason {
+  return reminder.droppedBy ?? 'closing';
 }
