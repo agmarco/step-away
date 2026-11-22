@@ -25,6 +25,7 @@ export type {
   CoreResult,
   CoreState,
   DoneExercise,
+  DropReason,
   GoalChange,
   Instant,
   Intent,
