@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   dropReason,
   effectiveFire,
+  isRunning,
   outstandingReminder,
   refireScheduled,
   todaysPauses,
@@ -127,7 +128,7 @@ function Row({
 
 /** A Pause's line: its span, open-ended while it runs. Not a Reminder: no dot colour of its own, no action. */
 function PauseRow({ pause, now, divided, colors }: { pause: Pause; now: number; divided: boolean; colors: Palette }) {
-  const running = pause.from <= now && now < pause.until;
+  const running = isRunning(pause, now);
   return (
     <View style={[styles.row, divided && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line.divider }]}>
       <View style={[styles.dot, { backgroundColor: colors.text.secondary }]} />

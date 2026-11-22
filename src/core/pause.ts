@@ -42,9 +42,14 @@ export function todaysPauses(state: CoreState, now: Instant): Pause[] {
   return state.pauses.filter((p) => sameDate(localDateOf(p.from, timeZone), today));
 }
 
-/** The Pause running at `now` (`from <= now < until`), or undefined. */
+/** The Pause running at `now` (`isRunning`), or undefined. */
 export function runningPause(state: CoreState, now: Instant): Pause | undefined {
-  return state.pauses.find((p) => p.from <= now && now < p.until);
+  return state.pauses.find((p) => isRunning(p, now));
+}
+
+/** Whether `pause` is running at `now`: `from <= now < until`. */
+export function isRunning(pause: Pause, now: Instant): boolean {
+  return pause.from <= now && now < pause.until;
 }
 
 /**
