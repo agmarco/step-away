@@ -3,14 +3,17 @@ export { exerciseGroups } from './groups';
 export type { ExerciseGroups } from './groups';
 export { guidedFinish, guidedStart } from './guidedFinish';
 export type { GuidedFinishEvent } from './guidedFinish';
-export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isGoalDay, streak, todayTally, weekMarks } from './days';
+export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isDayOff, isGoalDay, streak, todayTally, weekMarks } from './days';
 export type { DayMark, Tally } from './days';
-export { addDays } from './localTime';
+export { addDays, localDateOf } from './localTime';
 export type { LocalDate } from './localTime';
 export { formatDose } from './dose';
 export { FALLBACK_LINE, MAX_SNOOZES } from './notification';
+export { endsAtMidnight, heroStatus, isRunning, todaysPauses } from './pause';
+export type { HeroStatus } from './pause';
 export { isOutstanding, isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
+export { dropReason } from './types';
 export { APPEARANCE_SETTINGS, BODY_AREA_MODES, INTERVALS, SNOOZE_DELAYS, WEEKDAYS } from './settingsChange';
 export { effectiveFire, refireScheduled, settle } from './settle';
 export type {
@@ -23,12 +26,15 @@ export type {
   CoreResult,
   CoreState,
   DoneExercise,
+  DropReason,
   GoalChange,
   Instant,
   Intent,
   Minutes,
   NotificationAction,
   Outcome,
+  Pause,
+  PauseLength,
   Random,
   Reminder,
   ResponseKind,

@@ -62,7 +62,7 @@ The outcome of a Reminder that never got a Response before the next Reminder rep
 _Avoid_: ignored, expired
 
 **Dropped**:
-The end of a snoozed Reminder whose re-fire would land at or after its day's closing time: it never re-fires, and once the Active Hours end it is dropped. Not Missed, and not a Response: it isn't counted in the Activity Log, so snoozing near the end of the day isn't punished.
+The end of a Reminder that something other than the user's answer took away. Three causes: a Snooze past closing (its re-fire would land at or after its day's closing time, so it never re-fires, and once the Active Hours end it is dropped); a Pause starting while it is outstanding; or today taken off (a Day Off) while it is outstanding. The Reminder keeps which of the three dropped it. Not Missed, and not a Response: it is never counted in the Activity Log, so snoozing near the end of the day, pausing or taking a day off isn't punished.
 _Avoid_: cancelled, expired
 
 **Activity Log**:
@@ -121,7 +121,7 @@ _Avoid_: reroll, shuffle, skip (Skip is a Response)
 - A **Reminder** carries one **Suggestion**
 - A **Suggestion** contains 1–3 **Exercises**, drawn from the **Exercise Library**
 - An **Exercise** has one or more **Target Muscles**; its main Target Muscle places it in exactly one **Body Area**
-- A **Reminder** ends with one final **Response** (Done or Skip), as **Missed**, or **Dropped** (a Snooze past closing time); up to two **Snoozes** may come before that, each re-firing the same **Reminder**
+- A **Reminder** ends with one final **Response** (Done or Skip), as **Missed**, or **Dropped** (a Snooze past closing time, a **Pause** starting, or today taken off as a **Day Off**); up to two **Snoozes** may come before that, each re-firing the same **Reminder**
 - Only one **Reminder** is outstanding at a time; when a new one fires, an unanswered previous one becomes **Missed**
 - The **Activity Log** is built from **Responses** and **Missed** Reminders; the user self-reports, and nothing is detected from sensors
 

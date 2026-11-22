@@ -11,9 +11,10 @@ const MARK_LABEL: Record<DayMark, string> = {
   off: 'no Active Hours',
   today: 'today',
   future: 'still ahead',
+  dayOff: 'Day Off',
 };
 
-/** A week cell's look by mark: Goal Day and missed are filled; today has a ring; the rest are empty. */
+/** A week cell's look by mark: Goal Day, missed and a Day Off are filled; today has a ring; the rest are empty. */
 function cellStyle(mark: DayMark, colors: Palette) {
   switch (mark) {
     case 'goal':
@@ -22,6 +23,8 @@ function cellStyle(mark: DayMark, colors: Palette) {
       return { backgroundColor: colors.outcome.missed };
     case 'off':
       return { backgroundColor: colors.line.divider };
+    case 'dayOff':
+      return { backgroundColor: colors.day.dayOff };
     case 'today':
       return { backgroundColor: colors.background.card, borderWidth: 2, borderColor: colors.accent.hero };
     case 'future':
@@ -29,7 +32,10 @@ function cellStyle(mark: DayMark, colors: Palette) {
   }
 }
 
-/** The History panel (B4): this week's Mon-Fri by `weekMarks`; tapping it opens History. */
+/**
+ * The History panel (B4): this week's Mon-Fri by `weekMarks`, with a Day Off
+ * legend entry only when one shows this week; tapping it opens History.
+ */
 export function WeekPanel({ state, now }: { state: CoreState; now: number }) {
   const colors = useColors();
   const marks = weekMarks(state, now);
@@ -56,6 +62,7 @@ export function WeekPanel({ state, now }: { state: CoreState; now: number }) {
       <View style={styles.legend}>
         <Legend color={colors.day.goalDay} label="Goal Day" colors={colors} />
         <Legend color={colors.outcome.missed} label="Missed goal" colors={colors} />
+        {marks.some((m) => m.mark === 'dayOff') && <Legend color={colors.day.dayOff} label="Day Off" colors={colors} />}
       </View>
     </Pressable>
   );

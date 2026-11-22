@@ -20,7 +20,7 @@ export interface Tally {
 }
 
 /** One day of the week panel. */
-export type DayMark = 'goal' | 'missed' | 'off' | 'today' | 'future';
+export type DayMark = 'goal' | 'missed' | 'off' | 'today' | 'future' | 'dayOff';
 
 /**
  * The Daily Goal a day is judged against: the last change whose `from` is on
@@ -58,22 +58,30 @@ export function todayTally(state: CoreState, now: Instant): Tally {
   return dayTally(state, localDateOf(now, state.settings.timeZone));
 }
 
+/** Whether `date` is a Day Off. */
+export function isDayOff(state: CoreState, date: LocalDate): boolean {
+  const day = dateKey(date);
+  return state.daysOff.some((d) => dateKey(d) === day);
+}
+
 /**
  * Consecutive Goal Days backwards from today (if already a Goal Day) or
- * yesterday, skipping days without Active Hours (by the current Settings'
- * weekdays, even a day that reached its goal); the first earlier day with
- * Active Hours that isn't a Goal Day ends it. It looks back no further than
- * the earliest Reminder's day: before it no day can be a Goal Day.
+ * yesterday, skipping Days Off and days without Active Hours (by the current
+ * Settings' weekdays), even a day that reached its goal; the first earlier
+ * day with Active Hours that isn't a Goal Day ends it. A Pause gets nothing
+ * special: a paused day is judged as usual. It looks back no further than the
+ * earliest Reminder's day: before it no day can be a Goal Day.
  */
 export function streak(state: CoreState, now: Instant): number {
   const { timeZone, activeHours } = state.settings;
   let earliest = Infinity;
   for (const r of state.reminders) earliest = Math.min(earliest, dateKey(dayOf(r, timeZone)));
+  const counts = (date: LocalDate) => Boolean(activeHours[weekdayOf(date)]) && !isDayOff(state, date);
 
   const today = localDateOf(now, timeZone);
-  let count = activeHours[weekdayOf(today)] && isGoalDay(state, today) ? 1 : 0;
+  let count = counts(today) && isGoalDay(state, today) ? 1 : 0;
   for (let date = addDays(today, -1); dateKey(date) >= earliest; date = addDays(date, -1)) {
-    if (!activeHours[weekdayOf(date)]) continue;
+    if (!counts(date)) continue;
     if (!isGoalDay(state, date)) break;
     count += 1;
   }
@@ -83,8 +91,8 @@ export function streak(state: CoreState, now: Instant): number {
 /**
  * Mon-Fri of the current week (the local week of `now`, Monday to Sunday),
  * one mark per day, in this order of precedence: `today` (even if already a
- * Goal Day), `future`, `off` (no Active Hours by the current Settings),
- * `goal`, else `missed`.
+ * Goal Day or a Day Off), `dayOff`, `future`, `off` (no Active Hours by the
+ * current Settings), `goal`, else `missed`.
  */
 export function weekMarks(state: CoreState, now: Instant): { date: LocalDate; mark: DayMark }[] {
   const today = localDateOf(now, state.settings.timeZone);
@@ -112,6 +120,7 @@ const DAYS_SINCE_MONDAY: Record<Weekday, number> = { mon: 0, tue: 1, wed: 2, thu
 function markFor(state: CoreState, date: LocalDate, today: LocalDate): DayMark {
   const day = dateKey(date);
   if (day === dateKey(today)) return 'today';
+  if (isDayOff(state, date)) return 'dayOff';
   if (day > dateKey(today)) return 'future';
   if (!state.settings.activeHours[weekdayOf(date)]) return 'off';
   return isGoalDay(state, date) ? 'goal' : 'missed';

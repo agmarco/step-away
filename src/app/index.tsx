@@ -1,20 +1,24 @@
 import { Link, useIsFocused } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   dailyGoalFor,
+  isDayOff,
+  localDateOf,
   settle,
   streak,
   todayTally,
   type Reminder,
 } from "../core";
+import { pause, resume, setDayOff } from "../platform/handler";
 import { useCoreState } from "../platform/useCoreState";
 import { isDevelopment } from "../platform/variant";
 import { CorrectionSheet } from "../screens/today/CorrectionSheet";
 import { localDateIn } from "../screens/today/format";
-import { Hero } from "../screens/today/Hero";
+import { Hero, type HeroAction } from "../screens/today/Hero";
+import { PauseSheet } from "../screens/today/PauseSheet";
 import { ReminderList } from "../screens/today/ReminderList";
 import { Tiles } from "../screens/today/Tiles";
 import { WeekPanel } from "../screens/today/WeekPanel";
@@ -23,11 +27,14 @@ import { useColors, useScheme } from "../theme";
 /**
  * Today, the hub (#25, variant B4 of prototypes/app-navigation): the hero
  * (date, Streak, Daily Goal dots, next Reminder), the History · Achievements ·
- * Settings tiles, the tally and today's Reminders (Start on the outstanding
- * one, the correction sheet on the others), the week panel and "Take today
- * off" (a placeholder until #26). The stored state is settled at `now` first,
+ * Settings tiles, the tally and today's Reminders and Pauses (Start on the
+ * outstanding Reminder, the correction sheet on the others), the week panel
+ * and "Take today off". The hero's action pauses (through the Pause sheet),
+ * resumes or undoes the Day Off. The stored state is settled at `now` first,
  * so a Reminder shows Missed as soon as it is, even before the next write
- * persists it.
+ * persists it. One Pause or Day Off change at a time: the actions are
+ * disabled while one is in flight, and a ref drops a second tap in the same
+ * tick.
  */
 export default function Today() {
   const colors = useColors();
@@ -36,7 +43,23 @@ export default function Today() {
   const insets = useSafeAreaInsets();
   const { state: stored, now } = useCoreState();
   const [correcting, setCorrecting] = useState<Reminder | null>(null);
+  const [pausing, setPausing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const state = stored && settle(stored, now);
+
+  /** Runs one Pause or Day Off call at a time; the screen redraws from the stored state when it lands. */
+  const run = (label: string, call: () => Promise<boolean>) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    call()
+      .catch((e: unknown) => console.warn(`[today] ${label} failed: ${e}`))
+      .finally(() => {
+        busyRef.current = false;
+        setBusy(false);
+      });
+  };
 
   if (!state)
     return (
@@ -46,7 +69,14 @@ export default function Today() {
     );
 
   const tally = todayTally(state, now);
-  const goal = dailyGoalFor(state, localDateIn(now, state.settings.timeZone));
+  const today = localDateIn(now, state.settings.timeZone);
+  const goal = dailyGoalFor(state, today);
+  const dayOff = isDayOff(state, localDateOf(now, state.settings.timeZone));
+  const onHeroAction = (action: HeroAction) => {
+    if (action === "pause") setPausing(true);
+    else if (action === "resume") run("Resume", resume);
+    else run("Undo Day Off", () => setDayOff(today, false));
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.screen }]}>
@@ -60,6 +90,8 @@ export default function Today() {
           done={tally.done}
           goal={goal}
           topInset={insets.top}
+          busy={busy}
+          onAction={onHeroAction}
         />
         <Tiles />
         <View style={styles.body}>
@@ -70,14 +102,20 @@ export default function Today() {
             onCorrect={setCorrecting}
           />
           <WeekPanel state={state} now={now} />
-          {/* Placeholder until Pause and Day Off (#26). */}
-          <Text
-            style={[styles.dayOff, { color: colors.text.secondary }]}
-            accessibilityRole="link"
-            accessibilityState={{ disabled: true }}
-          >
-            Take today off (coming soon)
-          </Text>
+          {/* While today is off, the hero's Undo is the one way back. */}
+          {!dayOff && (
+            <Pressable
+              onPress={() => run("Take today off", () => setDayOff(today, true))}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              style={busy && styles.disabled}
+            >
+              <Text style={[styles.dayOff, { color: colors.accent.hero }]}>
+                Take today off
+              </Text>
+            </Pressable>
+          )}
 
           {/* TEMPORARY (#19): link to the Exercise Library debug list; remove with app/debug/library.tsx. */}
           <Link
@@ -105,6 +143,11 @@ export default function Today() {
           { height: insets.top, backgroundColor: colors.accent.hero },
         ]}
       />
+      <PauseSheet
+        visible={pausing}
+        onPick={(length) => run(`Pause ${length}`, () => pause(length))}
+        onClose={() => setPausing(false)}
+      />
       <CorrectionSheet
         reminder={correcting}
         onClose={() => setCorrecting(null)}
@@ -118,5 +161,6 @@ const styles = StyleSheet.create({
   statusBarStrip: { position: "absolute", top: 0, left: 0, right: 0 },
   body: { padding: 16, gap: 16 },
   dayOff: { textAlign: "center", fontSize: 15, fontWeight: "600", padding: 8 },
+  disabled: { opacity: 0.5 },
   debugLink: { fontSize: 14 },
 });

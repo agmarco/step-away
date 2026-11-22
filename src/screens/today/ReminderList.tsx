@@ -1,21 +1,29 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  dropReason,
   effectiveFire,
+  isRunning,
   outstandingReminder,
   refireScheduled,
+  todaysPauses,
   todaysReminders,
   type CoreState,
+  type DropReason,
+  type Pause,
   type Reminder,
   type Tally,
 } from '../../core';
 import { openGuided } from '../../platform/useReminderRuntime';
 import { type Palette, useColors } from '../../theme';
 import { timeOf } from './format';
+import { todayLines } from './pauseDisplay';
 
 /**
- * The tally line, then today's fired Reminders newest first. The outstanding
- * one has Start (the guided screen); every answered one (done, skipped,
- * Missed, dropped) opens the correction sheet through `onCorrect`.
+ * The tally line, then today's fired Reminders and today's Pauses, newest
+ * first (`todayLines`). The outstanding Reminder has Start (the guided
+ * screen); every answered one (done, skipped, Missed, dropped) opens the
+ * correction sheet through `onCorrect`. A Pause is a line of its own,
+ * "Paused 10:00–11:00", or "Paused 10:00–" while it runs.
  */
 export function ReminderList({
   state,
@@ -30,28 +38,32 @@ export function ReminderList({
 }) {
   const colors = useColors();
   const outstandingId = outstandingReminder(state, now)?.id;
-  const fired = todaysReminders(state, now);
+  const lines = todayLines(todaysReminders(state, now), todaysPauses(state, now));
 
   return (
     <View style={styles.section}>
       <Text style={[styles.tally, { color: colors.text.secondary }]}>
         {tally.done} done · {tally.skipped} skipped · {tally.missed} missed · {tally.exercises} Exercises
       </Text>
-      {fired.length === 0 ? (
+      {lines.length === 0 ? (
         <Text style={[styles.empty, { color: colors.text.secondary }]}>No Reminders yet today.</Text>
       ) : (
         <View style={[styles.list, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
-          {fired.map((r, i) => (
-            <Row
-              key={r.id}
-              reminder={r}
-              status={statusOf(r, state, outstandingId, now, colors)}
-              outstanding={r.id === outstandingId}
-              onCorrect={r.status === 'scheduled' ? undefined : () => onCorrect(r)}
-              divided={i > 0}
-              colors={colors}
-            />
-          ))}
+          {lines.map((line, i) =>
+            line.kind === 'pause' ? (
+              <PauseRow key={`pause-${line.pause.from}`} pause={line.pause} now={now} divided={i > 0} colors={colors} />
+            ) : (
+              <Row
+                key={line.reminder.id}
+                reminder={line.reminder}
+                status={statusOf(line.reminder, state, outstandingId, now, colors)}
+                outstanding={line.reminder.id === outstandingId}
+                onCorrect={line.reminder.status === 'scheduled' ? undefined : () => onCorrect(line.reminder)}
+                divided={i > 0}
+                colors={colors}
+              />
+            ),
+          )}
         </View>
       )}
     </View>
@@ -114,6 +126,26 @@ function Row({
   );
 }
 
+/** A Pause's line: its span, open-ended while it runs. Not a Reminder: no dot colour of its own, no action. */
+function PauseRow({ pause, now, divided, colors }: { pause: Pause; now: number; divided: boolean; colors: Palette }) {
+  const running = isRunning(pause, now);
+  return (
+    <View style={[styles.row, divided && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line.divider }]}>
+      <View style={[styles.dot, { backgroundColor: colors.text.secondary }]} />
+      <Text style={[styles.pause, { color: colors.text.secondary }]}>
+        Paused {timeOf(pause.from)}–{running ? '' : timeOf(pause.until)}
+      </Text>
+    </View>
+  );
+}
+
+/** A dropped Reminder's status, by what dropped it. */
+const DROPPED_LABEL: Record<DropReason, string> = {
+  pause: 'Ended by Pause',
+  dayOff: 'Ended: Day Off',
+  closing: 'Snoozed past closing',
+};
+
 /** One fired Reminder's line, from its settled status. */
 function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefined, now: number, colors: Palette) {
   switch (r.status) {
@@ -125,7 +157,7 @@ function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefin
       return { label: 'Missed', color: colors.outcome.missed };
     // Dropped is not an Activity Log outcome (not Missed), so it takes no outcome colour.
     case 'dropped':
-      return { label: 'Snoozed past closing', color: colors.text.secondary };
+      return { label: DROPPED_LABEL[dropReason(r)], color: colors.text.secondary };
     case 'scheduled':
       if (refireScheduled(r, state.settings, now)) {
         return { label: `Snoozed, back at ${timeOf(effectiveFire(r))}`, color: colors.text.secondary };
@@ -156,6 +188,7 @@ const styles = StyleSheet.create({
   start: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   startText: { fontSize: 15, fontWeight: '700' },
   edit: { fontSize: 16 },
+  pause: { flex: 1, fontSize: 15, fontWeight: '600' },
   tag: {
     fontSize: 11,
     fontWeight: '600',

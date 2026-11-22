@@ -90,6 +90,9 @@ export interface SuggestedExercise {
 /** One Exercise the user did in a Done Response: a text snapshot copied from the Suggestion. */
 export type DoneExercise = Pick<SuggestedExercise, 'id' | 'name' | 'bodyArea'>;
 
+/** What dropped a Reminder: see `Reminder.droppedBy`. */
+export type DropReason = 'closing' | 'pause' | 'dayOff';
+
 /**
  * A Reminder of the current chain. One whose `firesAt <= now` and status is
  * still `scheduled` has fired; only the latest fired one is outstanding.
@@ -98,7 +101,9 @@ export type DoneExercise = Pick<SuggestedExercise, 'id' | 'name' | 'bodyArea'>;
  * (a Done Response), `skipped` (a Skip Response), `missed` (no Response
  * before a later Reminder fired, or before its day's Active Hours ended) and
  * `dropped` (a pending Snooze re-fire that would land at or after its day's
- * window end).
+ * window end, or the outstanding Reminder when a Pause starts or today is
+ * taken off). Dropped is never counted; `droppedBy` records which of the
+ * three dropped it.
  */
 export interface Reminder {
   /** Deterministic from `firesAt`. A Snooze re-fire keeps it. */
@@ -115,6 +120,13 @@ export interface Reminder {
   refiresAt?: Instant;
   /** The Exercises done, in Suggestion order. Present only when `status` is `done`. */
   done?: DoneExercise[];
+  /**
+   * What dropped it: a Snooze re-fire past closing, a Pause, or taking today
+   * off. Set when it is dropped and never changed after; present only when
+   * `status` is `dropped` (a Correct removes it). Absent on a dropped one
+   * means `closing` (dropped before the reason was stored).
+   */
+  droppedBy?: DropReason;
   /**
    * Present (and true) only when nothing matched the settings: the Suggestion
    * is 1 fallback Exercise from the base set (no Equipment, Position not
@@ -134,6 +146,15 @@ export interface Reminder {
   rotation?: number;
 }
 
+/**
+ * Why a dropped Reminder was dropped: `droppedBy`, the reason stored when it
+ * was dropped. None stored means closing: every Reminder dropped before the
+ * reason was stored was a Snooze re-fire past closing.
+ */
+export function dropReason(reminder: Reminder): DropReason {
+  return reminder.droppedBy ?? 'closing';
+}
+
 /** Everything the core knows. Adapters persist it; the core never does. */
 export interface CoreState {
   /** When the app was last opened, or null if never. */
@@ -148,7 +169,23 @@ export interface CoreState {
    * with `from` on or before it; with none it is 4.
    */
   goalChanges: GoalChange[];
+  /**
+   * The Pause history, oldest first. Resume shortens the running one's
+   * `until` to the Resume time.
+   */
+  pauses: Pause[];
+  /** The Days Off (local dates in the Settings' time zone): no Reminder fires on them. */
+  daysOff: LocalDate[];
 }
+
+/** A Pause: no Reminder fires in [from, until), and nothing in it is Missed. */
+export interface Pause {
+  from: Instant;
+  until: Instant;
+}
+
+/** How long a Pause runs from now: 1 hour, 2 hours, or until the next local midnight. */
+export type PauseLength = 'hour' | 'twoHours' | 'restOfToday';
 
 /** From `from` on (a local date in the Settings' time zone), the Daily Goal is `goal`. */
 export interface GoalChange {
@@ -209,7 +246,19 @@ export type CoreEvent =
    * Reset settings to defaults: every setting but `timeZone`, and the Daily
    * Goal from tomorrow. Never touches the Activity Log. Then rearms.
    */
-  | { type: 'ResetSettings' };
+  | { type: 'ResetSettings' }
+  /**
+   * Pause Reminders from now. A Pause already running has its `until`
+   * replaced. Rejected on a Day Off. Drops the outstanding Reminder, then rearms.
+   */
+  | { type: 'Pause'; length: PauseLength }
+  /** End the running Pause now, then rearm. Rejected with no Pause running. */
+  | { type: 'Resume' }
+  /**
+   * Mark `date` (today or later) as a Day Off, or undo it. Taking today off
+   * drops the outstanding Reminder. Rejected for a past date or a no-op.
+   */
+  | { type: 'SetDayOff'; date: LocalDate; off: boolean };
 
 /** The notification actions, in order. */
 export type NotificationAction = 'start' | 'snooze' | 'skip';
