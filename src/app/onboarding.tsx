@@ -24,12 +24,14 @@ const LAST = STEPS.length - 1;
  * Permissions step asks for notifications (or "Not now") and finishes either
  * way: declining still finishes setup. Finishing marks onboarding done and
  * replaces this screen with Today. Android back goes to the previous step; on
- * the first one it leaves the app (nothing is under this screen).
+ * the first one it leaves the app (nothing is under this screen). If the
+ * stored state can't be read, a short message and "Go to Today" finish
+ * onboarding instead (the defaults stay; Settings can change them later).
  */
 export default function Onboarding() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { state } = useCoreState();
+  const { state, failed } = useCoreState();
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
@@ -72,6 +74,26 @@ export default function Onboarding() {
     await finish();
   };
 
+  if (!state && failed) {
+    return (
+      <View style={[styles.root, styles.fallback, { backgroundColor: colors.background.screen }]}>
+        <Text style={[styles.title, { color: colors.text.primary }]} accessibilityRole="header">
+          Setup can't start
+        </Text>
+        <Text style={[styles.body, { color: colors.text.secondary }]}>
+          Your settings couldn't be read. You can set things up later in Settings.
+        </Text>
+        <Pressable
+          onPress={() => run('Go to Today', finish)}
+          disabled={busy}
+          accessibilityRole="button"
+          style={[styles.primary, { backgroundColor: colors.accent.hero }, busy && styles.disabled]}
+        >
+          <Text style={[styles.primaryText, { color: colors.text.onHero }]}>Go to Today</Text>
+        </Pressable>
+      </View>
+    );
+  }
   if (!state) return <View style={[styles.root, { backgroundColor: colors.background.screen }]} />;
   const s = state.settings;
 
@@ -166,6 +188,7 @@ export default function Onboarding() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  fallback: { justifyContent: 'center', alignItems: 'flex-start', paddingHorizontal: 16, gap: 16 },
   content: { paddingHorizontal: 16, paddingBottom: 24, gap: 16 },
   dots: { flexDirection: 'row', gap: 8 },
   dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 2 },
