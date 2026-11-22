@@ -57,17 +57,18 @@ export default function Onboarding() {
   };
   const change = (c: SettingsChange) => run(Object.keys(c).join(', '), () => changeSettings(c));
 
+  /** Both answers on the Permissions step end here, after the exact-alarm grant prompt's slot. */
   const finish = async () => {
+    if (exactAlarmGrantNeeded()) {
+      // The exact-alarm grant prompt's slot: with SCHEDULE_EXACT_ALARM in the app config, ask the user to
+      // allow "Alarms & reminders" here, before finishing. Unused while USE_EXACT_ALARM is granted at install.
+    }
     await finishOnboarding();
     router.replace('/');
   };
 
   const allow = async () => {
     await requestNotifications();
-    if (exactAlarmGrantNeeded()) {
-      // The exact-alarm grant prompt's slot: with SCHEDULE_EXACT_ALARM (app.config.ts), ask the user to
-      // allow "Alarms & reminders" here, before finishing. Unused while USE_EXACT_ALARM is granted at install.
-    }
     await finish();
   };
 

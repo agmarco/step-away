@@ -5,10 +5,11 @@
  * it in the system settings); the request (onboarding's Permissions step
  * only); and Turn on. Also the exact-alarm grant's slot.
  */
+import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { AppState, Linking } from 'react-native';
-import { EXACT_ALARM_PERMISSION } from '../app.config';
+import { exactAlarmGrantNeededFor } from './exactAlarm';
 
 /** True when notifications are allowed, false when not, null until the first read. */
 export function useNotificationsOn(): boolean | null {
@@ -52,10 +53,12 @@ export async function requestNotifications(): Promise<void> {
 
 /**
  * Whether onboarding must prompt for the exact-alarm grant ("Alarms &
- * reminders" in the system settings). False while EXACT_ALARM_PERMISSION is
- * USE_EXACT_ALARM, which is granted at install; a SCHEDULE_EXACT_ALARM build
- * (app.config.ts) would need the prompt, behind the Permissions step.
+ * reminders" in the system settings), from the app config's
+ * `android.permissions` read at runtime (`Constants.expoConfig`, not
+ * app.config.ts itself): true with SCHEDULE_EXACT_ALARM and no
+ * USE_EXACT_ALARM (`exactAlarmGrantNeededFor`). False today: the config lists
+ * USE_EXACT_ALARM, granted at install.
  */
 export function exactAlarmGrantNeeded(): boolean {
-  return EXACT_ALARM_PERMISSION !== 'USE_EXACT_ALARM';
+  return exactAlarmGrantNeededFor(Constants.expoConfig?.android?.permissions);
 }
