@@ -214,8 +214,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const pauses = running
         ? dropped.pauses.map((p) => (p === running ? { from: p.from, until } : p))
         : [...dropped.pauses, { from: now, until }];
-      const rebuilt = rearm({ ...dropped, pauses }, deps);
-      return { state: rebuilt.state, intents: [...intents, ...rebuilt.intents] };
+      return rearmAfterDrop({ ...dropped, pauses }, intents, deps);
     }
     case 'Resume': {
       const running = runningPause(state, now);
@@ -235,10 +234,19 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const daysOff = event.off
         ? [...dropped.daysOff, event.date].sort((a, b) => dateKey(a) - dateKey(b))
         : dropped.daysOff.filter((d) => dateKey(d) !== day);
-      const rebuilt = rearm({ ...dropped, daysOff }, deps);
-      return { state: rebuilt.state, intents: [...intents, ...rebuilt.intents] };
+      return rearmAfterDrop({ ...dropped, daysOff }, intents, deps);
     }
   }
+}
+
+/**
+ * The end of a Pause or a Day Off, after `dropOutstanding`: rearm `state` (the
+ * drop's state with the Pause or Day Off applied), the drop's `intents` (its
+ * dismissal) first, then the rearm's.
+ */
+function rearmAfterDrop(state: CoreState, intents: Intent[], deps: CoreDeps): CoreResult {
+  const rebuilt = rearm(state, deps);
+  return { state: rebuilt.state, intents: [...intents, ...rebuilt.intents] };
 }
 
 /**
@@ -254,7 +262,7 @@ function dropOutstanding(
 ): { state: CoreState; intents: Intent[] } {
   const target = outstandingReminder(state, now);
   if (!target) return { state, intents: [] };
-  const { refiresAt: _cancelled, ...withoutRefire } = target;
+  const { refiresAt: _noRefire, ...withoutRefire } = target;
   return {
     state: { ...state, reminders: replace(state, { ...withoutRefire, status: 'dropped', droppedBy: reason }) },
     intents: [{ type: 'DismissNotification', reminderId: target.id }],
