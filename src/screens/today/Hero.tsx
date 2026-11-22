@@ -1,8 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { heroStatus, type CoreState, type HeroStatus } from '../../core';
+import { endsAtMidnight, heroStatus, type CoreState, type HeroStatus } from '../../core';
 import { useColors } from '../../theme';
 import { dateOf, longDateOf, timeOf, weekdayOf } from './format';
-import { endsAtMidnight } from './pauseDisplay';
 
 /** What the status line's action does: Pause (opens the sheet), Resume, or Undo the Day Off. */
 export type HeroAction = 'pause' | 'resume' | 'undoDayOff';

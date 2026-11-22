@@ -16,19 +16,3 @@ export function todayLines(reminders: Reminder[], pauses: Pause[]): TodayLine[] 
   ];
   return lines.sort((a, b) => at(b) - at(a) || (a.kind === 'pause' ? -1 : 0) - (b.kind === 'pause' ? -1 : 0));
 }
-
-/**
- * Whether `until` is a local midnight in `timeZone` (the Settings' time zone),
- * as a Pause for the rest of today ends: the hero then says "Paused for the
- * rest of today" instead of a time.
- */
-export function endsAtMidnight(until: number, timeZone: string): boolean {
-  const time = new Date(until).toLocaleTimeString('en-GB', {
-    timeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hourCycle: 'h23',
-  });
-  return time === '00:00:00' && until % 1000 === 0;
-}

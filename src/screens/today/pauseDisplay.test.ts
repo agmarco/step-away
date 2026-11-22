@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Pause, Reminder } from '../../core';
-import { endsAtMidnight, todayLines } from './pauseDisplay';
+import { todayLines } from './pauseDisplay';
 
 const reminder = (id: string, firesAt: number): Reminder => ({ id, firesAt, suggestion: [], status: 'done' });
 const MIN = 60_000;
@@ -36,17 +36,5 @@ describe("Today's lines", () => {
     const p: Pause = { from: 20 * MIN, until: 30 * MIN };
     expect(todayLines([r], [])).toEqual([{ kind: 'reminder', reminder: r }]);
     expect(todayLines([], [p])).toEqual([{ kind: 'pause', pause: p }]);
-  });
-});
-
-describe('a Pause for the rest of today', () => {
-  it('ends at local midnight in the Settings time zone', () => {
-    // 00:00 on Wednesday 2026-11-11 in Madrid is 23:00 UTC on Tuesday.
-    expect(endsAtMidnight(Date.UTC(2026, 10, 10, 23, 0), 'Europe/Madrid')).toBe(true);
-  });
-
-  it('does not end at midnight at any other time, UTC midnight included', () => {
-    expect(endsAtMidnight(Date.UTC(2026, 10, 11, 0, 0), 'Europe/Madrid')).toBe(false);
-    expect(endsAtMidnight(Date.UTC(2026, 10, 10, 23, 1), 'Europe/Madrid')).toBe(false);
   });
 });

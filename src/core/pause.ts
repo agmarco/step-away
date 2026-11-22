@@ -4,7 +4,7 @@
  */
 
 import { isDayOff, sameDate } from './days';
-import { localDateOf } from './localTime';
+import { instantAt, localDateOf } from './localTime';
 import { nextReminder } from './schedule';
 import type { CoreState, Instant, Pause } from './types';
 
@@ -45,4 +45,13 @@ export function todaysPauses(state: CoreState, now: Instant): Pause[] {
 /** The Pause running at `now` (`from <= now < until`), or undefined. */
 export function runningPause(state: CoreState, now: Instant): Pause | undefined {
   return state.pauses.find((p) => p.from <= now && now < p.until);
+}
+
+/**
+ * Whether `until` is a local midnight in `timeZone` (the Settings' time zone),
+ * as a Pause for the rest of today ends: the hero then says "Paused for the
+ * rest of today" instead of a time.
+ */
+export function endsAtMidnight(until: Instant, timeZone: string): boolean {
+  return until === instantAt(localDateOf(until, timeZone), 0, timeZone);
 }
