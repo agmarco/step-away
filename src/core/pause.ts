@@ -5,7 +5,7 @@
 
 import { isDayOff, sameDate } from './days';
 import { instantAt, localDateOf } from './localTime';
-import { nextReminder } from './schedule';
+import { nextReminder, outstandingReminder } from './schedule';
 import type { CoreState, Instant, Pause } from './types';
 
 /**
@@ -33,6 +33,24 @@ export function heroStatus(state: CoreState, now: Instant): HeroStatus {
   // A fired Reminder that is next can only be a pending Snooze re-fire.
   const snoozed = next.firesAt <= now;
   return { kind: 'next', at: snoozed ? (next.refiresAt ?? next.firesAt) : next.firesAt, snoozed };
+}
+
+/**
+ * Whether a Pause at `now` would do something, so the hero offers it. Never
+ * while `heroStatus` is `dayOff` or `paused`. Otherwise always while a
+ * Reminder is outstanding (`outstandingReminder`), which the Pause drops, even
+ * under `none`; and under `next` when that next Reminder (its re-fire time
+ * when snoozed) falls on today in the Settings' time zone. After the day's
+ * last Reminder, with nothing outstanding, a Pause would only record a line.
+ * `status` defaults to `heroStatus(state, now)`; a caller that already has it
+ * passes it. Screens use it to show or hide Pause.
+ */
+export function canPause(state: CoreState, now: Instant, status: HeroStatus = heroStatus(state, now)): boolean {
+  if (status.kind === 'dayOff' || status.kind === 'paused') return false;
+  if (outstandingReminder(state, now) !== undefined) return true;
+  if (status.kind !== 'next') return false;
+  const { timeZone } = state.settings;
+  return sameDate(localDateOf(status.at, timeZone), localDateOf(now, timeZone));
 }
 
 /** Today's Pauses (by the local date of `from`, Settings' time zone), oldest first. */
