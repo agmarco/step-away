@@ -14,7 +14,8 @@ vi.mock('expo-sqlite', () => ({}));
 // The bundled library pulls in photos; the backfill only needs Ids, and every snapshot here has its Body Area.
 vi.mock('../library', () => ({ exercises: [] }));
 
-const { isOnboardingDone, loadState, markOnboardingDone, saveState } = await import('./store');
+const { loadState, saveState } = await import('./store');
+const { isOnboardingDone, markOnboardingDone } = await import('./store');
 
 /** expo-sqlite takes bound parameters spread or as one array. */
 const paramsOf = (params: unknown[]) => (params.length === 1 && Array.isArray(params[0]) ? params[0] : params) as SQLInputValue[];
