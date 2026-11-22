@@ -65,7 +65,8 @@ export function settle(state: CoreState, now: Instant): CoreState {
     const status = settledStatus(r, state.settings, now, latestFiresAt);
     if (status === r.status) return r;
     changed = true;
-    return { ...r, status };
+    // Settling drops only a re-fire past closing.
+    return status === 'dropped' ? { ...r, status, droppedBy: 'closing' as const } : { ...r, status };
   });
   return changed ? { ...state, reminders } : state;
 }

@@ -14,6 +14,7 @@ import type {
   CoreResult,
   CoreState,
   DoneExercise,
+  DropReason,
   Instant,
   Intent,
   Reminder,
@@ -156,15 +157,16 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const { timeZone } = settled.settings;
       if (!sameDate(dayOf(target, timeZone), localDateOf(now, timeZone))) return { state, intents: [] };
 
-      const { done: _removed, ...withoutDone } = target;
+      // No longer dropped, so no `droppedBy`.
+      const { done: _removed, droppedBy: _notDropped, ...outcomeless } = target;
       let corrected: Reminder;
       if (event.to === 'Done') {
         const done = doneExercises(target, event.did ?? []);
         if (done.length === 0) return { state, intents: [] };
-        corrected = { ...target, status: 'done', done };
+        corrected = { ...outcomeless, status: 'done', done };
       } else {
         // Only the outcome changes: `snoozes` and `refiresAt` stay.
-        corrected = { ...withoutDone, status: event.to === 'Skip' ? 'skipped' : 'missed' };
+        corrected = { ...outcomeless, status: event.to === 'Skip' ? 'skipped' : 'missed' };
       }
       // History only: lastResponseAt and the chain stay, and there are no intents.
       return { state: { ...settled, reminders: replace(settled, corrected) }, intents: [] };
@@ -207,7 +209,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
         event.length === 'restOfToday'
           ? instantAt(addDays(today, 1), 0, timeZone)
           : now + (event.length === 'hour' ? 60 : 120) * MINUTE;
-      const { state: dropped, intents } = dropOutstanding(settle(state, now), now);
+      const { state: dropped, intents } = dropOutstanding(settle(state, now), now, 'pause');
       const running = runningPause(dropped, now);
       const pauses = running
         ? dropped.pauses.map((p) => (p === running ? { from: p.from, until } : p))
@@ -229,7 +231,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const settled = settle(state, now);
       // Taking today off drops the waiting Reminder; any other change only moves the chain.
       const { state: dropped, intents } =
-        event.off && day === today ? dropOutstanding(settled, now) : { state: settled, intents: [] };
+        event.off && day === today ? dropOutstanding(settled, now, 'dayOff') : { state: settled, intents: [] };
       const daysOff = event.off
         ? [...dropped.daysOff, event.date].sort((a, b) => dateKey(a) - dateKey(b))
         : dropped.daysOff.filter((d) => dateKey(d) !== day);
@@ -243,14 +245,18 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
  * Drops the outstanding Reminder, if any, as a Pause or taking today off
  * does: it becomes `dropped` (never Missed, never counted), any Snooze
  * re-fire goes with it (`refiresAt` cleared, so the chain anchors on its own
- * fire time), and its notification is dismissed.
+ * fire time), and its notification is dismissed. `droppedBy` records `reason`.
  */
-function dropOutstanding(state: CoreState, now: Instant): { state: CoreState; intents: Intent[] } {
+function dropOutstanding(
+  state: CoreState,
+  now: Instant,
+  reason: Extract<DropReason, 'pause' | 'dayOff'>,
+): { state: CoreState; intents: Intent[] } {
   const target = outstandingReminder(state, now);
   if (!target) return { state, intents: [] };
   const { refiresAt: _cancelled, ...withoutRefire } = target;
   return {
-    state: { ...state, reminders: replace(state, { ...withoutRefire, status: 'dropped' }) },
+    state: { ...state, reminders: replace(state, { ...withoutRefire, status: 'dropped', droppedBy: reason }) },
     intents: [{ type: 'DismissNotification', reminderId: target.id }],
   };
 }

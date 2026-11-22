@@ -90,6 +90,9 @@ export interface SuggestedExercise {
 /** One Exercise the user did in a Done Response: a text snapshot copied from the Suggestion. */
 export type DoneExercise = Pick<SuggestedExercise, 'id' | 'name' | 'bodyArea'>;
 
+/** What dropped a Reminder: see `Reminder.droppedBy`. */
+export type DropReason = 'closing' | 'pause' | 'dayOff';
+
 /**
  * A Reminder of the current chain. One whose `firesAt <= now` and status is
  * still `scheduled` has fired; only the latest fired one is outstanding.
@@ -99,7 +102,8 @@ export type DoneExercise = Pick<SuggestedExercise, 'id' | 'name' | 'bodyArea'>;
  * before a later Reminder fired, or before its day's Active Hours ended) and
  * `dropped` (a pending Snooze re-fire that would land at or after its day's
  * window end, or the outstanding Reminder when a Pause starts or today is
- * taken off). Dropped is never counted.
+ * taken off). Dropped is never counted; `droppedBy` records which of the
+ * three dropped it.
  */
 export interface Reminder {
   /** Deterministic from `firesAt`. A Snooze re-fire keeps it. */
@@ -116,6 +120,13 @@ export interface Reminder {
   refiresAt?: Instant;
   /** The Exercises done, in Suggestion order. Present only when `status` is `done`. */
   done?: DoneExercise[];
+  /**
+   * What dropped it: a Snooze re-fire past closing, a Pause, or taking today
+   * off. Set when it is dropped and never changed after; present only when
+   * `status` is `dropped` (a Correct removes it). Absent on a dropped one
+   * means `closing` (dropped before the reason was stored).
+   */
+  droppedBy?: DropReason;
   /**
    * Present (and true) only when nothing matched the settings: the Suggestion
    * is 1 fallback Exercise from the base set (no Equipment, Position not
