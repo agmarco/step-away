@@ -184,8 +184,11 @@ export interface Pause {
   until: Instant;
 }
 
+/** Every PauseLength: the one source of the type below. */
+const PAUSE_LENGTHS = ['hour', 'twoHours', 'restOfToday'] as const;
+
 /** How long a Pause runs from now: 1 hour, 2 hours, or until the next local midnight. */
-export type PauseLength = 'hour' | 'twoHours' | 'restOfToday';
+export type PauseLength = (typeof PAUSE_LENGTHS)[number];
 
 /**
  * The PauseLength `value` names, or undefined for anything else (another
@@ -195,8 +198,6 @@ export type PauseLength = 'hour' | 'twoHours' | 'restOfToday';
 export function pauseLengthOf(value: unknown): PauseLength | undefined {
   return PAUSE_LENGTHS.find((length) => length === value);
 }
-
-const PAUSE_LENGTHS: readonly PauseLength[] = ['hour', 'twoHours', 'restOfToday'];
 
 /** From `from` on (a local date in the Settings' time zone), the Daily Goal is `goal`. */
 export interface GoalChange {
