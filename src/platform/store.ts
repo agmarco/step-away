@@ -115,10 +115,6 @@ export async function loadState(d: Db): Promise<CoreState> {
  * pending (isOnboardingDone).
  */
 export async function saveState(d: Db, state: CoreState, now: Instant): Promise<void> {
-  const setMeta = async (key: string, value: string | null) => {
-    if (value === null) await d.runAsync('DELETE FROM meta WHERE key = ?', key);
-    else await d.runAsync('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', key, value);
-  };
   // The first save on a fresh DB (no settings stored yet) marks onboarding pending,
   // before the settings land and would read as an existing install (isOnboardingDone).
   await d.runAsync(
@@ -128,12 +124,12 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
     ONBOARDING_PENDING,
     META.settings,
   );
-  await setMeta(META.settings, JSON.stringify(state.settings));
-  await setMeta(META.lastResponseAt, state.lastResponseAt === null ? null : String(state.lastResponseAt));
-  await setMeta(META.lastAppOpenAt, state.lastAppOpenAt === null ? null : String(state.lastAppOpenAt));
-  await setMeta(META.goalChanges, JSON.stringify(state.goalChanges));
-  await setMeta(META.pauses, JSON.stringify(state.pauses));
-  await setMeta(META.daysOff, JSON.stringify(state.daysOff));
+  await setMeta(d, META.settings, JSON.stringify(state.settings));
+  await setMeta(d, META.lastResponseAt, state.lastResponseAt === null ? null : String(state.lastResponseAt));
+  await setMeta(d, META.lastAppOpenAt, state.lastAppOpenAt === null ? null : String(state.lastAppOpenAt));
+  await setMeta(d, META.goalChanges, JSON.stringify(state.goalChanges));
+  await setMeta(d, META.pauses, JSON.stringify(state.pauses));
+  await setMeta(d, META.daysOff, JSON.stringify(state.daysOff));
 
   await d.runAsync('DELETE FROM reminders WHERE fires_at > ?', now);
   for (let i = 0; i < state.reminders.length; i += BATCH) {
@@ -237,6 +233,12 @@ const ONBOARDING_DONE = '1';
 const metaValue = async (d: Db, key: string) =>
   (await d.getFirstAsync<{ value: string }>('SELECT value FROM meta WHERE key = ?', key))?.value ?? null;
 
+/** Upserts one meta key; null deletes it. */
+const setMeta = async (d: Db, key: string, value: string | null) => {
+  if (value === null) await d.runAsync('DELETE FROM meta WHERE key = ?', key);
+  else await d.runAsync('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', key, value);
+};
+
 /**
  * Whether onboarding (#31) has run on this install. The `onboarding_done`
  * meta key decides when set: done, or pending (the first save on a fresh DB
@@ -251,11 +253,7 @@ export async function isOnboardingDone(d: Db): Promise<boolean> {
 
 /** Onboarding finished (declining notifications included): it doesn't run again. */
 export async function markOnboardingDone(d: Db): Promise<void> {
-  await d.runAsync(
-    'INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
-    META.onboardingDone,
-    ONBOARDING_DONE,
-  );
+  await setMeta(d, META.onboardingDone, ONBOARDING_DONE);
 }
 
 /** A read for screens, outside any write transaction. */

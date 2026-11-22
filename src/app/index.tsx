@@ -39,8 +39,9 @@ import { useColors, useScheme } from "../theme";
  * disabled while one is in flight, and a ref drops a second tap in the same
  * tick. While notifications are blocked (re-read whenever the app comes to
  * the front), the hero reads "Reminders are off" and a banner above the list
- * offers Turn on; scheduling carries on underneath. On a fresh install, Today redirects to onboarding (#31) until it is
- * done, showing nothing until the flag is read.
+ * offers Turn on; scheduling carries on underneath. On a fresh install, Today
+ * redirects to onboarding (#31) until it is done, showing nothing until the
+ * flag is read.
  */
 export default function Today() {
   const colors = useColors();

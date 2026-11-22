@@ -9,19 +9,19 @@ const capitalised = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
  * The "What I can do" rows shared by Settings and onboarding's "What do you
- * have nearby?": the Difficulty ceiling (Settings only, with `difficulty`),
+ * have nearby?": the Difficulty ceiling (Settings only, with `showDifficulty`),
  * Energetic Exercises, Floor Exercises and the Equipment chips. Each edit is
  * one `SettingsChange` passed to `onChange`.
  */
 export function WhatICanDoRows({
   settings: s,
   disabled,
-  difficulty = false,
+  showDifficulty = false,
   onChange,
 }: {
   settings: Settings;
   disabled: boolean;
-  difficulty?: boolean;
+  showDifficulty?: boolean;
   onChange: (change: SettingsChange) => void;
 }) {
   const toggleEquipment = (item: Equipment) => {
@@ -33,7 +33,7 @@ export function WhatICanDoRows({
 
   return (
     <>
-      {difficulty && (
+      {showDifficulty && (
         <>
           <ChipsRow label="Difficulty ceiling" note="Only Exercises at or below it.">
             {DIFFICULTIES.map((d) => (

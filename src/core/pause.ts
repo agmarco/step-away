@@ -54,7 +54,8 @@ export function heroStatus(state: CoreState, now: Instant, notifications?: Notif
  * when snoozed) falls on today in the Settings' time zone. After the day's
  * last Reminder, with nothing outstanding, a Pause would only record a line.
  * `status` defaults to `heroStatus(state, now)` (notifications allowed); a
- * caller that already has it passes it, so only a passed status can be `off`. Screens use it to show or hide Pause.
+ * caller that already has it passes it, so only a passed status can be `off`.
+ * Screens use it to show or hide Pause.
  */
 export function canPause(state: CoreState, now: Instant, status: HeroStatus = heroStatus(state, now)): boolean {
   if (status.kind === 'off' || status.kind === 'dayOff' || status.kind === 'paused') return false;

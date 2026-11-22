@@ -136,7 +136,7 @@ export default function Settings() {
         </Section>
 
         <Section title="What I can do">
-          <WhatICanDoRows settings={s} disabled={busy} difficulty onChange={change} />
+          <WhatICanDoRows settings={s} disabled={busy} showDifficulty onChange={change} />
         </Section>
 
         <Section title="Exercise Library">
