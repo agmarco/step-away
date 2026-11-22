@@ -187,6 +187,17 @@ export interface Pause {
 /** How long a Pause runs from now: 1 hour, 2 hours, or until the next local midnight. */
 export type PauseLength = 'hour' | 'twoHours' | 'restOfToday';
 
+/**
+ * The PauseLength `value` names, or undefined for anything else (another
+ * string, an array, a number, undefined). For input from outside the app,
+ * e.g. the `pause/[length]` deep link's route param.
+ */
+export function pauseLengthOf(value: unknown): PauseLength | undefined {
+  return PAUSE_LENGTHS.find((length) => length === value);
+}
+
+const PAUSE_LENGTHS: readonly PauseLength[] = ['hour', 'twoHours', 'restOfToday'];
+
 /** From `from` on (a local date in the Settings' time zone), the Daily Goal is `goal`. */
 export interface GoalChange {
   from: LocalDate;
