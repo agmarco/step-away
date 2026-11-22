@@ -5,7 +5,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   dailyGoalFor,
-  heroStatus,
+  isDayOff,
+  localDateOf,
   settle,
   streak,
   todayTally,
@@ -70,7 +71,7 @@ export default function Today() {
   const tally = todayTally(state, now);
   const today = localDateIn(now, state.settings.timeZone);
   const goal = dailyGoalFor(state, today);
-  const dayOff = heroStatus(state, now).kind === "dayOff";
+  const dayOff = isDayOff(state, localDateOf(now, state.settings.timeZone));
   const onHeroAction = (action: HeroAction) => {
     if (action === "pause") setPausing(true);
     else if (action === "resume") run("Resume", resume);
