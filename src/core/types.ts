@@ -146,6 +146,15 @@ export interface Reminder {
   rotation?: number;
 }
 
+/**
+ * Why a dropped Reminder was dropped: `droppedBy`, the reason stored when it
+ * was dropped. None stored means closing: every Reminder dropped before the
+ * reason was stored was a Snooze re-fire past closing.
+ */
+export function dropReason(reminder: Reminder): DropReason {
+  return reminder.droppedBy ?? 'closing';
+}
+
 /** Everything the core knows. Adapters persist it; the core never does. */
 export interface CoreState {
   /** When the app was last opened, or null if never. */

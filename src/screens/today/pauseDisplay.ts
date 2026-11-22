@@ -1,4 +1,4 @@
-import type { DropReason, Pause, Reminder } from '../../core';
+import type { Pause, Reminder } from '../../core';
 
 /** One line of Today's list: a fired Reminder, or a Pause. */
 export type TodayLine = { kind: 'reminder'; reminder: Reminder } | { kind: 'pause'; pause: Pause };
@@ -31,13 +31,4 @@ export function endsAtMidnight(until: number, timeZone: string): boolean {
     hourCycle: 'h23',
   });
   return time === '00:00:00' && until % 1000 === 0;
-}
-
-/**
- * Why a dropped Reminder was dropped, for its line on Today: the reason the
- * core stored when it dropped it. None stored means closing: every Reminder
- * dropped before the reason was stored was a Snooze re-fire past closing.
- */
-export function dropReason(reminder: Reminder): DropReason {
-  return reminder.droppedBy ?? 'closing';
 }

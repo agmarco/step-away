@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  dropReason,
   effectiveFire,
   outstandingReminder,
   refireScheduled,
@@ -14,7 +15,7 @@ import {
 import { openGuided } from '../../platform/useReminderRuntime';
 import { type Palette, useColors } from '../../theme';
 import { timeOf } from './format';
-import { dropReason, todayLines } from './pauseDisplay';
+import { todayLines } from './pauseDisplay';
 
 /**
  * The tally line, then today's fired Reminders and today's Pauses, newest

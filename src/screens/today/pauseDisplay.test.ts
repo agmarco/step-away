@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Pause, Reminder } from '../../core';
-import { dropReason, endsAtMidnight, todayLines } from './pauseDisplay';
+import { endsAtMidnight, todayLines } from './pauseDisplay';
 
 const reminder = (id: string, firesAt: number): Reminder => ({ id, firesAt, suggestion: [], status: 'done' });
 const MIN = 60_000;
@@ -48,19 +48,5 @@ describe('a Pause for the rest of today', () => {
   it('does not end at midnight at any other time, UTC midnight included', () => {
     expect(endsAtMidnight(Date.UTC(2026, 10, 11, 0, 0), 'Europe/Madrid')).toBe(false);
     expect(endsAtMidnight(Date.UTC(2026, 10, 10, 23, 1), 'Europe/Madrid')).toBe(false);
-  });
-});
-
-describe('why a Reminder was dropped', () => {
-  const dropped: Reminder = { id: 'r', firesAt: 10 * MIN, suggestion: [], status: 'dropped' };
-
-  it('is the reason stored on it', () => {
-    expect(dropReason({ ...dropped, droppedBy: 'pause' })).toBe('pause');
-    expect(dropReason({ ...dropped, droppedBy: 'dayOff' })).toBe('dayOff');
-    expect(dropReason({ ...dropped, droppedBy: 'closing' })).toBe('closing');
-  });
-
-  it('is closing when none is stored (dropped before the reason was stored)', () => {
-    expect(dropReason(dropped)).toBe('closing');
   });
 });

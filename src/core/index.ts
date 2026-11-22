@@ -13,6 +13,7 @@ export { heroStatus, todaysPauses } from './pause';
 export type { HeroStatus } from './pause';
 export { isOutstanding, isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
+export { dropReason } from './types';
 export { APPEARANCE_SETTINGS, BODY_AREA_MODES, INTERVALS, SNOOZE_DELAYS, WEEKDAYS } from './settingsChange';
 export { effectiveFire, refireScheduled, settle } from './settle';
 export type {
