@@ -9,7 +9,7 @@ export { addDays, localDateOf } from './localTime';
 export type { LocalDate } from './localTime';
 export { formatDose } from './dose';
 export { FALLBACK_LINE, MAX_SNOOZES } from './notification';
-export { endsAtMidnight, heroStatus, isRunning, todaysPauses } from './pause';
+export { canPause, endsAtMidnight, heroStatus, isRunning, todaysPauses } from './pause';
 export type { HeroStatus } from './pause';
 export { isOutstanding, isReminderId, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
