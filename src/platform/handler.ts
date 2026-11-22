@@ -284,7 +284,7 @@ export async function correct(reminderId: string, to: Outcome, did?: string[]): 
  * Day Off drops the waiting Reminder) and notify. Not a Response: no
  * `responses` row. True when it was accepted.
  */
-async function stateEvent(event: CoreEvent, label: string): Promise<boolean> {
+async function commitEvent(event: CoreEvent, label: string): Promise<boolean> {
   const { deps, now } = frozenDeps();
   const intents = await write(async (d) => {
     const state = await loadState(d);
@@ -311,7 +311,7 @@ async function stateEvent(event: CoreEvent, label: string): Promise<boolean> {
  * True when the change was accepted.
  */
 export function changeSettings(change: SettingsChange): Promise<boolean> {
-  return stateEvent({ type: 'ChangeSettings', change }, `ChangeSettings ${Object.keys(change).join(', ')}`);
+  return commitEvent({ type: 'ChangeSettings', change }, `ChangeSettings ${Object.keys(change).join(', ')}`);
 }
 
 /**
@@ -320,7 +320,7 @@ export function changeSettings(change: SettingsChange): Promise<boolean> {
  * the Activity Log untouched, then the chain rescheduled. True when accepted.
  */
 export function resetSettings(): Promise<boolean> {
-  return stateEvent({ type: 'ResetSettings' }, 'ResetSettings');
+  return commitEvent({ type: 'ResetSettings' }, 'ResetSettings');
 }
 
 /**
@@ -328,7 +328,7 @@ export function resetSettings(): Promise<boolean> {
  * intents, so nothing is scheduled. True when the goal was accepted.
  */
 export function setDailyGoal(goal: number): Promise<boolean> {
-  return stateEvent({ type: 'SetDailyGoal', goal }, `SetDailyGoal ${goal}`);
+  return commitEvent({ type: 'SetDailyGoal', goal }, `SetDailyGoal ${goal}`);
 }
 
 /**
@@ -338,12 +338,12 @@ export function setDailyGoal(goal: number): Promise<boolean> {
  * commit. True when accepted.
  */
 export function pause(length: PauseLength): Promise<boolean> {
-  return stateEvent({ type: 'Pause', length }, `Pause ${length}`);
+  return commitEvent({ type: 'Pause', length }, `Pause ${length}`);
 }
 
 /** Resume from Today: ends the running Pause now and rearms. True when accepted (a Pause was running). */
 export function resume(): Promise<boolean> {
-  return stateEvent({ type: 'Resume' }, 'Resume');
+  return commitEvent({ type: 'Resume' }, 'Resume');
 }
 
 /**
@@ -352,7 +352,7 @@ export function resume(): Promise<boolean> {
  * Reminder and dismisses its notification after the commit. True when accepted.
  */
 export function setDayOff(date: LocalDate, off: boolean): Promise<boolean> {
-  return stateEvent(
+  return commitEvent(
     { type: 'SetDayOff', date, off },
     `SetDayOff ${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')} ${off}`,
   );
