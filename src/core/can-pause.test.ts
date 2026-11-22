@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   BODY_AREAS,
   canPause,
+  heroStatus,
   initialState,
+  outstandingReminder,
   reduce,
   seededRandom,
   type BodyArea,
@@ -97,6 +99,18 @@ describe('canPause: Pause is offered only when it does something', () => {
     const paused = reduce(armed(), { type: 'Pause', length: 'hour' }, depsAt(at('10:00'))).state;
 
     expect(canPause(paused, at('10:30'))).toBe(false);
+  });
+
+  it('is true with nothing scheduled while a Reminder is outstanding: the Pause drops it', () => {
+    // At 17:20 the 17:15 Reminder is outstanding and the next 7 days (Tue 3 to Mon 9) are Days Off.
+    let state = armed();
+    for (let day = 3; day <= 9; day++) {
+      state = reduce(state, { type: 'SetDayOff', date: { year: 2026, month: 11, day }, off: true }, depsAt(at('17:20'))).state;
+    }
+
+    expect(heroStatus(state, at('17:20')).kind).toBe('none');
+    expect(outstandingReminder(state, at('17:20'))?.firesAt).toBe(at('17:15'));
+    expect(canPause(state, at('17:20'))).toBe(true);
   });
 
   it('is false with nothing scheduled', () => {

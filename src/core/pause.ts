@@ -36,18 +36,21 @@ export function heroStatus(state: CoreState, now: Instant): HeroStatus {
 }
 
 /**
- * Whether a Pause at `now` would do something, so the hero offers it: only
- * while `heroStatus` is `next`, and then when that next Reminder (its re-fire
- * time when snoozed) falls on today in the Settings' time zone, or a Reminder
- * is outstanding (`outstandingReminder`), which the Pause drops. After the
- * day's last Reminder, with nothing outstanding, a Pause would only record a
- * line. Screens use it to show or hide Pause.
+ * Whether a Pause at `now` would do something, so the hero offers it. Never
+ * while `heroStatus` is `dayOff` or `paused`. Otherwise always while a
+ * Reminder is outstanding (`outstandingReminder`), which the Pause drops, even
+ * under `none`; and under `next` when that next Reminder (its re-fire time
+ * when snoozed) falls on today in the Settings' time zone. After the day's
+ * last Reminder, with nothing outstanding, a Pause would only record a line.
+ * `status` defaults to `heroStatus(state, now)`; a caller that already has it
+ * passes it. Screens use it to show or hide Pause.
  */
-export function canPause(state: CoreState, now: Instant): boolean {
-  const status = heroStatus(state, now);
+export function canPause(state: CoreState, now: Instant, status: HeroStatus = heroStatus(state, now)): boolean {
+  if (status.kind === 'dayOff' || status.kind === 'paused') return false;
+  if (outstandingReminder(state, now) !== undefined) return true;
   if (status.kind !== 'next') return false;
   const { timeZone } = state.settings;
-  return sameDate(localDateOf(status.at, timeZone), localDateOf(now, timeZone)) || outstandingReminder(state, now) !== undefined;
+  return sameDate(localDateOf(status.at, timeZone), localDateOf(now, timeZone));
 }
 
 /** Today's Pauses (by the local date of `from`, Settings' time zone), oldest first. */
@@ -75,4 +78,3 @@ export function isRunning(pause: Pause, now: Instant): boolean {
 export function endsAtMidnight(until: Instant, timeZone: string): boolean {
   return until === instantAt(localDateOf(until, timeZone), 0, timeZone);
 }
-
