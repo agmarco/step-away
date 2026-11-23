@@ -130,13 +130,6 @@ export default function Today() {
             </Pressable>
           )}
 
-          {/* TEMPORARY (#19): link to the Exercise Library debug list; remove with app/debug/library.tsx. */}
-          <Link
-            href="/debug/library"
-            style={[styles.debugLink, { color: colors.accent.hero }]}
-          >
-            Exercise Library (debug)
-          </Link>
           {/* TEMPORARY, development build only (#21): the device-check test mode. */}
           {isDevelopment && (
             <Link

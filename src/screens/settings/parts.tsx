@@ -6,12 +6,12 @@ import { useColors } from '../../theme';
 /** Back to Today: pop this page, or, opened with nothing under it, go to Today. */
 const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
-/** The page header: a back arrow and the title, as on the other pages Today pushes. */
-export function PageHeader({ title }: { title: string }) {
+/** The page header: a back arrow and the title, as on the other pages Today pushes. `backLabel` names where back goes. */
+export function PageHeader({ title, backLabel = 'Back to Today' }: { title: string; backLabel?: string }) {
   const colors = useColors();
   return (
     <View style={styles.header}>
-      <Pressable onPress={back} accessibilityRole="button" accessibilityLabel="Back to Today" hitSlop={12}>
+      <Pressable onPress={back} accessibilityRole="button" accessibilityLabel={backLabel} hitSlop={12}>
         <Text style={[styles.back, { color: colors.text.primary }]}>‹</Text>
       </Pressable>
       <Text style={[styles.title, { color: colors.text.primary }]} accessibilityRole="header">

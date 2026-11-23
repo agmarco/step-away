@@ -363,7 +363,8 @@ const styles = StyleSheet.create({
   dose: { fontSize: 44, fontWeight: '800', fontVariant: ['tabular-nums'] },
   cue: { fontSize: 17, fontStyle: 'italic', lineHeight: 24 },
   photos: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  // The source photos are 850×567; the box sets the size (see app/debug/library.tsx).
+  // The source photos are 850×567. The box sets the size: on web an Image's own
+  // aspectRatio loses to the asset's intrinsic height.
   photoBox: { flex: 1, aspectRatio: 850 / 567, borderRadius: 8, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
   timer: { alignItems: 'center', gap: 8, marginTop: 12 },
