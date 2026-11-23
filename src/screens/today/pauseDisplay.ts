@@ -1,4 +1,4 @@
-import type { Pause, Reminder } from '../../core';
+import { endsAtMidnight, isRunning, type Instant, type Pause, type Reminder } from '../../core';
 
 /** One line of Today's list: a fired Reminder, or a Pause. */
 export type TodayLine = { kind: 'reminder'; reminder: Reminder } | { kind: 'pause'; pause: Pause };
@@ -15,4 +15,16 @@ export function todayLines(reminders: Reminder[], pauses: Pause[]): TodayLine[] 
     ...pauses.map((pause) => ({ kind: 'pause' as const, pause })),
   ];
   return lines.sort((a, b) => at(b) - at(a) || (a.kind === 'pause' ? -1 : 0) - (b.kind === 'pause' ? -1 : 0));
+}
+
+/**
+ * A Pause's line in Today's list: its span, from its start to its end, the
+ * planned end while it runs (the hero's "until"; a Resume or an extension
+ * moves it). A running Pause for the rest of today (its `until` a local
+ * midnight in `timeZone`, the core's `endsAtMidnight`) ends at "end of day".
+ * `timeOf` formats a time (Today's `timeOf`; tests pass a fixed one).
+ */
+export function pauseLine(pause: Pause, now: Instant, timeZone: string, timeOf: (at: Instant) => string): string {
+  const end = isRunning(pause, now) && endsAtMidnight(pause.until, timeZone) ? 'end of day' : timeOf(pause.until);
+  return `Paused ${timeOf(pause.from)}–${end}`;
 }

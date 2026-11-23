@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   dropReason,
   effectiveFire,
-  isRunning,
   outstandingReminder,
   refireScheduled,
   todaysPauses,
@@ -16,14 +15,15 @@ import {
 import { openGuided } from '../../platform/useReminderRuntime';
 import { type Palette, useColors } from '../../theme';
 import { timeOf } from './format';
-import { todayLines } from './pauseDisplay';
+import { pauseLine, todayLines } from './pauseDisplay';
 
 /**
  * The tally line, then today's fired Reminders and today's Pauses, newest
  * first (`todayLines`). The outstanding Reminder has Start (the guided
  * screen); every answered one (done, skipped, Missed, dropped) opens the
  * correction sheet through `onCorrect`. A Pause is a line of its own,
- * "Paused 10:00–11:00", or "Paused 10:00–" while it runs.
+ * "Paused 10:00–11:00" (`pauseLine`): while it runs, to its planned end, or
+ * "Paused 10:00–end of day" for the rest of today.
  */
 export function ReminderList({
   state,
@@ -51,7 +51,14 @@ export function ReminderList({
         <View style={[styles.list, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
           {lines.map((line, i) =>
             line.kind === 'pause' ? (
-              <PauseRow key={`pause-${line.pause.from}`} pause={line.pause} now={now} divided={i > 0} colors={colors} />
+              <PauseRow
+                key={`pause-${line.pause.from}`}
+                pause={line.pause}
+                now={now}
+                timeZone={state.settings.timeZone}
+                divided={i > 0}
+                colors={colors}
+              />
             ) : (
               <Row
                 key={line.reminder.id}
@@ -126,14 +133,25 @@ function Row({
   );
 }
 
-/** A Pause's line: its span, open-ended while it runs. Not a Reminder: no dot colour of its own, no action. */
-function PauseRow({ pause, now, divided, colors }: { pause: Pause; now: number; divided: boolean; colors: Palette }) {
-  const running = isRunning(pause, now);
+/** A Pause's line: its span (`pauseLine`). Not a Reminder: no dot colour of its own, no action. */
+function PauseRow({
+  pause,
+  now,
+  timeZone,
+  divided,
+  colors,
+}: {
+  pause: Pause;
+  now: number;
+  timeZone: string;
+  divided: boolean;
+  colors: Palette;
+}) {
   return (
     <View style={[styles.row, divided && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line.divider }]}>
       <View style={[styles.dot, { backgroundColor: colors.text.secondary }]} />
       <Text style={[styles.pause, { color: colors.text.secondary }]}>
-        Paused {timeOf(pause.from)}–{running ? '' : timeOf(pause.until)}
+        {pauseLine(pause, now, timeZone, timeOf)}
       </Text>
     </View>
   );
