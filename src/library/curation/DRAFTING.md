@@ -13,7 +13,7 @@ Keep a candidate only if all of these hold:
 - It is safe done cold: no maximal effort, no ballistic stretching, no balance risk. Explosive and hard moves (jumps, bounds, a handstand push-up) are kept: drafting removes the maximal push ("as high as possible") and tags them Energetic or grades them Intermediate or Expert, because the user's Energetic switch and Difficulty ceiling gate them.
 - It needs nothing beyond v1's Equipment (dumbbells and resistance bands) and the room: no bench, bar or rack. A wall, desk or chair is fine, and so is a resistance band anchored low on a desk leg; a move that needs the band anchored at chest or elbow height is dropped. `library:draft` already leaves out entries whose source equipment is anything else, but the source lists some kit moves as body only, so check the photos and steps.
 - A small step or box is not needed: any small elevation (a book, a stair, a door threshold) replaces it, so a move that raises a heel or the toes on one is kept, and its steps say so. A move that steps up onto a bench-high box is still dropped.
-- It works alone. A stretch shown with a partner is kept when it works alone, and its steps are rewritten for doing it alone; only a move that truly needs a second person is dropped.
+- It works alone. A stretch shown with a partner is kept when it works alone, and its steps are rewritten for doing it alone; only a move that truly needs a second person is dropped. A partner stretch's contract-relax press phase (pushing against the partner's hold) is kept when it can be done alone, with your own hand resisting (`Overhead_Triceps`), and dropped when it can't (section 7).
 
 Every variant that passes these rules is kept, even a near-identical one, because any variety is welcome (owner decision, #20).
 
@@ -28,6 +28,8 @@ Drop sprint drills, Olympic-style technique drills, non-desk moves (e.g. trail r
 | `Either` | The move works the same sitting or standing: most neck, shoulder, arm, wrist and upper-back moves. **Use Either whenever the legs aren't involved**, even if the photos show standing. |
 | `Floor` | You lie or kneel on the floor. Goes in `floor.yaml` (or the Equipment file), never `base.yaml`. |
 
+The same goes for photos that sit on the floor: a move whose photos are seated on the floor but that involves only the head or arms is Either, not Floor (`Chin_To_Chest_Stretch`).
+
 ## 3. Energetic
 
 `energetic: true` only if the move raises the heart rate noticeably within the Dose: jumping, hopping, high knees, fast skipping. Squats, holds, stretches and mobility circles are `false`, even if tiring.
@@ -40,6 +42,11 @@ Grade for an untrained office worker doing it cold, not for a gym user:
 - **Intermediate**: needs some fitness, coordination or impact: jumps, deep or single-leg work, push-up variants.
 - **Expert**: hard even for fit people, or needs real skill. Kept when it passes section 1; the user's Difficulty ceiling hides it from those who don't want it.
 
+Two cases settled in the #20 pilot:
+
+- **Jumps:** a jump of Star Jump's height and impact is Intermediate; anything beyond it, such as a tuck jump or a bound, is Expert (`Knee_Tuck_Jump`).
+- **Loaded hinges:** a hinge with a weight (a bent-over row, a stiff-legged deadlift, a good morning) done cold is Intermediate, and its steps say to use a light weight and to keep the back flat throughout, including standing up at the end (`Bent_Over_Two-Dumbbell_Row`).
+
 The source `level` is a starting point only. It often grades stretches as Expert (e.g. `Seated_Biceps`) and explosive jumps as beginner; correct both.
 
 ## 5. Dose
@@ -47,7 +54,7 @@ The source `level` is a starting point only. It often grades stretches as Expert
 A default Dose is reps **or** seconds, never sets.
 
 - **Reps: 10** for anything that moves and repeats (squats, jumps, circles).
-- **Seconds** for anything held: stretches **20 s** by default (30 s only for a larger stretch, such as hamstrings or hips), isometric holds **15 s**, planks **20–30 s**.
+- **Seconds** for anything held: stretches **20 s** by default (30 s only for a larger stretch, which means the hips or hamstrings are the main target, as in `Seated_Glute`; a calf, side or arm stretch stays at 20), isometric holds **15 s**, planks **20 s** (the low end, since they are done cold).
 - **`eachSide: true`** when the move is done on one side and then the other (a neck tilt, a lunge, a one-arm stretch). The Dose is then per side. One-sided moves are **never** split into left and right Exercises.
 - Moves done with both sides at once (both wrists, both shoulders) are not Each Side.
 
@@ -68,7 +75,9 @@ Rewrite the source instructions; never copy them as they are.
 - **No count or number in a step, ever.** The Dose, which the user can change, carries it, so a number in a step would contradict an overridden Dose. When a reps Dose applies in each direction or phase, say so without a number ("Then circle them backwards the same number of times."). The build step fails on any digit in a step, naming the Id.
 - Remove gym tips, "this will be your starting position", anatomy lectures and asides.
 - Start with the set-up position. For Either moves, start with "Sit or stand tall."
-- For Each Side moves, end with "…, then switch sides."
+- For Each Side moves, end with "…, then switch sides." A held move's last step keeps that form ("Release slowly, then switch sides."); a reps move's last step finishes the reps first ("…finish your reps, then switch sides.").
+- For reaching moves, write "reach towards … until you feel the stretch", never a fixed end position the untrained can't reach (not "touch your toes").
+- A partner stretch done alone (section 1) keeps its press phase only when your own hand can resist it: "Press the elbow up into your hand for a few seconds, without letting it move." Otherwise the steps leave the press out.
 - British spelling (centre, colour) in every curated field and in this guide.
 
 Before (`Isometric_Chest_Squeezes`, source):
@@ -86,7 +95,11 @@ After:
 Leave a field out to take the script mapping. Write it only when the mapping is wrong, with the reason in a YAML comment above it.
 
 - **`name`**: only if the source name is awkward, jargon or a bare body part (`Adductor/Groin`, `Isometric Chest Squeezes`). Keep it short and recognisable. The Id never changes.
-- **`exerciseType`**: when the source category is wrong for the move, e.g. a static hold filed under `plyometrics`.
+  - The rename may be **descriptive**, not just a minimal fix, when the source name is jargon, a bare body part, or would be confused with another Exercise: `Overhead_Triceps` becomes Triceps Press and Stretch, because `Triceps_Stretch` already exists; `Hip_Extension_with_Bands` becomes Band Leg Kickback.
+  - Drop Position words that contradict section 2: `Standing_Lateral_Stretch` is Either, so it becomes Side Stretch ("Lateral" is jargon too).
+  - Other pilot renames: Standing Calf Stretch (`Standing_Gastrocnemius_Calf_Stretch`, jargon), Seated Glute Stretch (`Seated_Glute`, a bare body part), Split Squat (`Split_Squats`, plural).
+  - Don't re-punctuate a kept source name: Bent Over Two-Dumbbell Row stays as it is.
+- **`exerciseType`**: when the source category is wrong for the move, e.g. a static hold filed under `plyometrics`. Posture and activation moves (a chin tuck, wrist mobility) are `Stretch`, following `Wrist_Circles`; a House Exercise writes it (`custom/Chin_Tuck`).
 - **`bodyArea`**: when the first source Target Muscle doesn't match where the move is felt (e.g. a full-body jump whose first muscle is not the point). Prefer overriding `bodyArea` alone over reordering `targetMuscles`.
 - **`difficulty`**: always written, after re-grading (section 4), even when it equals the source.
 
@@ -210,3 +223,16 @@ The owner gave verdicts on all 212 candidates (base 147, dumbbells 50, resistanc
 4. **v1 Equipment is dumbbells and resistance bands only.** Kettlebell, medicine ball, exercise ball and foam roller leave v1, so a candidate needing one is dropped (e.g. `Crunch_-_Legs_On_Exercise_Ball`, which the source wrongly lists as body only). The code change is #20 CP2.
 5. **Band anchors:** a band anchored low on a desk leg is fine (e.g. `Hip_Extension_with_Bands`, `Hip_Flexion_with_Band`); moves that need it anchored at chest or elbow height (`Cross_Over_-_With_Bands`, `External_Rotation_with_Band`, `Internal_Rotation_with_Band`) stay dropped.
 6. **Calf Raise House Exercise:** the owner wants a plain calf raise. The source has none without kit (its calf raises need a barbell, a machine, a dumbbell or a band), so a bodyweight Calf Raise is added as a House Exercise (Hips & Legs).
+
+### 2026-11-23: #20 pilot (owner approved all 11 as drafted)
+
+The owner reviewed the eleven pilot drafts (seven base, Chin Tuck, Plank, the bent-over row and the band kickback) and approved all of them as drafted. The rules they settled:
+
+1. **Each Side endings:** a reps move's last step reads "…finish your reps, then switch sides."; a hold keeps "…, then switch sides." (section 7).
+2. **Names:** a rename may be descriptive when the source name is jargon, a bare body part or would be confused with another Exercise; Position words that contradict section 2 are dropped; a kept source name is not re-punctuated (section 8).
+3. **Grading:** jumps beyond Star Jump's height or impact (tuck jumps, bounds) are Expert; a loaded hinge done cold is Intermediate, with a light weight and a flat back in the steps (section 4).
+4. **Partner stretches done alone:** the contract-relax press phase stays when your own hand can resist, and goes when it can't (sections 1 and 7).
+5. **Exercise Type:** posture and activation moves (chin tuck, wrist mobility) are Stretch, following Wrist Circles (section 8).
+6. **Dose:** planks take 20 s; a stretch is "larger" (30 s) only when the hips or hamstrings are the main target (section 5).
+7. **Reach:** reaching moves say "reach towards … until you feel the stretch", never a fixed end position (section 7).
+8. **Position from photos:** a move whose photos sit on the floor but that uses only the head or arms is Either (section 2).
