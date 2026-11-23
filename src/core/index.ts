@@ -13,6 +13,7 @@ export { canPause, endsAtMidnight, heroStatus, isRunning, todaysPauses } from '.
 export type { HeroStatus, NotificationsState } from './pause';
 export { isOutstanding, isReminderId, MAX_CHAIN, nextReminder, outstandingReminder, todaysReminders } from './schedule';
 export { seededRandom } from './random';
+export { allowedBySettings } from './suggest';
 export { dropReason, pauseLengthOf } from './types';
 export { APPEARANCE_SETTINGS, BODY_AREA_MODES, INTERVALS, SNOOZE_DELAYS, WEEKDAYS } from './settingsChange';
 export { effectiveFire, refireScheduled, settle } from './settle';

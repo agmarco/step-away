@@ -34,21 +34,26 @@ export function suggestionSource(
 }
 
 /**
- * The eligible pool: Difficulty at or below the ceiling, Energetic only when
- * switched on, Position Floor only when Floor is on, no Equipment or owned
- * Equipment, and not Excluded.
+ * The Exercises the settings allow, Exclusions ignored: Difficulty at or
+ * below the ceiling, Energetic only when switched on, Position Floor only
+ * when Floor is on, no Equipment or owned Equipment. The Exercise Library
+ * browser lists these, the Excluded ones marked.
  */
-export function eligiblePool(settings: Settings, library: readonly Exercise[]): Exercise[] {
-  return library.filter((e) => eligible(e, settings));
+export function allowedBySettings(settings: Settings, library: readonly Exercise[]): Exercise[] {
+  return library.filter((e) => allowed(e, settings));
 }
 
-function eligible(e: Exercise, settings: Settings): boolean {
+/** The eligible pool: the Exercises the settings allow (`allowedBySettings`) that aren't Excluded. */
+export function eligiblePool(settings: Settings, library: readonly Exercise[]): Exercise[] {
+  return allowedBySettings(settings, library).filter((e) => !settings.excluded.includes(e.id));
+}
+
+function allowed(e: Exercise, settings: Settings): boolean {
   return (
     DIFFICULTIES.indexOf(e.difficulty) <= DIFFICULTIES.indexOf(settings.difficulty) &&
     (settings.energetic || !e.energetic) &&
     (settings.floor || e.position !== 'Floor') &&
-    (e.equipment === null || settings.equipment.includes(e.equipment)) &&
-    !settings.excluded.includes(e.id)
+    (e.equipment === null || settings.equipment.includes(e.equipment))
   );
 }
 
