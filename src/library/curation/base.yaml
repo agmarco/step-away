@@ -76,3 +76,146 @@ Wrist_Circles:
     - Hold your arms out to your sides, palms down.
     - Keeping your arms still, circle both wrists forwards.
     - Then circle them backwards the same number of times.
+
+# #20 pilot: approved by the owner as drafted on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Chin_To_Chest_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Hands behind head, chin gently to chest
+  steps:
+    - Sit or stand tall.
+    - Interlace your fingers behind your head, elbows pointing forward.
+    - Slowly pull your head down, bringing your chin towards your chest.
+    - Keep the pull gentle and your back straight.
+    - Release slowly and lift your head back up.
+
+Knee_Tuck_Jump:
+  difficulty: Expert
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Jump, knees up to hands, land softly
+  steps:
+    - Stand with your feet hip-width apart and your knees slightly bent.
+    - Hold your hands out in front of your chest, palms down.
+    - Dip into a quarter squat, then jump up.
+    - Bring your knees up towards your hands.
+    - Land softly on the balls of your feet, bending your knees as you land.
+
+Overhead_Triceps:
+  # Override: "Overhead Triceps" reads as a bare body part, and the plain
+  # Triceps_Stretch already exists; the name says what sets this one apart.
+  name: Triceps Press and Stretch
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Press elbow into hand, then ease it back
+  steps:
+    - Sit or stand tall.
+    - Raise one arm, bend the elbow and let your hand drop behind your head.
+    - Hold that elbow with your other hand.
+    - Press the elbow up into your hand for a few seconds, without letting it move.
+    - Relax the arm, then gently pull the elbow further behind your head.
+    - Release slowly, then switch sides.
+
+Seated_Glute:
+  # Override: "Seated Glute" is a bare body part.
+  name: Seated Glute Stretch
+  difficulty: Beginner
+  position: Seated
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Ankle on knee, lean forward, back flat
+  steps:
+    - Sit near the front of your chair with both feet flat.
+    - Cross one ankle over the opposite knee.
+    - Sit tall, then lean forward from your hips with a flat back.
+    - Stop when you feel the stretch in the buttock of the crossed leg.
+    - Sit back up slowly, then switch sides.
+
+Split_Squats:
+  # Override: "Split Squats" is plural, which reads oddly as one Exercise.
+  name: Split Squat
+  # Override: the source category is "stretching" (its steps describe a jumping
+  # leg switch), but the photos show a static split squat: a strength move.
+  exerciseType: Strength
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Feet stay planted, drop straight down, chest up
+  steps:
+    - Stand tall, then take a long step forward with one foot.
+    - Lift your back heel so you rest on the ball of that foot.
+    - Keeping your chest up, bend both knees to lower your hips straight down.
+    - Push through your front foot to rise again, keeping your feet where they are.
+    - Finish your reps and step your feet together, then switch sides.
+
+Standing_Gastrocnemius_Calf_Stretch:
+  # Override: "Gastrocnemius" is anatomy jargon.
+  name: Standing Calf Stretch
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Heel raised, back straight, pull toes back
+  steps:
+    - Stand facing a small step; a book, a stair or a door threshold works.
+    - Rest one heel on it with that knee straight and your toes pointing up.
+    - Bend your other knee slightly and rest that hand on your thigh.
+    - Keeping your back straight, lean forward and reach for the toes of the raised foot.
+    - Pull those toes gently towards your knee until you feel the stretch in your calf.
+    - Release slowly, then switch sides.
+
+Standing_Lateral_Stretch:
+  # Override: the move is drafted as Either (the legs aren't involved), so
+  # "Standing" no longer fits, and "Lateral" is jargon.
+  name: Side Stretch
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hand behind head, lean sideways, hips stay still
+  steps:
+    - Sit or stand tall.
+    - Rest one hand on your hip.
+    - Raise your other arm and place that hand behind your head.
+    - Lean your upper body sideways, away from the raised elbow, without leaning forward.
+    - Keep your hips still and your weight even.
+    - Come back up slowly, then switch sides.
+
+# House Exercises: self-authored (custom/ Ids), no photos.
+
+custom/Chin_Tuck:
+  name: Chin Tuck
+  targetMuscles: [neck]
+  bodyArea: Neck
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    reps: 10
+  cue: Slide chin straight back, eyes stay level
+  steps:
+    - Sit or stand tall, looking straight ahead.
+    - Glide your chin straight back, as if making a double chin.
+    - Keep your eyes level; don't tip your head down.
+    - Hold briefly, then let your head ease forward again.

@@ -1,0 +1,19 @@
+# Resistance bands group: needs a resistance band and nothing else; any Position, Floor included. Format: README.md; how to fill each field: DRAFTING.md.
+# #20 pilot: approved by the owner as drafted on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Hip_Extension_with_Bands:
+  # Override: "Hip Extension" is anatomy jargon, and the move uses one band.
+  name: Band Leg Kickback
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Straight leg back slowly, back stays still
+  steps:
+    - Loop one end of the band round a desk leg, close to the floor, and the other round one ankle.
+    - Stand facing the desk, a step back from it, and hold its edge.
+    - Keep your chest up and the band leg straight.
+    - Move that leg back slowly, as far as you can without arching your lower back.
+    - Bring it forward again slowly and finish your reps, then switch sides.

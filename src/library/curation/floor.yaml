@@ -1,0 +1,16 @@
+# Floor group: Position Floor, no Equipment. Format: README.md; how to fill each field: DRAFTING.md.
+# #20 pilot: approved by the owner as drafted on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Plank:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Forearms down, body straight, hips don't sag
+  steps:
+    - Kneel on the floor and rest your forearms on it, elbows under your shoulders.
+    - Step your feet back one at a time, resting on your toes.
+    - Hold your body in a straight line from head to heels.
+    - Keep your hips level, neither sagging nor raised, and breathe.
+    - Lower your knees to the floor to finish.

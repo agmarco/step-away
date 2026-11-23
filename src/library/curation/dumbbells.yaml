@@ -1,0 +1,17 @@
+# Dumbbells group: needs dumbbells and nothing else; any Position, Floor included. Format: README.md; how to fill each field: DRAFTING.md.
+# #20 pilot: approved by the owner as drafted on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Bent_Over_Two-Dumbbell_Row:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Back flat, pull elbows back to your sides
+  steps:
+    - Hold a light dumbbell in each hand, palms facing you.
+    - Stand with your feet hip-width apart and your knees slightly bent.
+    - Push your hips back and lean forward, keeping your back flat and your head in line.
+    - Let the weights hang below your shoulders.
+    - Pull them up to your sides, elbows close to your body, and squeeze your shoulder blades together.
+    - Lower them slowly, and keep your back flat as you stand up at the end.

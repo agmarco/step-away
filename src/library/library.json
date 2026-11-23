@@ -1,5 +1,115 @@
 [
   {
+    "id": "Bent_Over_Two-Dumbbell_Row",
+    "source": "free-exercise-db",
+    "name": "Bent Over Two-Dumbbell Row",
+    "targetMuscles": [
+      "middle back"
+    ],
+    "bodyArea": "Shoulders & Upper Back",
+    "exerciseType": "Strength",
+    "difficulty": "Intermediate",
+    "position": "Standing",
+    "equipment": "dumbbells",
+    "energetic": false,
+    "dose": {
+      "kind": "reps",
+      "amount": 10,
+      "eachSide": false
+    },
+    "cue": "Back flat, pull elbows back to your sides",
+    "steps": [
+      "Hold a light dumbbell in each hand, palms facing you.",
+      "Stand with your feet hip-width apart and your knees slightly bent.",
+      "Push your hips back and lean forward, keeping your back flat and your head in line.",
+      "Let the weights hang below your shoulders.",
+      "Pull them up to your sides, elbows close to your body, and squeeze your shoulder blades together.",
+      "Lower them slowly, and keep your back flat as you stand up at the end."
+    ],
+    "photos": {
+      "start": "Bent_Over_Two-Dumbbell_Row/0.jpg",
+      "end": "Bent_Over_Two-Dumbbell_Row/1.jpg"
+    },
+    "secondaryMuscles": [
+      "biceps",
+      "lats",
+      "shoulders"
+    ],
+    "force": "pull",
+    "mechanic": "compound"
+  },
+  {
+    "id": "Chin_To_Chest_Stretch",
+    "source": "free-exercise-db",
+    "name": "Chin To Chest Stretch",
+    "targetMuscles": [
+      "neck"
+    ],
+    "bodyArea": "Neck",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 20,
+      "eachSide": false
+    },
+    "cue": "Hands behind head, chin gently to chest",
+    "steps": [
+      "Sit or stand tall.",
+      "Interlace your fingers behind your head, elbows pointing forward.",
+      "Slowly pull your head down, bringing your chin towards your chest.",
+      "Keep the pull gentle and your back straight.",
+      "Release slowly and lift your head back up."
+    ],
+    "photos": {
+      "start": "Chin_To_Chest_Stretch/0.jpg",
+      "end": "Chin_To_Chest_Stretch/1.jpg"
+    },
+    "secondaryMuscles": [
+      "traps"
+    ],
+    "force": "static"
+  },
+  {
+    "id": "Hip_Extension_with_Bands",
+    "source": "free-exercise-db",
+    "name": "Band Leg Kickback",
+    "targetMuscles": [
+      "glutes"
+    ],
+    "bodyArea": "Hips & Legs",
+    "exerciseType": "Strength",
+    "difficulty": "Beginner",
+    "position": "Standing",
+    "equipment": "resistance bands",
+    "energetic": false,
+    "dose": {
+      "kind": "reps",
+      "amount": 10,
+      "eachSide": true
+    },
+    "cue": "Straight leg back slowly, back stays still",
+    "steps": [
+      "Loop one end of the band round a desk leg, close to the floor, and the other round one ankle.",
+      "Stand facing the desk, a step back from it, and hold its edge.",
+      "Keep your chest up and the band leg straight.",
+      "Move that leg back slowly, as far as you can without arching your lower back.",
+      "Bring it forward again slowly and finish your reps, then switch sides."
+    ],
+    "photos": {
+      "start": "Hip_Extension_with_Bands/0.jpg",
+      "end": "Hip_Extension_with_Bands/1.jpg"
+    },
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "force": "push",
+    "mechanic": "compound"
+  },
+  {
     "id": "Isometric_Chest_Squeezes",
     "source": "free-exercise-db",
     "name": "Chest Squeeze",
@@ -37,6 +147,150 @@
     "mechanic": "compound"
   },
   {
+    "id": "Knee_Tuck_Jump",
+    "source": "free-exercise-db",
+    "name": "Knee Tuck Jump",
+    "targetMuscles": [
+      "hamstrings"
+    ],
+    "bodyArea": "Hips & Legs",
+    "exerciseType": "Plyometric",
+    "difficulty": "Expert",
+    "position": "Standing",
+    "equipment": null,
+    "energetic": true,
+    "dose": {
+      "kind": "reps",
+      "amount": 10,
+      "eachSide": false
+    },
+    "cue": "Jump, knees up to hands, land softly",
+    "steps": [
+      "Stand with your feet hip-width apart and your knees slightly bent.",
+      "Hold your hands out in front of your chest, palms down.",
+      "Dip into a quarter squat, then jump up.",
+      "Bring your knees up towards your hands.",
+      "Land softly on the balls of your feet, bending your knees as you land."
+    ],
+    "photos": {
+      "start": "Knee_Tuck_Jump/0.jpg",
+      "end": "Knee_Tuck_Jump/1.jpg"
+    },
+    "secondaryMuscles": [
+      "abductors",
+      "adductors",
+      "calves",
+      "glutes",
+      "quadriceps"
+    ],
+    "force": "push",
+    "mechanic": "compound"
+  },
+  {
+    "id": "Overhead_Triceps",
+    "source": "free-exercise-db",
+    "name": "Triceps Press and Stretch",
+    "targetMuscles": [
+      "triceps"
+    ],
+    "bodyArea": "Chest & Arms",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 20,
+      "eachSide": true
+    },
+    "cue": "Press elbow into hand, then ease it back",
+    "steps": [
+      "Sit or stand tall.",
+      "Raise one arm, bend the elbow and let your hand drop behind your head.",
+      "Hold that elbow with your other hand.",
+      "Press the elbow up into your hand for a few seconds, without letting it move.",
+      "Relax the arm, then gently pull the elbow further behind your head.",
+      "Release slowly, then switch sides."
+    ],
+    "photos": {
+      "start": "Overhead_Triceps/0.jpg",
+      "end": "Overhead_Triceps/1.jpg"
+    },
+    "secondaryMuscles": [
+      "lats"
+    ],
+    "force": "static"
+  },
+  {
+    "id": "Plank",
+    "source": "free-exercise-db",
+    "name": "Plank",
+    "targetMuscles": [
+      "abdominals"
+    ],
+    "bodyArea": "Core & Lower Back",
+    "exerciseType": "Strength",
+    "difficulty": "Beginner",
+    "position": "Floor",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 20,
+      "eachSide": false
+    },
+    "cue": "Forearms down, body straight, hips don't sag",
+    "steps": [
+      "Kneel on the floor and rest your forearms on it, elbows under your shoulders.",
+      "Step your feet back one at a time, resting on your toes.",
+      "Hold your body in a straight line from head to heels.",
+      "Keep your hips level, neither sagging nor raised, and breathe.",
+      "Lower your knees to the floor to finish."
+    ],
+    "photos": {
+      "start": "Plank/0.jpg",
+      "end": "Plank/1.jpg"
+    },
+    "force": "static",
+    "mechanic": "isolation"
+  },
+  {
+    "id": "Seated_Glute",
+    "source": "free-exercise-db",
+    "name": "Seated Glute Stretch",
+    "targetMuscles": [
+      "glutes"
+    ],
+    "bodyArea": "Hips & Legs",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Seated",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 30,
+      "eachSide": true
+    },
+    "cue": "Ankle on knee, lean forward, back flat",
+    "steps": [
+      "Sit near the front of your chair with both feet flat.",
+      "Cross one ankle over the opposite knee.",
+      "Sit tall, then lean forward from your hips with a flat back.",
+      "Stop when you feel the stretch in the buttock of the crossed leg.",
+      "Sit back up slowly, then switch sides."
+    ],
+    "photos": {
+      "start": "Seated_Glute/0.jpg",
+      "end": "Seated_Glute/1.jpg"
+    },
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "force": "static"
+  },
+  {
     "id": "Side_Neck_Stretch",
     "source": "free-exercise-db",
     "name": "Side Neck Stretch",
@@ -67,6 +321,112 @@
     },
     "force": "static",
     "mechanic": "isolation"
+  },
+  {
+    "id": "Split_Squats",
+    "source": "free-exercise-db",
+    "name": "Split Squat",
+    "targetMuscles": [
+      "hamstrings"
+    ],
+    "bodyArea": "Hips & Legs",
+    "exerciseType": "Strength",
+    "difficulty": "Intermediate",
+    "position": "Standing",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "reps",
+      "amount": 10,
+      "eachSide": true
+    },
+    "cue": "Feet stay planted, drop straight down, chest up",
+    "steps": [
+      "Stand tall, then take a long step forward with one foot.",
+      "Lift your back heel so you rest on the ball of that foot.",
+      "Keeping your chest up, bend both knees to lower your hips straight down.",
+      "Push through your front foot to rise again, keeping your feet where they are.",
+      "Finish your reps and step your feet together, then switch sides."
+    ],
+    "photos": {
+      "start": "Split_Squats/0.jpg",
+      "end": "Split_Squats/1.jpg"
+    },
+    "secondaryMuscles": [
+      "calves",
+      "glutes",
+      "quadriceps"
+    ],
+    "force": "push"
+  },
+  {
+    "id": "Standing_Gastrocnemius_Calf_Stretch",
+    "source": "free-exercise-db",
+    "name": "Standing Calf Stretch",
+    "targetMuscles": [
+      "calves"
+    ],
+    "bodyArea": "Hips & Legs",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Standing",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 20,
+      "eachSide": true
+    },
+    "cue": "Heel raised, back straight, pull toes back",
+    "steps": [
+      "Stand facing a small step; a book, a stair or a door threshold works.",
+      "Rest one heel on it with that knee straight and your toes pointing up.",
+      "Bend your other knee slightly and rest that hand on your thigh.",
+      "Keeping your back straight, lean forward and reach for the toes of the raised foot.",
+      "Pull those toes gently towards your knee until you feel the stretch in your calf.",
+      "Release slowly, then switch sides."
+    ],
+    "photos": {
+      "start": "Standing_Gastrocnemius_Calf_Stretch/0.jpg",
+      "end": "Standing_Gastrocnemius_Calf_Stretch/1.jpg"
+    },
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "force": "static"
+  },
+  {
+    "id": "Standing_Lateral_Stretch",
+    "source": "free-exercise-db",
+    "name": "Side Stretch",
+    "targetMuscles": [
+      "abdominals"
+    ],
+    "bodyArea": "Core & Lower Back",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "seconds",
+      "amount": 20,
+      "eachSide": true
+    },
+    "cue": "Hand behind head, lean sideways, hips stay still",
+    "steps": [
+      "Sit or stand tall.",
+      "Rest one hand on your hip.",
+      "Raise your other arm and place that hand behind your head.",
+      "Lean your upper body sideways, away from the raised elbow, without leaning forward.",
+      "Keep your hips still and your weight even.",
+      "Come back up slowly, then switch sides."
+    ],
+    "photos": {
+      "start": "Standing_Lateral_Stretch/0.jpg",
+      "end": "Standing_Lateral_Stretch/1.jpg"
+    },
+    "force": "static"
   },
   {
     "id": "Star_Jump",
@@ -171,5 +531,32 @@
     },
     "force": "pull",
     "mechanic": "isolation"
+  },
+  {
+    "id": "custom/Chin_Tuck",
+    "source": "self-authored",
+    "name": "Chin Tuck",
+    "targetMuscles": [
+      "neck"
+    ],
+    "bodyArea": "Neck",
+    "exerciseType": "Stretch",
+    "difficulty": "Beginner",
+    "position": "Either",
+    "equipment": null,
+    "energetic": false,
+    "dose": {
+      "kind": "reps",
+      "amount": 10,
+      "eachSide": false
+    },
+    "cue": "Slide chin straight back, eyes stay level",
+    "steps": [
+      "Sit or stand tall, looking straight ahead.",
+      "Glide your chin straight back, as if making a double chin.",
+      "Keep your eyes level; don't tip your head down.",
+      "Hold briefly, then let your head ease forward again."
+    ],
+    "photos": null
   }
 ]
