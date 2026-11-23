@@ -290,6 +290,24 @@ describe('buildLibrary: validation', () => {
   });
 });
 
+describe('buildLibrary: steps carry no count', () => {
+  it('rejects a source-backed step with a digit, naming the Id and the step', () => {
+    const bad = curation.base.replace('Drive through your heels to stand.', 'Drive through your heels to stand 10 times.');
+
+    expectBuildError(
+      () => build({ curation: { ...curation, base: bad } }),
+      'Bodyweight_Squat',
+      'Drive through your heels to stand 10 times.',
+    );
+  });
+
+  it('rejects a self-authored step with a digit, naming the Id', () => {
+    const bad = curation.base.replace('Hold for a moment, then release.', 'Hold for 5 seconds, then release.');
+
+    expectBuildError(() => build({ curation: { ...curation, base: bad } }), 'custom/chin_tuck', 'Hold for 5 seconds');
+  });
+});
+
 describe('buildLibrary: strict curation', () => {
   it('rejects an unknown key in a curation entry, naming the Id and the key', () => {
     expectBuildError(
