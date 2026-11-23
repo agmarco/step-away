@@ -140,7 +140,7 @@ export async function respond(event: ResponseEvent, source: Source): Promise<boo
     await logResponse(d, reminderId, logged, source, now);
     span.step('logResponse');
     // Also persists what settling changed (Missed, dropped).
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     span.step('save', `${next.state.reminders.length} reminders`);
     // Inside the lock, before COMMIT: see the header comment.
     await scheduleChains(next.intents, span);
@@ -155,7 +155,8 @@ export async function respond(event: ResponseEvent, source: Source): Promise<boo
   if (logged) notifyStateChanged();
   await dismissNotifications(result.intents);
   span.step('dismissNotifications');
-  await dismissStale(result.state, now, span).catch((e: unknown) => span.step('dismissStale', `failed: ${e}`));
+  // The clock after the commit: a Reminder that fired during the write is outstanding now, so it stays (#39).
+  await dismissStale(result.state, Date.now(), span).catch((e: unknown) => span.step('dismissStale', `failed: ${e}`));
   span.end(logged ? `accepted as ${logged}` : 'no-op');
   return logged !== null;
 }
@@ -175,7 +176,7 @@ export async function startGuided(reminderId: string): Promise<{ state: CoreStat
     const next = reduce(loaded, { type: 'GuidedStarted', reminderId }, deps);
     if (next.state === loaded) return loaded;
     changed = true;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, loaded);
     // Inside the lock, before COMMIT: see the header comment.
     await scheduleChains(next.intents);
     return next.state;
@@ -202,7 +203,7 @@ export async function swap(reminderId: string, exerciseId: string): Promise<Remi
     const state = await loadState(d);
     const next = reduce(state, { type: 'Swap', reminderId, exerciseId }, deps);
     if (next.state === state) return null;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     // Inside the lock, before COMMIT: see the header comment.
     await scheduleChains(next.intents);
     return next.state.reminders.find((r) => r.id === reminderId) ?? null;
@@ -250,7 +251,7 @@ async function finishGuidedLate(reminderId: string, did: string[]): Promise<bool
     if (event?.type !== 'Correct') return;
     const next = reduce(state, event, deps);
     if (next.state === state) return;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     recorded = event.to;
     const statusOf = (s: CoreState) => settle(s, now).reminders.find((r) => r.id === reminderId)?.status;
     if (statusOf(next.state) === statusOf(state)) return;
@@ -282,7 +283,7 @@ export async function correct(reminderId: string, to: Outcome, did?: string[]): 
     const state = await loadState(d);
     const next = reduce(state, { type: 'Correct', reminderId, to, did }, deps);
     if (next.state === state) return false;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     return true;
   }).catch((e: unknown) => {
     console.warn(`[handler] Correct ${reminderId} to ${to} rolled back: ${e}`);
@@ -310,7 +311,7 @@ async function commitEvent(event: CoreEvent, label: string): Promise<boolean> {
     const next = reduce(state, event, deps);
     span.step('reduce', next.state === state ? 'unchanged' : undefined);
     if (next.state === state) return null;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     span.step('save', `${next.state.reminders.length} reminders`);
     // Inside the lock, before COMMIT: see the header comment.
     await scheduleChains(next.intents, span);
@@ -417,7 +418,7 @@ export async function rearmOnOpen(prepare?: (state: CoreState) => CoreState): Pr
     const opened = reduce(state, { type: 'AppOpened' }, deps);
     const rearmed = reduce(opened.state, { type: 'Rearm', timeZone: deviceTimeZone() }, deps);
     span.step('reduce', 'AppOpened + Rearm');
-    await saveState(d, rearmed.state, now);
+    await saveState(d, rearmed.state, now, loaded);
     span.step('save', `${rearmed.state.reminders.length} reminders`);
     const intents = [...opened.intents, ...rearmed.intents];
     // Inside the lock, before COMMIT: see the header comment.
@@ -432,7 +433,8 @@ export async function rearmOnOpen(prepare?: (state: CoreState) => CoreState): Pr
   notifyStateChanged();
   await dismissNotifications(result.intents);
   span.step('dismissNotifications');
-  await dismissStale(result.state, now, span).catch((e: unknown) => span.step('dismissStale', `failed: ${e}`));
+  // The clock after the commit: a Reminder that fired during the write is outstanding now, so it stays (#39).
+  await dismissStale(result.state, Date.now(), span).catch((e: unknown) => span.step('dismissStale', `failed: ${e}`));
   span.end('done');
   return result;
 }

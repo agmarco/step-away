@@ -1,6 +1,7 @@
 /**
  * The chain of upcoming Reminders: no-Response fallbacks one Interval apart,
- * within Active Hours in the Settings' time zone, over a 7-day horizon.
+ * within Active Hours in the Settings' time zone, over a 7-day horizon and at
+ * most MAX_CHAIN of them.
  * Recomputed whenever JS runs, because nothing runs when a notification fires.
  */
 
@@ -11,6 +12,12 @@ import type { CoreState, Instant, Reminder } from './types';
 
 const HORIZON_DAYS = 7;
 const HORIZON = HORIZON_DAYS * 24 * 60 * MINUTE;
+/**
+ * The most Reminders in the chain ahead (#39). The default chain is about 60
+ * over 7 days; a short Interval all day (the dev test mode) would be ~5,000,
+ * and every write would carry them all. A pending Snooze re-fire is on top.
+ */
+export const MAX_CHAIN = 100;
 const REMINDER_ID_PREFIX = 'reminder-';
 
 /** A Reminder's Id: deterministic from its fire time. */
@@ -84,7 +91,7 @@ export function isOutstanding(state: CoreState, reminderId: string, now: Instant
 
 /**
  * The fire times of the chain, oldest first: all strictly after `now` and
- * strictly before `now` + 7 days.
+ * strictly before `now` + 7 days, and at most the first MAX_CHAIN of them.
  *
  * Today the chain runs one Interval after the anchor, the later of the last
  * Response and the latest fire (a fired Reminder, or its pending or latest
@@ -133,7 +140,10 @@ export function chainTimes(state: CoreState, now: Instant): Instant[] {
         anchor = pauses[p].until;
         continue;
       }
-      if (t > now) times.push(t);
+      if (t > now) {
+        times.push(t);
+        if (times.length === MAX_CHAIN) return times;
+      }
       anchor = t;
     }
   }

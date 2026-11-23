@@ -40,7 +40,7 @@ const fired: Reminder[] = Array.from({ length: 20_000 }, (_, i) => {
 });
 
 describe('the chain rebuild', () => {
-  it('is linear: a Rearm over 20,000 fired Reminders and a 7-day, 2-minute chain takes well under 1 s', () => {
+  it('is linear: a Rearm over 20,000 fired Reminders and a capped 2-minute chain takes well under 1 s', () => {
     const state = {
       ...initialState,
       settings: {
@@ -58,7 +58,7 @@ describe('the chain rebuild', () => {
     const { state: rebuilt } = reduce(state, { type: 'Rearm' }, deps);
     const elapsed = performance.now() - start;
 
-    expect(rebuilt.reminders.length - fired.length).toBeGreaterThan(5_000);
+    expect(rebuilt.reminders.length - fired.length).toBe(100);
     expect(elapsed).toBeLessThan(1_000);
   });
 });

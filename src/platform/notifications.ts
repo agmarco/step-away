@@ -15,6 +15,7 @@
 import * as Notifications from 'expo-notifications';
 import {
   isReminderId,
+  MAX_CHAIN,
   outstandingReminder,
   type CoreState,
   type Instant,
@@ -33,12 +34,12 @@ export const CATEGORY_NO_SNOOZE = 'reminder-no-snooze';
 const GROUP = 'reminders';
 
 /**
- * The most notifications scheduled at once. The default chain is about 60
- * over 7 days; Android caps an app at 500 pending alarms. The dev test mode
- * (2-minute Interval, all day) yields ~5000, so only the first ones are armed;
- * the rest are armed by the next Rearm, which happens whenever JS runs.
+ * The most notifications scheduled at once: the chain, which the core caps at
+ * MAX_CHAIN (core/schedule.ts), plus a pending Snooze re-fire on top. Android
+ * caps an app at 500 pending alarms. The chain beyond the cap is built and
+ * armed by a later Rearm, which happens whenever JS runs.
  */
-const MAX_SCHEDULED = 100;
+const MAX_SCHEDULED = MAX_CHAIN + 1;
 
 /** The action identifiers, as the core names them: typed from NotificationAction, so the two can't drift. */
 export const ACTION = { start: 'start', snooze: 'snooze', skip: 'skip' } as const satisfies {
