@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Pause, Reminder } from '../../core';
-import { todayLines } from './pauseDisplay';
+import { pauseLine, todayLines } from './pauseDisplay';
 
 const reminder = (id: string, firesAt: number): Reminder => ({ id, firesAt, suggestion: [], status: 'done' });
 const MIN = 60_000;
@@ -36,5 +36,27 @@ describe("Today's lines", () => {
     const p: Pause = { from: 20 * MIN, until: 30 * MIN };
     expect(todayLines([r], [])).toEqual([{ kind: 'reminder', reminder: r }]);
     expect(todayLines([], [p])).toEqual([{ kind: 'pause', pause: p }]);
+  });
+});
+
+describe("A Pause's line", () => {
+  // UTC throughout, with a fixed HH:MM formatter, so nothing depends on the device's locale or zone.
+  const ZONE = 'UTC';
+  const at = (h: number, m: number) => Date.UTC(2026, 10, 23, h, m);
+  const hhmm = (instant: number) => new Date(instant).toISOString().slice(11, 16);
+
+  it('shows a running timed Pause from its start to its planned end', () => {
+    const pause: Pause = { from: at(21, 56), until: at(23, 58) };
+    expect(pauseLine(pause, at(22, 10), ZONE, hhmm)).toBe('Paused 21:56–23:58');
+  });
+
+  it('shows a running Pause for the rest of today as ending at the end of the day', () => {
+    const pause: Pause = { from: at(21, 56), until: Date.UTC(2026, 10, 24) };
+    expect(pauseLine(pause, at(22, 10), ZONE, hhmm)).toBe('Paused 21:56–end of day');
+  });
+
+  it('shows a finished Pause from its start to its end', () => {
+    const pause: Pause = { from: at(21, 56), until: at(22, 30) };
+    expect(pauseLine(pause, at(23, 0), ZONE, hhmm)).toBe('Paused 21:56–22:30');
   });
 });
