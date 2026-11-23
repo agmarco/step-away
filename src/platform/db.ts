@@ -26,7 +26,7 @@ export function db(): Promise<Db> {
   dbPromise ??= (async () => {
     const d = await SQLite.openDatabaseAsync(DB_NAME);
     // busy_timeout is 15 s, not 5: the Reminder chain (up to 100
-    // notifications, notifications.ts MAX_SCHEDULED) is scheduled while
+    // notifications plus a Snooze re-fire, notifications.ts MAX_SCHEDULED) is scheduled while
     // BEGIN IMMEDIATE is held (handler.ts), and a cold-start headless Skip in
     // the other JS context must outwait that, not fail with `database is locked`.
     // busy_timeout goes first: on a brand-new file the WAL switch itself takes

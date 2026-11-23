@@ -113,8 +113,14 @@ export async function loadState(d: Db): Promise<CoreState> {
  * dropped clears `dropped_by`. `now` must be the clock time the core
  * computed `state` at. The first save on a fresh DB also marks onboarding
  * pending (isOnboardingDone).
+ *
+ * With `previous`, the state as loaded in the same transaction (#39), it
+ * writes only the Reminders that are new or differ from it in a stored field
+ * (one upsert each) and deletes those it holds that `state` no longer has;
+ * every other row stays as it is, whether fired or ahead. Without it, every
+ * row is written.
  */
-export async function saveState(d: Db, state: CoreState, now: Instant): Promise<void> {
+export async function saveState(d: Db, state: CoreState, now: Instant, previous?: CoreState): Promise<void> {
   // The first save on a fresh DB (no settings stored yet) marks onboarding pending,
   // before the settings land and would read as an existing install (isOnboardingDone).
   await d.runAsync(
@@ -131,9 +137,51 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
   await setMeta(d, META.pauses, JSON.stringify(state.pauses));
   await setMeta(d, META.daysOff, JSON.stringify(state.daysOff));
 
-  await d.runAsync('DELETE FROM reminders WHERE fires_at > ?', now);
-  for (let i = 0; i < state.reminders.length; i += BATCH) {
-    const batch = state.reminders.slice(i, i + BATCH);
+  if (previous) {
+    const before = new Map(previous.reminders.map((r) => [r.id, rowOf(r)]));
+    const ids = new Set(state.reminders.map((r) => r.id));
+    const gone = previous.reminders.filter((r) => !ids.has(r.id)).map((r) => r.id);
+    for (let i = 0; i < gone.length; i += DELETE_BATCH) {
+      const batch = gone.slice(i, i + DELETE_BATCH);
+      await d.runAsync(`DELETE FROM reminders WHERE id IN (${batch.map(() => '?').join(', ')})`, batch);
+    }
+    const changed = state.reminders.map(rowOf).filter((row) => {
+      const old = before.get(row[0] as string);
+      return !old || row.some((v, k) => v !== old[k]);
+    });
+    await upsertRows(d, changed);
+  } else {
+    await d.runAsync('DELETE FROM reminders WHERE fires_at > ?', now);
+    await upsertRows(d, state.reminders.map(rowOf));
+  }
+}
+
+/** The SQLite parameters bound per DELETE: SQLite's bound-parameter limit (999 before 3.32), and then some. */
+const DELETE_BATCH = 900;
+
+type Row = (string | number | null)[];
+
+/** A Reminder as its `reminders` row, in the column order of `upsertRows`. */
+function rowOf(r: Reminder): Row {
+  return [
+    r.id,
+    r.firesAt,
+    JSON.stringify(r.suggestion),
+    r.status,
+    r.snoozes ?? 0,
+    r.refiresAt ?? null,
+    r.done ? JSON.stringify(r.done) : null,
+    r.fallback ? 1 : 0,
+    r.swappedOut ? JSON.stringify(r.swappedOut) : null,
+    r.rotation ?? null,
+    r.droppedBy ?? null,
+  ];
+}
+
+/** Inserts `rows` (see `rowOf`), updating every column of a row whose Id is already stored. */
+async function upsertRows(d: Db, rows: Row[]) {
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const batch = rows.slice(i, i + BATCH);
     await d.runAsync(
       `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, done_exercises, fallback, swapped_out, rotation, dropped_by)
        VALUES ${batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}
@@ -141,19 +189,7 @@ export async function saveState(d: Db, state: CoreState, now: Instant): Promise<
          status = excluded.status, snoozes = excluded.snoozes, refires_at = excluded.refires_at,
          done_exercises = excluded.done_exercises, fallback = excluded.fallback,
          swapped_out = excluded.swapped_out, rotation = excluded.rotation, dropped_by = excluded.dropped_by`,
-      batch.flatMap((r) => [
-        r.id,
-        r.firesAt,
-        JSON.stringify(r.suggestion),
-        r.status,
-        r.snoozes ?? 0,
-        r.refiresAt ?? null,
-        r.done ? JSON.stringify(r.done) : null,
-        r.fallback ? 1 : 0,
-        r.swappedOut ? JSON.stringify(r.swappedOut) : null,
-        r.rotation ?? null,
-        r.droppedBy ?? null,
-      ]),
+      batch.flat(),
     );
   }
 }

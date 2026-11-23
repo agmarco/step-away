@@ -44,6 +44,7 @@ import {
   saveState,
   type Source,
 } from './store';
+import { trace } from './trace';
 
 /**
  * The real randomness and library, with the clock frozen at one instant, so
@@ -110,37 +111,53 @@ async function guarded(d: Db, event: ResponseEvent, next: CoreState, now: number
  */
 export async function respond(event: ResponseEvent, source: Source): Promise<boolean> {
   const { reminderId, kind } = event;
+  const span = trace.span(source, `${kind} ${reminderId}`);
   // Dismiss first: on a cold start JS takes seconds to reach the database.
   await dismissReminder(reminderId);
+  span.step('dismiss');
   const { deps, now } = frozenDeps();
   let logged: ResponseKind | null = null;
   const result = await write(async (d) => {
+    span.step('lock', 'db open + mutex + BEGIN IMMEDIATE');
     const state = await loadState(d);
+    span.step('load', `${state.reminders.length} reminders`);
     // The core's guard, asked before reducing: only the outstanding Reminder
     // takes a Response (a pending re-fire doesn't stop a Done or Skip). Anything
     // else (duplicate, stale, unknown) is a no-op; its notification was already
     // dismissed above.
-    if (!isOutstanding(state, reminderId, now)) return { state, intents: [] };
+    if (!isOutstanding(state, reminderId, now)) {
+      span.step('guard', 'not outstanding');
+      return { state, intents: [] };
+    }
     const next = reduce(state, event, deps);
+    span.step('reduce', next.state === state ? 'unchanged' : undefined);
     // A guarded no-op returns the input state itself (e.g. a third Snooze, or a Snooze before the re-fire).
     if (next.state === state) return { state, intents: [] };
     // The same guard in SQL, accepted only when exactly one row changed.
     logged = await guarded(d, event, next.state, now);
+    span.step('guarded', logged ?? 'lost the race');
     if (!logged) return { state, intents: [] };
     await logResponse(d, reminderId, logged, source, now);
+    span.step('logResponse');
     // Also persists what settling changed (Missed, dropped).
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
+    span.step('save', `${next.state.reminders.length} reminders`);
     // Inside the lock, before COMMIT: see the header comment.
-    await scheduleChains(next.intents);
+    await scheduleChains(next.intents, span);
     return next;
   }).catch((e: unknown) => {
     console.warn(`[handler] ${kind} ${reminderId} from ${source} rolled back: ${e}`);
+    span.end(`rolled back: ${e}`);
     throw e;
   });
+  span.step('commit');
   console.log(`[handler] ${kind} ${reminderId} from ${source}: ${logged ? `accepted as ${logged}` : 'no-op'}`);
   if (logged) notifyStateChanged();
   await dismissNotifications(result.intents);
-  await dismissStale(result.state, now).catch(() => {});
+  span.step('dismissNotifications');
+  // The clock after the commit: a Reminder that fired during the write is outstanding now, so it stays (#39).
+  await dismissStale(result.state, Date.now(), span).catch((e: unknown) => span.step('dismissStale', `failed: ${e}`));
+  span.end(logged ? `accepted as ${logged}` : 'no-op');
   return logged !== null;
 }
 
@@ -159,7 +176,7 @@ export async function startGuided(reminderId: string): Promise<{ state: CoreStat
     const next = reduce(loaded, { type: 'GuidedStarted', reminderId }, deps);
     if (next.state === loaded) return loaded;
     changed = true;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, loaded);
     // Inside the lock, before COMMIT: see the header comment.
     await scheduleChains(next.intents);
     return next.state;
@@ -186,7 +203,7 @@ export async function swap(reminderId: string, exerciseId: string): Promise<Remi
     const state = await loadState(d);
     const next = reduce(state, { type: 'Swap', reminderId, exerciseId }, deps);
     if (next.state === state) return null;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     // Inside the lock, before COMMIT: see the header comment.
     await scheduleChains(next.intents);
     return next.state.reminders.find((r) => r.id === reminderId) ?? null;
@@ -234,7 +251,7 @@ async function finishGuidedLate(reminderId: string, did: string[]): Promise<bool
     if (event?.type !== 'Correct') return;
     const next = reduce(state, event, deps);
     if (next.state === state) return;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     recorded = event.to;
     const statusOf = (s: CoreState) => settle(s, now).reminders.find((r) => r.id === reminderId)?.status;
     if (statusOf(next.state) === statusOf(state)) return;
@@ -266,7 +283,7 @@ export async function correct(reminderId: string, to: Outcome, did?: string[]): 
     const state = await loadState(d);
     const next = reduce(state, { type: 'Correct', reminderId, to, did }, deps);
     if (next.state === state) return false;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
     return true;
   }).catch((e: unknown) => {
     console.warn(`[handler] Correct ${reminderId} to ${to} rolled back: ${e}`);
@@ -285,23 +302,35 @@ export async function correct(reminderId: string, to: Outcome, did?: string[]): 
  * `responses` row. True when it was accepted.
  */
 async function commitEvent(event: CoreEvent, label: string): Promise<boolean> {
+  const span = trace.span('app', label);
   const { deps, now } = frozenDeps();
   const intents = await write(async (d) => {
+    span.step('lock', 'db open + mutex + BEGIN IMMEDIATE');
     const state = await loadState(d);
+    span.step('load', `${state.reminders.length} reminders`);
     const next = reduce(state, event, deps);
+    span.step('reduce', next.state === state ? 'unchanged' : undefined);
     if (next.state === state) return null;
-    await saveState(d, next.state, now);
+    await saveState(d, next.state, now, state);
+    span.step('save', `${next.state.reminders.length} reminders`);
     // Inside the lock, before COMMIT: see the header comment.
-    await scheduleChains(next.intents);
+    await scheduleChains(next.intents, span);
     return next.intents;
   }).catch((e: unknown) => {
     console.warn(`[handler] ${label} rolled back: ${e}`);
+    span.end(`rolled back: ${e}`);
     throw e;
   });
+  span.step('commit');
   console.log(`[handler] ${label}: ${intents ? 'accepted' : 'no-op'}`);
-  if (!intents) return false;
+  if (!intents) {
+    span.end('no-op');
+    return false;
+  }
   await dismissNotifications(intents);
+  span.step('dismissNotifications');
   notifyStateChanged();
+  span.end('accepted');
   return true;
 }
 
@@ -379,23 +408,33 @@ export async function handleAction(actionId: string, payload: { reminderId?: str
  * stored settings in the same transaction.
  */
 export async function rearmOnOpen(prepare?: (state: CoreState) => CoreState): Promise<CoreResult> {
+  const span = trace.span('app', 'Rearm');
   const { deps, now } = frozenDeps();
   const result = await write(async (d) => {
+    span.step('lock', 'db open + mutex + BEGIN IMMEDIATE');
     const loaded = await loadState(d);
+    span.step('load', `${loaded.reminders.length} reminders`);
     const state = prepare ? prepare(loaded) : loaded;
     const opened = reduce(state, { type: 'AppOpened' }, deps);
     const rearmed = reduce(opened.state, { type: 'Rearm', timeZone: deviceTimeZone() }, deps);
-    await saveState(d, rearmed.state, now);
+    span.step('reduce', 'AppOpened + Rearm');
+    await saveState(d, rearmed.state, now, loaded);
+    span.step('save', `${rearmed.state.reminders.length} reminders`);
     const intents = [...opened.intents, ...rearmed.intents];
     // Inside the lock, before COMMIT: see the header comment.
-    await scheduleChains(intents);
+    await scheduleChains(intents, span);
     return { state: rearmed.state, intents };
   }).catch((e: unknown) => {
     console.warn(`[handler] Rearm rolled back: ${e}`);
+    span.end(`rolled back: ${e}`);
     throw e;
   });
+  span.step('commit');
   notifyStateChanged();
   await dismissNotifications(result.intents);
-  await dismissStale(result.state, now).catch(() => {});
+  span.step('dismissNotifications');
+  // The clock after the commit: a Reminder that fired during the write is outstanding now, so it stays (#39).
+  await dismissStale(result.state, Date.now(), span).catch((e: unknown) => span.step('dismissStale', `failed: ${e}`));
+  span.end('done');
   return result;
 }
