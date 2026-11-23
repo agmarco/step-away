@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SettingsChange } from '../core';
@@ -11,6 +11,7 @@ import { Section } from '../screens/settings/parts';
 import { ScheduleRows } from '../screens/settings/ScheduleRows';
 import { WhatICanDoRows } from '../screens/settings/WhatICanDoRows';
 import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
+import { useOneChange } from '../screens/useOneChange';
 import { useColors } from '../theme';
 
 const STEPS = ['Your day', 'What do you have nearby?', 'Permissions'] as const;
@@ -34,8 +35,8 @@ export default function Onboarding() {
   const insets = useSafeAreaInsets();
   const { state, failed } = useCoreState();
   const [step, setStep] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const busyRef = useRef(false);
+  /** One call at a time, as Settings does; a second tap in the same tick is dropped. */
+  const { busy, run } = useOneChange('onboarding');
 
   useEffect(() => {
     if (step === 0) return;
@@ -46,18 +47,6 @@ export default function Onboarding() {
     return () => sub.remove();
   }, [step]);
 
-  /** Runs one call at a time, as Settings does; a second tap in the same tick is dropped. */
-  const run = (label: string, call: () => Promise<unknown>) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setBusy(true);
-    call()
-      .catch((e: unknown) => console.warn(`[onboarding] ${label} failed: ${e}`))
-      .finally(() => {
-        busyRef.current = false;
-        setBusy(false);
-      });
-  };
   const change = (c: SettingsChange) => run(Object.keys(c).join(', '), () => changeSettings(c));
 
   /** Both answers on the Permissions step end here, after the exact-alarm grant prompt's slot. */

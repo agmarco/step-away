@@ -1,6 +1,6 @@
 import { Link, Redirect, useIsFocused } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -25,6 +25,7 @@ import { PauseSheet } from "../screens/today/PauseSheet";
 import { ReminderList } from "../screens/today/ReminderList";
 import { Tiles } from "../screens/today/Tiles";
 import { WeekPanel } from "../screens/today/WeekPanel";
+import { useOneChange } from "../screens/useOneChange";
 import { useColors, useScheme } from "../theme";
 
 /**
@@ -53,22 +54,9 @@ export default function Today() {
   const notifications = useNotificationsOn();
   const [correcting, setCorrecting] = useState<Reminder | null>(null);
   const [pausing, setPausing] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const busyRef = useRef(false);
+  /** One Pause or Day Off call at a time; the screen redraws from the stored state when it lands. */
+  const { busy, run } = useOneChange("today");
   const state = stored && settle(stored, now);
-
-  /** Runs one Pause or Day Off call at a time; the screen redraws from the stored state when it lands. */
-  const run = (label: string, call: () => Promise<boolean>) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setBusy(true);
-    call()
-      .catch((e: unknown) => console.warn(`[today] ${label} failed: ${e}`))
-      .finally(() => {
-        busyRef.current = false;
-        setBusy(false);
-      });
-  };
 
   if (onboardingDone === false) return <Redirect href="/onboarding" />;
   if (!state || onboardingDone === null)

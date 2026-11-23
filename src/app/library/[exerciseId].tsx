@@ -18,7 +18,7 @@ import { changeSettings } from '../../platform/handler';
 import { useCoreState } from '../../platform/useCoreState';
 import { stepAmount, withDose, withExcluded, withKind, withoutDose } from '../../screens/settings/exerciseCard';
 import { Chip, ChipsRow, Divider, PageHeader, Section, SwitchRow } from '../../screens/settings/parts';
-import { useOneChange } from '../../screens/settings/useOneChange';
+import { useOneChange } from '../../screens/useOneChange';
 import { StatusBarBackdrop } from '../../screens/StatusBarBackdrop';
 import { type Palette, useColors } from '../../theme';
 

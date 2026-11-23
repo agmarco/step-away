@@ -16,7 +16,7 @@ import { Chip, ChipsRow, Divider, PageHeader, RadioRow, Row, Section } from '../
 import { PickerSheet } from '../screens/settings/PickerSheet';
 import { ScheduleRows } from '../screens/settings/ScheduleRows';
 import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
-import { useOneChange } from '../screens/settings/useOneChange';
+import { useOneChange } from '../screens/useOneChange';
 import { WhatICanDoRows } from '../screens/settings/WhatICanDoRows';
 import { useColors } from '../theme';
 
