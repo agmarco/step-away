@@ -52,14 +52,7 @@ export const POSITIONS = ['Seated', 'Standing', 'Either', 'Floor'] as const;
 export type Position = (typeof POSITIONS)[number];
 
 /** Equipment an Exercise needs; `null` on Exercise means none. */
-export const EQUIPMENT = [
-  'dumbbells',
-  'kettlebell',
-  'resistance bands',
-  'medicine ball',
-  'exercise ball',
-  'foam roller',
-] as const;
+export const EQUIPMENT = ['dumbbells', 'resistance bands'] as const;
 export type Equipment = (typeof EQUIPMENT)[number];
 
 /** The source `force` of an Exercise, copied when present. */

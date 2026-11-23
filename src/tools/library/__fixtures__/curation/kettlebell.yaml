@@ -1,6 +1,5 @@
-# Fixture: the kettlebell group. The source entry has no images.
+# Fixture: kettlebell.yaml, a group that left v1 (#20): the build rejects it as unknown.
 
-# No difficulty: the build falls back to the source level (intermediate).
 Kettlebell_Windmill:
   position: Standing
   energetic: false

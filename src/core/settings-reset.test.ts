@@ -90,7 +90,7 @@ const CUSTOM: Settings = {
   difficulty: 'Expert',
   energetic: true,
   floor: true,
-  equipment: ['dumbbells', 'foam roller'],
+  equipment: ['dumbbells', 'resistance bands'],
   excluded: ['Neck_0', 'Neck_1'],
   doseOverrides: { Hips_Legs_0: { kind: 'seconds', amount: 45, eachSide: true } },
   appearance: 'Dark',

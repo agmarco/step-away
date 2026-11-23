@@ -2,16 +2,7 @@ import type { BodyArea, Difficulty, Equipment, Exercise, ExerciseType, TargetMus
 import type { LibraryGroup, SourceCategory, SourceEquipment, SourceExercise } from './types';
 
 /** Every curation group, in the order the build reads them. */
-export const LIBRARY_GROUPS = [
-  'base',
-  'floor',
-  'dumbbells',
-  'kettlebell',
-  'resistance-bands',
-  'medicine-ball',
-  'exercise-ball',
-  'foam-roller',
-] as const;
+export const LIBRARY_GROUPS = ['base', 'floor', 'dumbbells', 'resistance-bands'] as const;
 
 /** Whether a name (e.g. a curation file name or a CLI argument) is one of the groups. */
 export function isLibraryGroup(name: string): name is LibraryGroup {
@@ -23,11 +14,7 @@ export const GROUP_EQUIPMENT: Record<LibraryGroup, Equipment | null> = {
   base: null,
   floor: null,
   dumbbells: 'dumbbells',
-  kettlebell: 'kettlebell',
   'resistance-bands': 'resistance bands',
-  'medicine-ball': 'medicine ball',
-  'exercise-ball': 'exercise ball',
-  'foam-roller': 'foam roller',
 };
 
 /** Body Area per Target Muscle: the six-area table of issue #7. */
@@ -67,15 +54,18 @@ export const DIFFICULTY_BY_LEVEL: Record<SourceExercise['level'], Difficulty> = 
   expert: 'Expert',
 };
 
-/** App Equipment per source equipment: `null` is none, `undefined` is ineligible (never shipped). */
+/**
+ * App Equipment per source equipment: `null` is none, `undefined` is not v1
+ * Equipment (never shipped): gym kit, and the kit that left v1 in #20.
+ */
 const SOURCE_EQUIPMENT: Record<SourceEquipment, Equipment | null | undefined> = {
   'body only': null,
   dumbbell: 'dumbbells',
-  kettlebells: 'kettlebell',
   bands: 'resistance bands',
-  'medicine ball': 'medicine ball',
-  'exercise ball': 'exercise ball',
-  'foam roll': 'foam roller',
+  kettlebells: undefined,
+  'medicine ball': undefined,
+  'exercise ball': undefined,
+  'foam roll': undefined,
   machine: undefined,
   cable: undefined,
   barbell: undefined,
@@ -83,7 +73,7 @@ const SOURCE_EQUIPMENT: Record<SourceEquipment, Equipment | null | undefined> = 
   other: undefined,
 };
 
-/** The app Equipment for a source entry, or `undefined` when its equipment is ineligible. */
+/** The app Equipment for a source entry, or `undefined` when its equipment is not v1 Equipment. */
 export function mapEquipment(source: SourceExercise): Equipment | null | undefined {
   return source.equipment === null ? null : SOURCE_EQUIPMENT[source.equipment];
 }

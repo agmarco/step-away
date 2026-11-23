@@ -23,16 +23,7 @@ const entry = (id: string, overrides: Partial<SourceExercise> = {}): SourceExerc
 const ids = (entries: DraftEntry[]) => entries.map((e) => e.id);
 const none = new Set<string>();
 
-const ALL_GROUPS: LibraryGroup[] = [
-  'base',
-  'floor',
-  'dumbbells',
-  'kettlebell',
-  'resistance-bands',
-  'medicine-ball',
-  'exercise-ball',
-  'foam-roller',
-];
+const ALL_GROUPS: LibraryGroup[] = ['base', 'floor', 'dumbbells', 'resistance-bands'];
 
 describe('draftCandidates: which entries are candidates', () => {
   const source: SourceExercise[] = [
@@ -82,11 +73,7 @@ describe('draftCandidates: which entries are candidates', () => {
 
   it.each<[LibraryGroup, SourceEquipment]>([
     ['dumbbells', 'dumbbell'],
-    ['kettlebell', 'kettlebells'],
     ['resistance-bands', 'bands'],
-    ['medicine-ball', 'medicine ball'],
-    ['exercise-ball', 'exercise ball'],
-    ['foam-roller', 'foam roll'],
   ])('offers the %s group the source "%s" entries', (group, equipment) => {
     const everyKind: SourceExercise[] = (
       ['body only', 'dumbbell', 'kettlebells', 'bands', 'medicine ball', 'exercise ball', 'foam roll'] as const
@@ -95,6 +82,16 @@ describe('draftCandidates: which entries are candidates', () => {
     expect(ids(draftCandidates({ source: everyKind, group, curatedIds: none }))).toEqual([
       `Move_With_${equipment.replace(/ /g, '_')}`,
     ]);
+  });
+
+  it('never offers kettlebells, medicine ball, exercise ball or foam roll, which are not v1 Equipment, in any group', () => {
+    const notV1: SourceExercise[] = (['kettlebells', 'medicine ball', 'exercise ball', 'foam roll'] as const).map((kind) =>
+      entry(`Move_With_${kind.replace(/ /g, '_')}`, { equipment: kind }),
+    );
+
+    for (const group of ALL_GROUPS) {
+      expect(draftCandidates({ source: notV1, group, curatedIds: none }), group).toEqual([]);
+    }
   });
 
   it('never offers machine, cable, barbell, e-z curl bar or other Equipment in any group', () => {

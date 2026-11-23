@@ -1,0 +1,14 @@
+# Fixture: the resistance-bands group. The source entry has no images.
+
+# No difficulty: the build falls back to the source level (intermediate).
+Band_Pull_Apart:
+  position: Standing
+  energetic: false
+  dose:
+    reps: 5
+    eachSide: true
+  cue: Arms straight, squeeze your shoulder blades together
+  steps:
+    - Hold a band in front of you at shoulder height.
+    - Pull the band apart until it touches your chest.
+    - Return slowly.

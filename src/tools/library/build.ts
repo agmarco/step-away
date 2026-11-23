@@ -206,7 +206,9 @@ function sourceBacked(
 
   const equipment = mapEquipment(source);
   if (equipment === undefined) {
-    throw new LibraryBuildError(`${id} (${group}): source equipment "${source.equipment}" is ineligible.`);
+    throw new LibraryBuildError(
+      `${id} (${group}): source equipment "${source.equipment}" is not v1 Equipment; an entry needs none, ${EQUIPMENT.join(' or ')}.`,
+    );
   }
   const writtenEquipment = field.optional('equipment', isEquipmentOrNone);
   if (writtenEquipment !== undefined && writtenEquipment !== equipment) {

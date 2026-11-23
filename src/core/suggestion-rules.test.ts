@@ -160,11 +160,11 @@ describe('the eligible pool', () => {
     const library = BODY_AREAS.flatMap((area) => [
       exercise(`${slug(area)}_none`, area),
       exercise(`${slug(area)}_dumbbells`, area, { equipment: 'dumbbells' }),
-      exercise(`${slug(area)}_kettlebell`, area, { equipment: 'kettlebell' }),
       exercise(`${slug(area)}_bands`, area, { equipment: 'resistance bands' }),
     ]);
 
     expect(valuesSuggested(library, { equipment: [] }, 'equipment')).toEqual(new Set([null]));
+    expect(valuesSuggested(library, { equipment: ['dumbbells'] }, 'equipment')).toEqual(new Set([null, 'dumbbells']));
     expect(valuesSuggested(library, { equipment: ['dumbbells', 'resistance bands'] }, 'equipment')).toEqual(
       new Set([null, 'dumbbells', 'resistance bands']),
     );
