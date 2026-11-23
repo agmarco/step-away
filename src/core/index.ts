@@ -7,7 +7,7 @@ export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isDayOff, isGoalDay, streak
 export type { DayMark, Tally } from './days';
 export { addDays, localDateOf } from './localTime';
 export type { LocalDate } from './localTime';
-export { doseOf, formatDose } from './dose';
+export { doseOf, formatDose, isCustomised, MAX_DOSE_AMOUNT, MIN_DOSE_AMOUNT, sameDose } from './dose';
 export { FALLBACK_LINE, MAX_SNOOZES } from './notification';
 export { canPause, endsAtMidnight, heroStatus, isRunning, todaysPauses } from './pause';
 export type { HeroStatus, NotificationsState } from './pause';

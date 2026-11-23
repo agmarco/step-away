@@ -4,6 +4,7 @@
  * bug), so every field is checked at runtime.
  */
 
+import { MAX_DOSE_AMOUNT, MIN_DOSE_AMOUNT } from './dose';
 import { DIFFICULTIES, EQUIPMENT, type Dose } from './exercise';
 import type { AppearanceSetting, BodyAreaMode, SettingsChange, Weekday } from './types';
 
@@ -51,12 +52,12 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const DOSE_KINDS = allOf<Dose['kind']>()(['reps', 'seconds']);
 
-/** A Dose: exactly `kind` (reps or seconds), `amount` (an integer 1–999) and `eachSide` (a boolean). */
+/** A Dose: exactly `kind` (reps or seconds), `amount` (an integer from `MIN_DOSE_AMOUNT` to `MAX_DOSE_AMOUNT`, 1–999) and `eachSide` (a boolean). */
 const isDose = (value: unknown) =>
   isRecord(value) &&
   Object.keys(value).length === 3 &&
   isOneOf(DOSE_KINDS)(value.kind) &&
-  isIntegerIn(value.amount, 1, 999) &&
+  isIntegerIn(value.amount, MIN_DOSE_AMOUNT, MAX_DOSE_AMOUNT) &&
   isBoolean(value.eachSide);
 
 /** Dose overrides: a record whose every value is a Dose. Its keys are any Exercise Ids, unchecked. */

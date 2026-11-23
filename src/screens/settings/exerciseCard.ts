@@ -4,19 +4,14 @@
  * Bring back (each goes to `changeSettings` whole), and the Dose editor's
  * stepper and kind switch.
  */
-import type { Dose } from '../../core';
+import { MAX_DOSE_AMOUNT, MIN_DOSE_AMOUNT, sameDose, type Dose } from '../../core';
 
-/** The Dose amount range the core accepts. */
-export const MIN_AMOUNT = 1;
-export const MAX_AMOUNT = 999;
 /** The stepper's step per kind: a rep at a time, a hold 5 s at a time. */
 const STEP: Record<Dose['kind'], number> = { reps: 1, seconds: 5 };
 /** The amount a switch to a kind other than the library's starts at. */
 const START: Record<Dose['kind'], number> = { reps: 10, seconds: 30 };
 
 type Overrides = Record<string, Dose>;
-
-const sameDose = (a: Dose, b: Dose) => a.kind === b.kind && a.amount === b.amount && a.eachSide === b.eachSide;
 
 /**
  * The overrides after saving `dose` on the Exercise `id` whose library Dose
@@ -43,7 +38,7 @@ export function withExcluded(excluded: readonly string[], id: string, exclude: b
 export function stepAmount(dose: Dose, direction: 1 | -1): number {
   const step = STEP[dose.kind];
   const next = direction === 1 ? Math.floor(dose.amount / step) * step + step : Math.ceil(dose.amount / step) * step - step;
-  return Math.min(MAX_AMOUNT, Math.max(MIN_AMOUNT, next));
+  return Math.min(MAX_DOSE_AMOUNT, Math.max(MIN_DOSE_AMOUNT, next));
 }
 
 /** The draft after switching it to `kind`: the library amount for the library's kind, else 10 reps or 30 s; Each Side kept. */

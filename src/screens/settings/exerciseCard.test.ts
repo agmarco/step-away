@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Dose } from '../../core';
-import { MAX_AMOUNT, stepAmount, withDose, withExcluded, withKind, withoutDose } from './exerciseCard';
+import { MAX_DOSE_AMOUNT, type Dose } from '../../core';
+import { stepAmount, withDose, withExcluded, withKind, withoutDose } from './exerciseCard';
 
 const reps = (amount: number, eachSide = false): Dose => ({ kind: 'reps', amount, eachSide });
 const secs = (amount: number, eachSide = false): Dose => ({ kind: 'seconds', amount, eachSide });
@@ -63,7 +63,7 @@ describe('stepAmount: the Dose editor stepper', () => {
     expect(stepAmount(reps(1), -1)).toBe(1);
     expect(stepAmount(secs(5), -1)).toBe(1);
     expect(stepAmount(secs(1), 1)).toBe(5);
-    expect(stepAmount(reps(MAX_AMOUNT), 1)).toBe(999);
+    expect(stepAmount(reps(MAX_DOSE_AMOUNT), 1)).toBe(999);
     expect(stepAmount(secs(995), 1)).toBe(999);
   });
 });

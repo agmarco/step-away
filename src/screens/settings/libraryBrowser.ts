@@ -1,4 +1,13 @@
-import { allowedBySettings, BODY_AREAS, doseOf, formatDose, type BodyArea, type Exercise, type Settings } from '../../core';
+import {
+  allowedBySettings,
+  BODY_AREAS,
+  doseOf,
+  formatDose,
+  isCustomised,
+  type BodyArea,
+  type Exercise,
+  type Settings,
+} from '../../core';
 
 /** The Exercise Library browser's filters: All the settings allow, the Excluded ones, the Customised ones. */
 export const LIBRARY_FILTERS = ['All', 'Excluded', 'Customised'] as const;
@@ -21,11 +30,6 @@ export interface LibraryBrowser {
   counts: Record<LibraryFilter, number>;
   /** The filter's rows by Body Area, in `BODY_AREAS` order, by name within; no empty sections. */
   sections: { bodyArea: BodyArea; rows: LibraryRow[] }[];
-}
-
-/** Whether `id` has a Dose override: an own key, so an Id like `constructor` isn't misread. */
-export function isCustomised(settings: Settings, id: string): boolean {
-  return Object.hasOwn(settings.doseOverrides, id);
 }
 
 /**

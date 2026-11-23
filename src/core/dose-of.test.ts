@@ -35,4 +35,9 @@ describe('doseOf', () => {
     const settings = withOverrides({ Shoulder_Roll: TWENTY_FIVE_EACH_SIDE });
     expect(doseOf(NECK_TURN, settings)).toEqual({ kind: 'reps', amount: 10, eachSide: false });
   });
+
+  it('is the library Dose for an Id like `constructor` with no override of its own', () => {
+    const constructorExercise: Exercise = { ...NECK_TURN, id: 'constructor', name: 'Constructor' };
+    expect(doseOf(constructorExercise, defaultSettings)).toEqual({ kind: 'reps', amount: 10, eachSide: false });
+  });
 });

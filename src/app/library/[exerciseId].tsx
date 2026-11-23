@@ -2,12 +2,20 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { doseOf, formatDose, type Dose, type Exercise } from '../../core';
+import {
+  doseOf,
+  formatDose,
+  isCustomised,
+  MAX_DOSE_AMOUNT,
+  MIN_DOSE_AMOUNT,
+  sameDose,
+  type Dose,
+  type Exercise,
+} from '../../core';
 import { exercises, photoSource } from '../../library';
 import { changeSettings } from '../../platform/handler';
 import { useCoreState } from '../../platform/useCoreState';
-import { MAX_AMOUNT, MIN_AMOUNT, stepAmount, withDose, withExcluded, withKind, withoutDose } from '../../screens/settings/exerciseCard';
-import { isCustomised } from '../../screens/settings/libraryBrowser';
+import { stepAmount, withDose, withExcluded, withKind, withoutDose } from '../../screens/settings/exerciseCard';
 import { Chip, ChipsRow, Divider, PageHeader, Section, SwitchRow } from '../../screens/settings/parts';
 import { useOneChange } from '../../screens/settings/useOneChange';
 import { type Palette, useColors } from '../../theme';
@@ -57,7 +65,7 @@ export default function ExerciseCard() {
   const shown = draft ?? effective;
   const customised = isCustomised(settings, exercise.id);
   const excluded = settings.excluded.includes(exercise.id);
-  const changed = formatDose(shown) !== formatDose(effective);
+  const changed = !sameDose(shown, effective);
   const edit = (dose: Dose) => setDraft(dose);
 
   const save = () =>
@@ -106,7 +114,7 @@ export default function ExerciseCard() {
             <StepButton
               label="−"
               a11y="Fewer"
-              disabled={busy || shown.amount <= MIN_AMOUNT}
+              disabled={busy || shown.amount <= MIN_DOSE_AMOUNT}
               onPress={() => edit({ ...shown, amount: stepAmount(shown, -1) })}
               colors={colors}
             />
@@ -114,7 +122,7 @@ export default function ExerciseCard() {
             <StepButton
               label="+"
               a11y="More"
-              disabled={busy || shown.amount >= MAX_AMOUNT}
+              disabled={busy || shown.amount >= MAX_DOSE_AMOUNT}
               onPress={() => edit({ ...shown, amount: stepAmount(shown, 1) })}
               colors={colors}
             />
