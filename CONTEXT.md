@@ -19,6 +19,10 @@ A single movement from the Exercise Library that can be done at or beside a desk
 The catalogue of Exercises that Suggestions are drawn from.
 _Avoid_: exercise DB (implementation term)
 
+**House Exercise**:
+An Exercise written for the Exercise Library by its curators, rather than taken from the open exercise source. It ships with the app like any other Exercise; users cannot add Exercises of their own.
+_Avoid_: self-authored, custom exercise, user exercise
+
 **Target Muscle**:
 The primary muscle an Exercise works (e.g. quadriceps, neck).
 
