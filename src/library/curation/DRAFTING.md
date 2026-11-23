@@ -10,12 +10,14 @@ Keep a candidate only if all of these hold:
 
 - It can be done in a minute or two with no warm-up, in ordinary clothes.
 - It is explainable in a short Cue and a few plain Steps (not "too technical for a quick break").
-- It is safe done cold: no maximal effort, no ballistic stretching, no balance risk.
-- It needs nothing the Equipment list lacks: no bench, bar, box or partner. A wall, desk or chair is fine.
+- It is safe done cold: no maximal effort, no ballistic stretching, no balance risk. Explosive and hard moves (jumps, bounds, a handstand push-up) are kept: drafting removes the maximal push ("as high as possible") and tags them Energetic or grades them Intermediate or Expert, because the user's Energetic switch and Difficulty ceiling gate them.
+- It needs nothing beyond v1's Equipment (dumbbells and resistance bands) and the room: no bench, bar or rack. A wall, desk or chair is fine, and so is a resistance band anchored low on a desk leg; a move that needs the band anchored at chest or elbow height is dropped.
+- A small step or box is not needed: any small elevation (a book, a stair, a door threshold) replaces it, so a move that raises a heel or the toes on one is kept, and its steps say so. A move that steps up onto a bench-high box is still dropped.
+- It works alone. A stretch shown with a partner is kept when it works alone, and its steps are rewritten for doing it alone; only a move that truly needs a second person is dropped.
 
 Every variant that passes these rules is kept, even a near-identical one, because any variety is welcome (owner decision, #20).
 
-Drop sprint drills, Olympic-style technique drills, partner stretches and anything whose photos don't make the move clear. Dropped candidates get no entry; nothing records them.
+Drop sprint drills, Olympic-style technique drills, non-desk moves (e.g. trail running) and anything whose photos don't make the move clear. Dropped candidates get no entry; nothing records them. A candidate that passes these rules but is done lying or kneeling on the floor is not dropped: it is parked for the floor group (#33).
 
 ## 2. Position
 
@@ -36,7 +38,7 @@ Grade for an untrained office worker doing it cold, not for a gym user:
 
 - **Beginner**: anyone can do it safely right now. Most stretches, mobility moves and gentle holds.
 - **Intermediate**: needs some fitness, coordination or impact: jumps, deep or single-leg work, push-up variants.
-- **Expert**: hard even for fit people, or needs real skill. Rarely kept at all for a quick break.
+- **Expert**: hard even for fit people, or needs real skill. Kept when it passes section 1; the user's Difficulty ceiling hides it from those who don't want it.
 
 The source `level` is a starting point only. It often grades stretches as Expert (e.g. `Seated_Biceps`) and explosive jumps as beginner; correct both.
 
@@ -190,3 +192,21 @@ Decisions for the base set, from the #20 grilling session:
 2. **No near-duplicate filter:** every variant that passes section 1 is its own Exercise, near-identical pairs included. The near-duplicate line is removed from section 1.
 3. **At least 5 Exercises in every Body Area.** House Exercises (`custom/…`, written by us, no photos) fill Neck and Wrists & Forearms, which the source can't fill.
 4. **Floor candidates** found among the base candidates are parked for #33 (floor moves), not dropped.
+
+### 2026-11-23: #20 triage
+
+The owner gave verdicts on all 212 candidates (base 147, dumbbells 50, resistance bands 15) on the triage page. Section 1 now reflects them.
+
+1. **Drops brought back** (owner decision after the first triage):
+   - **Partner stretches** that work alone are kept, and drafting rewrites their steps for doing them alone (e.g. `Seated_Front_Deltoid`, `Overhead_Triceps`, `Seated_Biceps`, `Seated_Glute`, `Standing_Towel_Triceps_Extension`). Their solo versions that lie or kneel on the floor are parked for #33. Only moves that truly need a second person stay dropped.
+   - **Explosive and hard moves** are kept, tagged Energetic or graded Intermediate or Expert, because the Energetic switch and the Difficulty ceiling gate them (e.g. `Knee_Tuck_Jump`, `Lateral_Bound`, `Handstand_Push-Ups`). Explosive push-ups are floor moves, so they are parked for #33.
+   - Sprint drills, Olympic-style lifts, moves needing a bench, bar or rack, unclear photos and non-desk moves stay dropped.
+2. **Four owner flips from drop to keep:**
+   - `Linear_Acceleration_Wall_Drill`: recommended drop as a sprint drill. The owner left no note; unlike the other sprint drills it is done on the spot, leaning against a wall, so it is gated like the other explosive moves (Energetic).
+   - `One_Half_Locust`: recommended drop because the photos (all fours, then side-lying) contradict the steps (lying face down). Drafting writes the steps from the photos, or marks it for the owner. Both the photos and the steps are on the floor, which `base.yaml` doesn't allow, so the owner confirms its group before it is drafted.
+   - `Split_Squats`: recommended drop because the photos show a static split-stance lunge while the steps describe a jumping leg switch. Drafting follows the photos (a static split squat); `Split_Jump` and `Scissors_Jump` already cover the jump.
+   - `Standing_Gastrocnemius_Calf_Stretch`: recommended drop for its step. The owner: "we can just add a note that any small elevation can sub the box".
+3. **Small elevation:** any small elevation (a book, a stair, a door threshold) can replace a small step or box, so a move needing one is kept and its steps say so (section 1).
+4. **v1 Equipment is dumbbells and resistance bands only.** Kettlebell, medicine ball, exercise ball and foam roller leave v1, so a candidate needing one is dropped (e.g. `Crunch_-_Legs_On_Exercise_Ball`, which the source wrongly lists as body only). The code change is #20 CP2.
+5. **Band anchors:** a band anchored low on a desk leg is fine (e.g. `Hip_Extension_with_Bands`, `Hip_Flexion_with_Band`); moves that need it anchored at chest or elbow height (`Cross_Over_-_With_Bands`, `External_Rotation_with_Band`, `Internal_Rotation_with_Band`) stay dropped.
+6. **Calf Raise House Exercise:** the owner wants a plain calf raise. The source has none without kit (its calf raises need a barbell, a machine, a dumbbell or a band), so a bodyweight Calf Raise is added as a House Exercise (Hips & Legs).
