@@ -3,10 +3,10 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useColors } from '../../theme';
 
-/** Back to Today: pop this page, or, opened with nothing under it, go to Today. */
+/** Back: pop this page, or, opened with nothing under it, go to Today. */
 const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
-/** The page header: a back arrow and the title, as on the other pages Today pushes. `backLabel` names where back goes. */
+/** A pushed page's header: a back arrow and the title. `backLabel` names where back goes: Today by default, else the page under it. */
 export function PageHeader({ title, backLabel = 'Back to Today' }: { title: string; backLabel?: string }) {
   const colors = useColors();
   return (
