@@ -70,9 +70,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: 'automatic',
     // An update only reaches a build with the same native fingerprint.
     runtimeVersion: { policy: 'fingerprint' },
-    // expo-updates is configured, not imported: check for an update on launch
-    // without waiting for it (fallbackToCacheTimeout 0), apply it on the next
-    // launch. No app code imports expo-updates.
+    // expo-updates is configured here, never imported by app code: check for
+    // an update on launch without waiting for it (fallbackToCacheTimeout 0),
+    // apply it on the next launch.
     updates: v.updates
       ? {
           enabled: true,
