@@ -15,13 +15,22 @@ const EMPTY: Record<LibraryFilter, string> = {
   Customised: "No Dose is changed. Change an Exercise's Dose on its card and it shows here.",
 };
 
+/** The intro: what All lists, and what Excluded and Customised list. */
+const INTRO =
+  'All shows the Exercises your settings allow. Excluded and Customised show every Exercise you Excluded or gave its own Dose, allowed or not. Open one to change its Dose or Exclude it.';
+
+/** The mark on a row the settings don't allow (listed under Excluded or Customised only). */
+const NOT_ALLOWED = 'Not allowed by your settings';
+
 /**
- * The Exercise Library browser (#30), pushed from Settings: the Exercises the
- * settings allow (Exclusions ignored), with All / Excluded / Customised
- * filter chips and their counts. Rows by Body Area, then by name
- * (`libraryBrowser`): Name, the effective Dose and the Excluded and
- * Customised marks. A row opens its Exercise card (`library/[exerciseId]`).
- * Read only: every change is made on the card.
+ * The Exercise Library browser (#30), pushed from Settings, with All /
+ * Excluded / Customised filter chips and their counts (`libraryBrowser`):
+ * All lists the Exercises the settings allow (Exclusions ignored); Excluded
+ * and Customised list every Excluded or customised Exercise, ones the
+ * settings don't allow included and marked "Not allowed by your settings".
+ * Rows by Body Area, then by name: Name, the effective Dose and the
+ * Customised, Excluded and Not allowed marks. A row opens its Exercise card
+ * (`library/[exerciseId]`). Read only: every change is made on the card.
  */
 export default function LibraryBrowserPage() {
   const colors = useColors();
@@ -40,7 +49,7 @@ export default function LibraryBrowserPage() {
     >
       <PageHeader title="Exercise Library" backLabel="Back to Settings" />
       <Text style={[styles.intro, { color: colors.text.secondary }]}>
-        The Exercises your settings allow. Open one to change its Dose or Exclude it.
+        {INTRO}
       </Text>
       <View style={styles.chips}>
         {LIBRARY_FILTERS.map((f) => (
@@ -67,7 +76,9 @@ export default function LibraryBrowserPage() {
 }
 
 function ExerciseRow({ row, colors }: { row: LibraryRow; colors: Palette }) {
-  const marks = [row.excluded && 'Excluded', row.customised && 'Customised'].filter(Boolean).join(', ');
+  const marks = [row.customised && 'Customised', row.excluded && 'Excluded', !row.allowed && NOT_ALLOWED]
+    .filter(Boolean)
+    .join(', ');
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/library/[exerciseId]', params: { exerciseId: row.id } })}
@@ -76,11 +87,14 @@ function ExerciseRow({ row, colors }: { row: LibraryRow; colors: Palette }) {
       style={styles.row}
     >
       <View style={styles.rowText}>
-        <Text style={[styles.name, { color: row.excluded ? colors.text.secondary : colors.text.primary }]}>{row.name}</Text>
+        <Text style={[styles.name, { color: row.excluded || !row.allowed ? colors.text.secondary : colors.text.primary }]}>
+          {row.name}
+        </Text>
         <View style={styles.meta}>
           <Text style={[styles.dose, { color: colors.text.secondary }]}>{row.dose}</Text>
           {row.customised && <Mark label="Customised" color={colors.accent.hero} />}
           {row.excluded && <Mark label="Excluded" color={colors.outcome.skip} />}
+          {!row.allowed && <Mark label={NOT_ALLOWED} color={colors.text.secondary} />}
         </View>
       </View>
       <Text style={[styles.chevron, { color: colors.text.secondary }]}>›</Text>

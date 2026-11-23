@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  allowedBySettings,
   doseOf,
   formatDose,
   isCustomised,
@@ -33,9 +34,12 @@ const KINDS: { kind: Dose['kind']; label: string }[] = [
  * The Dose editor holds a draft (reps or seconds, the amount by a stepper,
  * Each Side) until Save, which sends the whole `doseOverrides` record through
  * `changeSettings`; a draft equal to the library Dose removes the Id instead
- * (`withDose`). Reset to default, shown only while the Exercise has an
- * override, removes it. Exclude / Bring back sends the whole `excluded` list.
- * One change at a time (`useOneChange`); the page shows only what is stored.
+ * (`withDose`). Reset to default, shown while the Exercise has an override
+ * and no draft is being edited, removes it. Exclude / Bring back sends the
+ * whole `excluded` list. When the settings don't allow the Exercise
+ * (`allowedBySettings`), a note says it isn't suggested; Exclude / Bring back
+ * and the Dose editor still work on it. One change at a time
+ * (`useOneChange`); the page shows only what is stored.
  */
 export default function ExerciseCard() {
   const colors = useColors();
@@ -65,6 +69,7 @@ export default function ExerciseCard() {
   const shown = draft ?? effective;
   const customised = isCustomised(settings, exercise.id);
   const excluded = settings.excluded.includes(exercise.id);
+  const allowed = allowedBySettings(settings, [exercise]).length > 0;
   const changed = !sameDose(shown, effective);
   const edit = (dose: Dose) => setDraft(dose);
 
@@ -91,6 +96,12 @@ export default function ExerciseCard() {
             Excluded: this Exercise is never suggested. Bring it back to have it suggested again.
           </Text>
         </View>
+      )}
+
+      {!allowed && (
+        <Text style={[styles.body, { color: colors.text.secondary }]}>
+          {"Your settings don't allow this Exercise (Difficulty, Energetic, Floor or Equipment), so it isn't suggested."}
+        </Text>
       )}
 
       <About exercise={exercise} dose={effective} colors={colors} />

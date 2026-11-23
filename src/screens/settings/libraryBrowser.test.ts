@@ -64,33 +64,64 @@ describe('libraryBrowser: the browser rows for a filter', () => {
     expect(rows.find((r) => r.id === 'Neck_Tilt')).toMatchObject({ dose: '10 reps', customised: false });
   });
 
-  it('Excluded lists only the allowed Excluded Exercises; an Excluded one the settings rule out is not listed', () => {
+  it('Excluded lists every Excluded Exercise, one the settings rule out included and marked not allowed', () => {
     const browser = libraryBrowser(settings({ excluded: ['Neck_Turn', 'Star_Jump'] }), LIBRARY, 'Excluded');
 
-    expect(outline(browser)).toEqual([['Neck', ['Neck Turn']]]);
+    expect(outline(browser)).toEqual([
+      ['Neck', ['Neck Turn']],
+      ['Hips & Legs', ['Star Jump']],
+    ]);
+    const rows = browser.sections.flatMap((s) => s.rows);
+    expect(rows.map((r) => [r.id, r.allowed, r.excluded])).toEqual([
+      ['Neck_Turn', true, true],
+      ['Star_Jump', false, true],
+    ]);
   });
 
-  it('Customised lists only the allowed Exercises with an override', () => {
+  it('Customised lists every Exercise with an override, one the settings rule out included and marked not allowed', () => {
     const doseOverrides = {
       Wrist_Circles: { kind: 'reps', amount: 15, eachSide: false },
       Star_Jump: { kind: 'reps', amount: 20, eachSide: false },
     } as const;
     const browser = libraryBrowser(settings({ doseOverrides }), LIBRARY, 'Customised');
 
-    expect(outline(browser)).toEqual([['Wrists & Forearms', ['Wrist Circles']]]);
+    expect(outline(browser)).toEqual([
+      ['Wrists & Forearms', ['Wrist Circles']],
+      ['Hips & Legs', ['Star Jump']],
+    ]);
+    const rows = browser.sections.flatMap((s) => s.rows);
+    expect(rows.map((r) => [r.id, r.allowed, r.customised, r.dose])).toEqual([
+      ['Wrist_Circles', true, true, '15 reps'],
+      ['Star_Jump', false, true, '20 reps'],
+    ]);
   });
 
-  it('counts each filter among the allowed Exercises, whatever the filter shown', () => {
+  it('All leaves out an Excluded or customised Exercise the settings rule out; every All row is allowed', () => {
+    const browser = libraryBrowser(
+      settings({ excluded: ['Star_Jump'], doseOverrides: { Star_Jump: { kind: 'reps', amount: 20, eachSide: false } } }),
+      LIBRARY,
+      'All',
+    );
+
+    const rows = browser.sections.flatMap((s) => s.rows);
+    expect(rows.map((r) => r.id)).not.toContain('Star_Jump');
+    expect(rows.every((r) => r.allowed)).toBe(true);
+  });
+
+  it('counts each filter by its own rule, whatever the filter shown: All the allowed, Excluded and Customised allowed or not', () => {
     const browser = libraryBrowser(
       settings({
         excluded: ['Neck_Turn', 'Hip_Hinge', 'Star_Jump'],
-        doseOverrides: { Neck_Turn: { kind: 'reps', amount: 12, eachSide: false } },
+        doseOverrides: {
+          Neck_Turn: { kind: 'reps', amount: 12, eachSide: false },
+          Star_Jump: { kind: 'reps', amount: 20, eachSide: false },
+        },
       }),
       LIBRARY,
       'Customised',
     );
 
-    expect(browser.counts).toEqual({ All: 4, Excluded: 2, Customised: 1 });
+    expect(browser.counts).toEqual({ All: 4, Excluded: 3, Customised: 2 });
   });
 
   it('a filter with nothing in it has no sections', () => {
