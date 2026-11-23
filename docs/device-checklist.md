@@ -41,9 +41,9 @@ Useful commands:
 
 ```sh
 adb shell pidof com.agmarco.activityreminder                                   # empty = the process is not running
-adb shell dumpsys alarm | grep -c com.agmarco.activityreminder                # alarm lines for the app (0 = nothing armed)
-adb shell dumpsys alarm | grep -A3 com.agmarco.activityreminder | head        # the app's alarms with their times (the earliest = the first alarm)
-adb shell dumpsys notification --noredact | grep -A2 com.agmarco.activityreminder | head
+adb shell dumpsys alarm | grep -A3 "com.agmarco.activityreminder}" | grep -c origWhen=   # the app's alarms (0 = nothing armed; the } leaves out the .dev app)
+adb shell dumpsys alarm | grep -A3 "com.agmarco.activityreminder}" | grep -m1 -o 'origWhen=[0-9-]* [0-9:.]*'   # the first alarm's time
+adb shell dumpsys notification --noredact | grep -A2 "pkg=com.agmarco.activityreminder " | head
 grep -i "database is locked" ~/Desktop/preview-run.log                        # must print nothing
 ```
 
@@ -107,8 +107,8 @@ Pass: the Reminder arrives within a minute of its time while the device is IDLE 
 
 1. Note the app's alarm count and its first (earliest) alarm's time (Useful commands above):
    ```sh
-   adb shell dumpsys alarm | grep -c com.agmarco.activityreminder
-   adb shell dumpsys alarm | grep -A3 com.agmarco.activityreminder | head
+   adb shell dumpsys alarm | grep -A3 "com.agmarco.activityreminder}" | grep -c origWhen=
+   adb shell dumpsys alarm | grep -A3 "com.agmarco.activityreminder}" | grep -m1 -o 'origWhen=[0-9-]* [0-9:.]*'
    ```
 2. `adb reboot`. Unlock the phone once (boot broadcasts arrive after the first unlock). **Don't open the app.**
 3. Reconnect adb, restart the logcat from Setup step 8, and read the alarm count and first alarm time again.
@@ -119,7 +119,7 @@ Pass: judged from `dumpsys alarm`, without opening the app (no need to wait for 
 
 **Result:** alarms before ____ / after ____ · first alarm before ____ / after ____
 
-### E. Re-arm after installing over the old build (`MY_PACKAGE_REPLACED`)
+### E. Alarms after installing over the old build (`MY_PACKAGE_REPLACED`)
 
 1. Note the app's alarm count and first alarm time (as in D).
 2. Install the APK over itself (or a newer `preview` APK over this one), keeping the data:
@@ -209,7 +209,7 @@ Pass: both directions re-theme without a restart.
 | B. Cold-start tap lag (#39) | | |
 | C. Doze delivery | | |
 | D. Re-arm after reboot | | |
-| E. Re-arm after install over the old build | | |
+| E. Alarms after installing over the old build (`MY_PACKAGE_REPLACED`) | | |
 | F. EAS Update (check on launch, apply next launch, wrong runtime ignored) | | |
 | G. Light/dark without restart | | |
 | H. #45 shortcuts: shown, warm, cold, no Reminder during the Pause | | |
