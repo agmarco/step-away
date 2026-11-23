@@ -113,8 +113,11 @@ export async function loadState(d: Db): Promise<CoreState> {
  * dropped clears `dropped_by`. `now` must be the clock time the core
  * computed `state` at. The first save on a fresh DB also marks onboarding
  * pending (isOnboardingDone).
+ *
+ * `previous` is the state as loaded in the same transaction. Not used yet
+ * (#39 CP2 stub): CP3 writes only the rows that differ from it.
  */
-export async function saveState(d: Db, state: CoreState, now: Instant): Promise<void> {
+export async function saveState(d: Db, state: CoreState, now: Instant, _previous?: CoreState): Promise<void> {
   // The first save on a fresh DB (no settings stored yet) marks onboarding pending,
   // before the settings land and would read as an existing install (isOnboardingDone).
   await d.runAsync(

@@ -214,6 +214,28 @@ describe('Rearm: the chain of upcoming Reminders', () => {
     expect(timesOf(result)).toContain(Date.parse('2027-03-29T09:45:00+02:00'));
     expect(timesOf(result)).not.toContain(Date.parse('2027-03-29T09:45:00+01:00'));
   });
+
+  it('stops the chain at 100 Reminders ahead, before 7 days, with a short Interval all day (#39)', () => {
+    // The dev test mode: a 2-minute Interval, all day, every day. 7 days of it would be ~5,000 Reminders.
+    const allDay = { start: 0, end: 24 * 60 };
+    const testMode: CoreState = {
+      ...start,
+      settings: {
+        ...start.settings,
+        intervalMinutes: 2,
+        activeHours: { mon: allDay, tue: allDay, wed: allDay, thu: allDay, fri: allDay, sat: allDay, sun: allDay },
+      },
+    };
+    const now = local(MON, '08:00');
+
+    const result = rearm(testMode, now);
+
+    // 08:02, 08:04, ... 11:20: the first 100 slots after now, and nothing after them.
+    const first100 = Array.from({ length: 100 }, (_, k) => local(MON, '08:02') + k * 2 * 60_000);
+    expect(timesOf(result)).toHaveLength(100);
+    expect(timesOf(result)).toEqual(first100);
+    expect(result.state.reminders.filter((r) => r.firesAt > now).map((r) => r.firesAt)).toEqual(first100);
+  });
 });
 
 describe('Suggestion', () => {

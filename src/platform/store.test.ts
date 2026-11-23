@@ -280,6 +280,78 @@ describe('saveState and loadState', () => {
   });
 });
 
+describe('saveState against the state it was loaded as (#39)', () => {
+  /** Counts every reminders row inserted, updated or deleted from here on, however the SQL is shaped. */
+  async function countRowWrites(d: Db): Promise<() => Promise<number>> {
+    await d.execAsync(`
+      CREATE TABLE row_writes (n INTEGER NOT NULL);
+      INSERT INTO row_writes (n) VALUES (0);
+      CREATE TRIGGER count_insert AFTER INSERT ON reminders BEGIN UPDATE row_writes SET n = n + 1; END;
+      CREATE TRIGGER count_update AFTER UPDATE ON reminders BEGIN UPDATE row_writes SET n = n + 1; END;
+      CREATE TRIGGER count_delete AFTER DELETE ON reminders BEGIN UPDATE row_writes SET n = n + 1; END;
+    `);
+    return async () => (await d.getFirstAsync<{ n: number }>('SELECT n FROM row_writes'))?.n ?? -1;
+  }
+
+  /** 200 fired Reminders (the last one outstanding, the rest Done) and 100 in the chain ahead. */
+  const history: Reminder[] = [
+    ...Array.from(
+      { length: 200 },
+      (_, i): Reminder => ({
+        id: `fired${i}`,
+        firesAt: NOW - (200 - i) * 60_000,
+        suggestion: [exercise('A')],
+        status: i === 199 ? 'scheduled' : 'done',
+        ...(i < 199 && { done: [{ id: 'A', name: 'A', bodyArea: 'Neck' as const }] }),
+      }),
+    ),
+    ...Array.from(
+      { length: 100 },
+      (_, i): Reminder => ({
+        id: `ahead${i}`,
+        firesAt: NOW + (i + 1) * 60_000,
+        suggestion: [exercise('B')],
+        status: 'scheduled',
+      }),
+    ),
+  ];
+
+  /** A Skip on the outstanding Reminder: one row changes, nothing else. */
+  const skipOutstanding = (s: CoreState): CoreState => ({
+    ...s,
+    lastResponseAt: NOW,
+    reminders: s.reminders.map((r) => (r.id === 'fired199' ? { ...r, status: 'skipped' } : r)),
+  });
+
+  it('writes only the changed Reminder, not every row', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state(history), NOW);
+    const loaded = await loadState(d);
+    const rowWrites = await countRowWrites(d);
+
+    await saveState(d, skipOutstanding(loaded), NOW, loaded);
+
+    expect(await rowWrites()).toBe(1);
+  });
+
+  it('round-trips the changed state: a Skip, a Reminder dropped from the chain ahead and one added', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state(history), NOW);
+    const loaded = await loadState(d);
+    const added: Reminder = { id: 'added', firesAt: NOW + 500 * 60_000, suggestion: [exercise('C')], status: 'scheduled' };
+    const changed: CoreState = {
+      ...skipOutstanding(loaded),
+      reminders: [...skipOutstanding(loaded).reminders.filter((r) => r.id !== 'ahead99'), added],
+    };
+
+    await saveState(d, changed, NOW, loaded);
+
+    expect(await loadState(d)).toEqual(changed);
+  });
+});
+
 describe('Pauses and Days Off', () => {
   it('round-trips the Pause history and the Days Off', async () => {
     const d = fakeDb();
