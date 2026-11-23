@@ -109,7 +109,7 @@ _Avoid_: category, kind
 An Exercise whose Position is Floor (lying, kneeling, plank). Excluded unless the user switches them on.
 
 **Equipment**:
-A light piece of kit an Exercise needs: dumbbells, kettlebell, resistance bands, medicine ball, exercise ball or foam roller. An Exercise is only suggested if the user has said they own its Equipment.
+A light piece of kit an Exercise needs: dumbbells or resistance bands (v1's only Equipment). An Exercise is only suggested if the user has said they own its Equipment.
 _Avoid_: gear
 
 **Excluded Exercise**:

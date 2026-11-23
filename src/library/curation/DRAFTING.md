@@ -11,7 +11,7 @@ Keep a candidate only if all of these hold:
 - It can be done in a minute or two with no warm-up, in ordinary clothes.
 - It is explainable in a short Cue and a few plain Steps (not "too technical for a quick break").
 - It is safe done cold: no maximal effort, no ballistic stretching, no balance risk. Explosive and hard moves (jumps, bounds, a handstand push-up) are kept: drafting removes the maximal push ("as high as possible") and tags them Energetic or grades them Intermediate or Expert, because the user's Energetic switch and Difficulty ceiling gate them.
-- It needs nothing beyond v1's Equipment (dumbbells and resistance bands) and the room: no bench, bar or rack. A wall, desk or chair is fine, and so is a resistance band anchored low on a desk leg; a move that needs the band anchored at chest or elbow height is dropped.
+- It needs nothing beyond v1's Equipment (dumbbells and resistance bands) and the room: no bench, bar or rack. A wall, desk or chair is fine, and so is a resistance band anchored low on a desk leg; a move that needs the band anchored at chest or elbow height is dropped. `library:draft` already leaves out entries whose source equipment is anything else, but the source lists some kit moves as body only, so check the photos and steps.
 - A small step or box is not needed: any small elevation (a book, a stair, a door threshold) replaces it, so a move that raises a heel or the toes on one is kept, and its steps say so. A move that steps up onto a bench-high box is still dropped.
 - It works alone. A stretch shown with a partner is kept when it works alone, and its steps are rewritten for doing it alone; only a move that truly needs a second person is dropped.
 
