@@ -6,7 +6,7 @@ Every check below has steps, what to record, and a pass criterion. Fill the **Re
 
 ## Why these checks are on the phone
 
-There is no JS code for re-arming: `expo-notifications` reschedules its stored Reminder chain (7 days ahead) natively on `BOOT_COMPLETED`, `REBOOT`, `QUICKBOOT_POWERON` and `MY_PACKAGE_REPLACED`. Opening the app also re-arms (`rearmOnOpen`). So in checks **D** and **E** the app must **not be opened** between the event and the Reminder arriving, otherwise the app's own re-arm hides whether the native one worked.
+There is no JS code for re-arming: `expo-notifications` reschedules its stored Reminder chain (7 days ahead) natively on `BOOT_COMPLETED`, `REBOOT`, `QUICKBOOT_POWERON` and `MY_PACKAGE_REPLACED`. Opening the app also re-arms (`rearmOnOpen`). So in checks **D** and **E** the app must **not be opened** between the event and reading the alarms, otherwise the app's own re-arm hides whether the native one worked.
 
 ## Setup (once)
 
@@ -28,8 +28,9 @@ There is no JS code for re-arming: `expo-notifications` reschedules its stored R
 3. Open **Activity Reminder** (not "(dev)") and go through onboarding; **Allow notifications** on the Permissions step.
 4. Settings: Active Hours covering the whole test session (today on, e.g. 00:00–24:00 or a window spanning it), **Interval 15 min** (the shortest outside the dev build's Test mode), **Snooze delay 5 min**, Appearance **System**.
 5. Keep the dev app quiet so its Reminders don't mix in: in **Activity Reminder (dev)**, take today off (or Pause for the rest of today).
-6. adb over Wi-Fi: Developer options › Wireless debugging › Pair with code, then `adb pair <ip:port> <code>` and `adb connect <ip:port>`. After a reboot (check D) wireless debugging needs reconnecting; a USB cable avoids that.
-7. Leave a log running for the whole session (Metro isn't connected to this build, so `console.log` goes to logcat):
+6. Allow **Activity Reminder** in any launcher or app that filters notifications (e.g. the notification filter of the `com.beforesoft.launcher` launcher). Symptom when it isn't allowed: the Reminder is posted and removed within a second, and the app logs nothing about it.
+7. adb over Wi-Fi: Developer options › Wireless debugging › Pair with code, then `adb pair <ip:port> <code>` and `adb connect <ip:port>`. After a reboot (check D) wireless debugging needs reconnecting; a USB cable avoids that.
+8. Leave a log running for the whole session (Metro isn't connected to this build, so `console.log` goes to logcat):
    ```sh
    adb logcat -c
    adb logcat -v time ReactNativeJS:V TaskService:V ActivityManager:I dev.expo.updates:V '*:S' | tee ~/Desktop/preview-run.log
@@ -41,6 +42,7 @@ Useful commands:
 ```sh
 adb shell pidof com.agmarco.activityreminder                                   # empty = the process is not running
 adb shell dumpsys alarm | grep -c com.agmarco.activityreminder                # alarm lines for the app (0 = nothing armed)
+adb shell dumpsys alarm | grep -A3 com.agmarco.activityreminder | head        # the app's alarms with their times (the earliest = the first alarm)
 adb shell dumpsys notification --noredact | grep -A2 com.agmarco.activityreminder | head
 grep -i "database is locked" ~/Desktop/preview-run.log                        # must print nothing
 ```
@@ -103,61 +105,61 @@ Pass: the Reminder arrives within a minute of its time while the device is IDLE 
 
 ### D. Re-arm after reboot
 
-1. Note Today's "Next Reminder HH:MM" (at least 5 min away) and the alarm count:
+1. Note the app's alarm count and its first (earliest) alarm's time (Useful commands above):
    ```sh
    adb shell dumpsys alarm | grep -c com.agmarco.activityreminder
+   adb shell dumpsys alarm | grep -A3 com.agmarco.activityreminder | head
    ```
 2. `adb reboot`. Unlock the phone once (boot broadcasts arrive after the first unlock). **Don't open the app.**
-3. Reconnect adb, restart the logcat from Setup step 7, and read the alarm count again.
-4. Wait past the noted time without opening the app.
+3. Reconnect adb, restart the logcat from Setup step 8, and read the alarm count and first alarm time again.
 
-Record: alarm count before / after the reboot, the Reminder's arrival time.
+Record: alarm count and first alarm time, before / after the reboot.
 
-Pass: alarms are back after the reboot without opening the app, and the Reminder arrives on time.
+Pass: judged from `dumpsys alarm`, without opening the app (no need to wait for a Reminder): the app's alarms are back after the reboot, the same count, the first one at the same time. A reboot clears every alarm, so this is the proof that the native re-arm works.
 
-**Result:** alarms before ____ / after ____ · arrived ____
+**Result:** alarms before ____ / after ____ · first alarm before ____ / after ____
 
 ### E. Re-arm after installing over the old build (`MY_PACKAGE_REPLACED`)
 
-1. Note "Next Reminder HH:MM" (at least 5 min away) and the alarm count.
+1. Note the app's alarm count and first alarm time (as in D).
 2. Install the APK over itself (or a newer `preview` APK over this one), keeping the data:
    ```sh
    adb install -r ~/Downloads/activity-reminder-preview.apk
    ```
    **Don't open the app.**
-3. Read the alarm count again; wait past the noted time.
+3. Read the alarm count and first alarm time again.
 
-Record: alarm count before / after, arrival time, and that Today's history is intact when you do open the app afterwards.
+Record: alarm count and first alarm time, before / after; then open the app and check Today's history is intact.
 
-Pass: the Reminder arrives on time without opening the app; the data (Today's lines, Settings) survives.
+Pass: judged from `dumpsys alarm`, without opening the app: the app's alarms are still there, the same count, the first one at the same time; the data (Today's lines, Settings) survives. Android doesn't cancel an app's alarms when the package is updated, so this check shows the alarms **survive** an install over the old build; it doesn't prove `MY_PACKAGE_REPLACED` re-arms them. D is the re-arm proof.
 
-**Result:** alarms before ____ / after ____ · arrived ____ · data kept: yes / no
+**Result:** alarms before ____ / after ____ · first alarm before ____ / after ____ · data kept: yes / no
 
 ### F. EAS Update: check on launch, apply on next launch, wrong runtime ignored
 
-The `preview` build checks `https://u.expo.dev/<projectId>` on channel `preview` at every launch without waiting (`checkAutomatically: ON_LOAD`, `fallbackToCacheTimeout: 0`), downloads an update in the background and runs it on the **next** launch. An update only applies to a build whose runtime version (the fingerprint) matches.
+How the `preview` build checks for and applies updates, and the runtime guard, are in [`src/README.md` › EAS Update and when to rebuild](../src/README.md#eas-update-and-when-to-rebuild): an update downloads at one launch and runs from the **next**, and only on a build with the same runtime version (the fingerprint).
 
 Use a visible marker: a throwaway, uncommitted edit to the Settings Version row in `src/app/settings.tsx` (`value={…}` on the `Version` row), e.g. append `" · update A"`.
 
 1. **Wrong runtime (ignored).** Marker `" · update B (wrong runtime)"`. Also make a throwaway native change so the fingerprint differs, e.g. add `'VIBRATE'` to `android.permissions` in `src/app.config.ts`. Publish (owner):
    ```sh
    cd src
-   APP_VARIANT=preview npx eas-cli@latest update --channel preview --message "checklist F: wrong runtime"
+   APP_VARIANT=preview npx eas-cli@latest update --channel preview --environment preview --message "checklist F: wrong runtime"
    ```
    Close and reopen the app twice. Settings › Version must **not** show the B marker. Revert both edits (`git checkout -- app/settings.tsx app.config.ts`).
 2. **Matching runtime (applied).** Marker `" · update A"` only, no native change; `npx expo-updates fingerprint:generate` (Setup step 2) must print the build's fingerprint. Publish:
    ```sh
-   APP_VARIANT=preview npx eas-cli@latest update --channel preview --message "checklist F: update A"
+   APP_VARIANT=preview npx eas-cli@latest update --channel preview --environment preview --message "checklist F: update A"
    ```
    Open the app: Settings › Version still shows the plain version (the check runs, the update downloads). Wait ~30 s, swipe the app away, open it again: Version shows `1.0.0 · update A`.
 3. Revert the marker and publish the committed JS again, so the phone runs `main`:
    ```sh
    git checkout -- app/settings.tsx
-   APP_VARIANT=preview npx eas-cli@latest update --channel preview --message "checklist F: back to main"
+   APP_VARIANT=preview npx eas-cli@latest update --channel preview --environment preview --message "checklist F: back to main"
    ```
    Two launches later the marker is gone.
 
-If `eas update` asks for an environment, add `--environment preview`. `npx eas-cli@latest update:list --branch preview` shows each update's runtime version.
+`--environment preview` is required: without it, `eas update` stops with "The `--environment` flag must be set when running in `--non-interactive` mode". `npx eas-cli@latest update:list --branch preview` shows each update's runtime version.
 
 Record: the runtime version of each update (B differs from the build's, A matches), what Version showed on each launch, the `dev.expo.updates` log lines.
 
@@ -188,10 +190,11 @@ Pass: both directions re-theme without a restart.
    Pass: three shortcuts, **Pause 1 h**, **Pause 2 h**, **Pause today** (long labels "Pause for 1 hour", "Pause for 2 hours", "Pause for the rest of today").
 2. **Warm.** With the app in the background, tap each shortcut in turn; tap **Resume** on Today between them.
    Pass: each opens Today showing "Paused until HH:MM" (1 h / 2 h from now), or "Paused for the rest of today"; log `[handler] Pause …: accepted`.
-3. **Cold start.** Swipe the app away, check `adb shell pidof com.agmarco.activityreminder` is empty, then tap **Pause 1 h**. (The dev client couldn't show this: its launcher screen drops a cold deep link.) Same pass as step 2. Equivalent by adb:
+3. **Cold start.** Swipe the app away, check `adb shell pidof com.agmarco.activityreminder` is empty, then tap **Pause 1 h**. (The dev client couldn't show this: its launcher screen drops a cold deep link.) Same pass as step 2. Equivalent by adb, with the shortcut's own intent flags (`0x1000c000` = `NEW_TASK | CLEAR_TASK | TASK_ON_HOME`; `adb shell dumpsys shortcut` shows them on the real shortcuts):
    ```sh
-   adb shell am start -a android.intent.action.VIEW -d "activityreminder://pause/hour"
+   adb shell am start -f 0x1000c000 -a android.intent.action.VIEW -d "activityreminder://pause/hour" -n com.agmarco.activityreminder/.MainActivity
    ```
+   Without the flags, a task left in Recents swallows the link: `am start` only brings the old task to the front.
 4. **No Reminder during the Pause.** Take **Pause 1 h** (shortcut) while a Reminder is due inside that hour; note the hero time. Leave the Pause running.
    Pass: no Reminder notification until the Pause ends; the Reminder that was waiting shows "Ended by Pause"; Reminders resume one Interval after the Pause ends. Then Resume or let it run out.
 
