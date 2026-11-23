@@ -12,7 +12,8 @@ Keep a candidate only if all of these hold:
 - It is explainable in a short Cue and a few plain Steps (not "too technical for a quick break").
 - It is safe done cold: no maximal effort, no ballistic stretching, no balance risk.
 - It needs nothing the Equipment list lacks: no bench, bar, box or partner. A wall, desk or chair is fine.
-- It isn't a near-duplicate of an Exercise already kept.
+
+Every variant that passes these rules is kept, even a near-identical one, because any variety is welcome (owner decision, #20).
 
 Drop sprint drills, Olympic-style technique drills, partner stretches and anything whose photos don't make the move clear. Dropped candidates get no entry; nothing records them.
 
@@ -180,3 +181,12 @@ The owner reviewed the five calibration drafts and accepted all as recommended:
 4. **Positions:** keep "Either whenever the legs aren't involved". Seated is for moves that need the chair, such as a chair dip or a seated twist (section 2).
 5. **Dose defaults** confirmed: 20 s for stretches (30 s only for a larger stretch), 15 s for isometric holds (section 5).
 6. **Spelling:** British (centre, colour) in curated text and in this guide.
+
+### 2026-11-23: #20 grilling
+
+Decisions for the base set, from the #20 grilling session:
+
+1. **No cap on size:** every base candidate that passes section 1 is kept, Energetic ones included.
+2. **No near-duplicate filter:** every variant that passes section 1 is its own Exercise, near-identical pairs included. The near-duplicate line is removed from section 1.
+3. **At least 5 Exercises in every Body Area.** House Exercises (`custom/…`, written by us, no photos) fill Neck and Wrists & Forearms, which the source can't fill.
+4. **Floor candidates** found among the base candidates are parked for #33 (floor moves), not dropped.
