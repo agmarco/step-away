@@ -6,6 +6,7 @@ import { exercises } from '../../library';
 import { useCoreState } from '../../platform/useCoreState';
 import { LIBRARY_FILTERS, libraryBrowser, type LibraryFilter, type LibraryRow } from '../../screens/settings/libraryBrowser';
 import { Chip, Divider, PageHeader, Section } from '../../screens/settings/parts';
+import { StatusBarBackdrop } from '../../screens/StatusBarBackdrop';
 import { type Palette, useColors } from '../../theme';
 
 /** What each filter shows when it has nothing. */
@@ -43,35 +44,38 @@ export default function LibraryBrowserPage() {
   const { counts, sections } = libraryBrowser(state.settings, exercises, filter);
 
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: colors.background.screen }]}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
-    >
-      <PageHeader title="Exercise Library" backLabel="Back to Settings" />
-      <Text style={[styles.intro, { color: colors.text.secondary }]}>
-        {INTRO}
-      </Text>
-      <View style={styles.chips}>
-        {LIBRARY_FILTERS.map((f) => (
-          <Chip key={f} label={`${f} ${counts[f]}`} selected={filter === f} onPress={() => setFilter(f)} />
-        ))}
-      </View>
+    <>
+      <ScrollView
+        style={[styles.root, { backgroundColor: colors.background.screen }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
+      >
+        <PageHeader title="Exercise Library" backLabel="Back to Settings" />
+        <Text style={[styles.intro, { color: colors.text.secondary }]}>
+          {INTRO}
+        </Text>
+        <View style={styles.chips}>
+          {LIBRARY_FILTERS.map((f) => (
+            <Chip key={f} label={`${f} ${counts[f]}`} selected={filter === f} onPress={() => setFilter(f)} />
+          ))}
+        </View>
 
-      {sections.length === 0 ? (
-        <Text style={[styles.empty, { color: colors.text.secondary }]}>{EMPTY[filter]}</Text>
-      ) : (
-        sections.map(({ bodyArea, rows }) => (
-          <Section key={bodyArea} title={bodyArea}>
-            {rows.map((row, i) => (
-              <View key={row.id}>
-                {i > 0 && <Divider />}
-                <ExerciseRow row={row} colors={colors} />
-              </View>
-            ))}
-          </Section>
-        ))
-      )}
-    </ScrollView>
+        {sections.length === 0 ? (
+          <Text style={[styles.empty, { color: colors.text.secondary }]}>{EMPTY[filter]}</Text>
+        ) : (
+          sections.map(({ bodyArea, rows }) => (
+            <Section key={bodyArea} title={bodyArea}>
+              {rows.map((row, i) => (
+                <View key={row.id}>
+                  {i > 0 && <Divider />}
+                  <ExerciseRow row={row} colors={colors} />
+                </View>
+              ))}
+            </Section>
+          ))
+        )}
+      </ScrollView>
+      <StatusBarBackdrop />
+    </>
   );
 }
 

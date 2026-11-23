@@ -19,6 +19,7 @@ import { useCoreState } from '../../platform/useCoreState';
 import { stepAmount, withDose, withExcluded, withKind, withoutDose } from '../../screens/settings/exerciseCard';
 import { Chip, ChipsRow, Divider, PageHeader, Section, SwitchRow } from '../../screens/settings/parts';
 import { useOneChange } from '../../screens/settings/useOneChange';
+import { StatusBarBackdrop } from '../../screens/StatusBarBackdrop';
 import { type Palette, useColors } from '../../theme';
 
 const KINDS: { kind: Dose['kind']; label: string }[] = [
@@ -57,10 +58,13 @@ export default function ExerciseCard() {
   const content = [styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }];
   if (!exercise) {
     return (
-      <ScrollView style={[styles.root, screen]} contentContainerStyle={content}>
-        <PageHeader title="Exercise" backLabel="Back to the Exercise Library" />
-        <Text style={[styles.body, { color: colors.text.secondary }]}>{"This Exercise isn't in the library any more."}</Text>
-      </ScrollView>
+      <>
+        <ScrollView style={[styles.root, screen]} contentContainerStyle={content}>
+          <PageHeader title="Exercise" backLabel="Back to the Exercise Library" />
+          <Text style={[styles.body, { color: colors.text.secondary }]}>{"This Exercise isn't in the library any more."}</Text>
+        </ScrollView>
+        <StatusBarBackdrop />
+      </>
     );
   }
 
@@ -87,91 +91,94 @@ export default function ExerciseCard() {
     );
 
   return (
-    <ScrollView style={[styles.root, screen]} contentContainerStyle={content}>
-      <PageHeader title={exercise.name} backLabel="Back to the Exercise Library" />
+    <>
+      <ScrollView style={[styles.root, screen]} contentContainerStyle={content}>
+        <PageHeader title={exercise.name} backLabel="Back to the Exercise Library" />
 
-      {excluded && (
-        <View style={[styles.banner, { backgroundColor: colors.background.banner }]}>
-          <Text style={[styles.bannerText, { color: colors.text.primary }]}>
-            Excluded: this Exercise is never suggested. Bring it back to have it suggested again.
-          </Text>
-        </View>
-      )}
-
-      {!allowed && (
-        <Text style={[styles.body, { color: colors.text.secondary }]}>
-          {"Your settings don't allow this Exercise (Difficulty, Energetic, Floor or Equipment), so it isn't suggested."}
-        </Text>
-      )}
-
-      <About exercise={exercise} dose={effective} colors={colors} />
-
-      <Section title="Dose">
-        <ChipsRow label="Kind">
-          {KINDS.map(({ kind, label }) => (
-            <Chip
-              key={kind}
-              label={label}
-              selected={shown.kind === kind}
-              disabled={busy}
-              onPress={() => shown.kind !== kind && edit(withKind(shown, kind, exercise.dose))}
-            />
-          ))}
-        </ChipsRow>
-        <Divider />
-        <View style={styles.stepperRow}>
-          <Text style={[styles.label, { color: colors.text.primary }]}>{shown.kind === 'reps' ? 'Reps' : 'Seconds'}</Text>
-          <View style={styles.stepper}>
-            <StepButton
-              label="−"
-              a11y="Fewer"
-              disabled={busy || shown.amount <= MIN_DOSE_AMOUNT}
-              onPress={() => edit({ ...shown, amount: stepAmount(shown, -1) })}
-              colors={colors}
-            />
-            <Text style={[styles.amount, { color: colors.text.primary }]}>{shown.amount}</Text>
-            <StepButton
-              label="+"
-              a11y="More"
-              disabled={busy || shown.amount >= MAX_DOSE_AMOUNT}
-              onPress={() => edit({ ...shown, amount: stepAmount(shown, 1) })}
-              colors={colors}
-            />
+        {excluded && (
+          <View style={[styles.banner, { backgroundColor: colors.background.banner }]}>
+            <Text style={[styles.bannerText, { color: colors.text.primary }]}>
+              Excluded: this Exercise is never suggested. Bring it back to have it suggested again.
+            </Text>
           </View>
-        </View>
-        <Divider />
-        <SwitchRow
-          label="Each side"
-          note="Done once on each side."
-          value={shown.eachSide}
-          disabled={busy}
-          onChange={(eachSide) => edit({ ...shown, eachSide })}
-        />
-        <Divider />
-        <View style={styles.doseActions}>
-          <Text style={[styles.note, { color: colors.text.secondary }]}>
-            {customised ? `Default: ${formatDose(exercise.dose)}` : 'The default Dose.'}
-          </Text>
-          {changed && (
-            <View style={styles.buttons}>
-              <Button label="Cancel" onPress={() => setDraft(null)} disabled={busy} colors={colors} />
-              <Button label={`Save ${formatDose(shown)}`} onPress={save} disabled={busy} filled colors={colors} />
-            </View>
-          )}
-          {customised && !changed && (
-            <Button label="Reset to default" onPress={reset} disabled={busy} colors={colors} />
-          )}
-        </View>
-      </Section>
+        )}
 
-      <Button
-        label={excluded ? 'Bring back' : 'Exclude: never suggest'}
-        onPress={toggleExcluded}
-        disabled={busy}
-        filled={excluded}
-        colors={colors}
-      />
-    </ScrollView>
+        {!allowed && (
+          <Text style={[styles.body, { color: colors.text.secondary }]}>
+            {"Your settings don't allow this Exercise (Difficulty, Energetic, Floor or Equipment), so it isn't suggested."}
+          </Text>
+        )}
+
+        <About exercise={exercise} dose={effective} colors={colors} />
+
+        <Section title="Dose">
+          <ChipsRow label="Kind">
+            {KINDS.map(({ kind, label }) => (
+              <Chip
+                key={kind}
+                label={label}
+                selected={shown.kind === kind}
+                disabled={busy}
+                onPress={() => shown.kind !== kind && edit(withKind(shown, kind, exercise.dose))}
+              />
+            ))}
+          </ChipsRow>
+          <Divider />
+          <View style={styles.stepperRow}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>{shown.kind === 'reps' ? 'Reps' : 'Seconds'}</Text>
+            <View style={styles.stepper}>
+              <StepButton
+                label="−"
+                a11y="Fewer"
+                disabled={busy || shown.amount <= MIN_DOSE_AMOUNT}
+                onPress={() => edit({ ...shown, amount: stepAmount(shown, -1) })}
+                colors={colors}
+              />
+              <Text style={[styles.amount, { color: colors.text.primary }]}>{shown.amount}</Text>
+              <StepButton
+                label="+"
+                a11y="More"
+                disabled={busy || shown.amount >= MAX_DOSE_AMOUNT}
+                onPress={() => edit({ ...shown, amount: stepAmount(shown, 1) })}
+                colors={colors}
+              />
+            </View>
+          </View>
+          <Divider />
+          <SwitchRow
+            label="Each side"
+            note="Done once on each side."
+            value={shown.eachSide}
+            disabled={busy}
+            onChange={(eachSide) => edit({ ...shown, eachSide })}
+          />
+          <Divider />
+          <View style={styles.doseActions}>
+            <Text style={[styles.note, { color: colors.text.secondary }]}>
+              {customised ? `Default: ${formatDose(exercise.dose)}` : 'The default Dose.'}
+            </Text>
+            {changed && (
+              <View style={styles.buttons}>
+                <Button label="Cancel" onPress={() => setDraft(null)} disabled={busy} colors={colors} />
+                <Button label={`Save ${formatDose(shown)}`} onPress={save} disabled={busy} filled colors={colors} />
+              </View>
+            )}
+            {customised && !changed && (
+              <Button label="Reset to default" onPress={reset} disabled={busy} colors={colors} />
+            )}
+          </View>
+        </Section>
+
+        <Button
+          label={excluded ? 'Bring back' : 'Exclude: never suggest'}
+          onPress={toggleExcluded}
+          disabled={busy}
+          filled={excluded}
+          colors={colors}
+        />
+      </ScrollView>
+      <StatusBarBackdrop />
+    </>
   );
 }
 

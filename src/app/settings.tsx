@@ -15,6 +15,7 @@ import { libraryBrowser } from '../screens/settings/libraryBrowser';
 import { Chip, ChipsRow, Divider, PageHeader, RadioRow, Row, Section } from '../screens/settings/parts';
 import { PickerSheet } from '../screens/settings/PickerSheet';
 import { ScheduleRows } from '../screens/settings/ScheduleRows';
+import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
 import { useOneChange } from '../screens/settings/useOneChange';
 import { WhatICanDoRows } from '../screens/settings/WhatICanDoRows';
 import { useColors } from '../theme';
@@ -177,6 +178,7 @@ export default function Settings() {
           <Row label="Version" value={isDevelopment ? `${version} (${appVariant})` : version} />
         </Section>
       </ScrollView>
+      <StatusBarBackdrop />
 
       <PickerSheet
         visible={picker === 'snooze'}

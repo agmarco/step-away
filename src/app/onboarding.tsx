@@ -10,6 +10,7 @@ import { useCoreState } from '../platform/useCoreState';
 import { Section } from '../screens/settings/parts';
 import { ScheduleRows } from '../screens/settings/ScheduleRows';
 import { WhatICanDoRows } from '../screens/settings/WhatICanDoRows';
+import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
 import { useColors } from '../theme';
 
 const STEPS = ['Your day', 'What do you have nearby?', 'Permissions'] as const;
@@ -141,6 +142,7 @@ export default function Onboarding() {
           </Text>
         )}
       </ScrollView>
+      <StatusBarBackdrop />
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         {step === LAST ? (
