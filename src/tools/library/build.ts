@@ -229,7 +229,7 @@ function sourceBacked(
     energetic: field.required('energetic', isBoolean),
     dose: readDose(curated),
     cue: field.required('cue', isText),
-    steps: field.required('steps', isTextList),
+    steps: readSteps(curated),
     photos: sourcePhotos(curated, source),
   };
   if (source.secondaryMuscles.length > 0) exercise.secondaryMuscles = source.secondaryMuscles;
@@ -259,9 +259,21 @@ function selfAuthored(curated: Curated): Exercise {
     energetic: field.required('energetic', isBoolean),
     dose: readDose(curated),
     cue: field.required('cue', isText),
-    steps: field.required('steps', isTextList),
+    steps: readSteps(curated),
     photos: null,
   };
+}
+
+/** Steps never carry a count or any number: the Dose, which the user can change, carries it. */
+function readSteps(curated: Curated): string[] {
+  const steps = fieldReader(curated).required('steps', isTextList);
+  const counted = steps.find((step) => /\d/.test(step));
+  if (counted !== undefined) {
+    throw new LibraryBuildError(
+      `${curated.id} (${curated.group}): a step has a number, but the Dose carries the count: "${counted}".`,
+    );
+  }
+  return steps;
 }
 
 function readDose({ id, group, entry }: Curated): Dose {

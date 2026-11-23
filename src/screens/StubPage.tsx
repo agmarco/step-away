@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBarBackdrop } from './StatusBarBackdrop';
 import { useColors } from '../theme';
 
 /** Back to Today: pop this page, or, opened with nothing under it, go to Today. */
@@ -14,20 +15,23 @@ export function StubPage({ title, body }: { title: string; body: string }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.background.screen }}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
-    >
-      <View style={styles.header}>
-        <Pressable onPress={back} accessibilityRole="button" accessibilityLabel="Back to Today" hitSlop={12}>
-          <Text style={[styles.back, { color: colors.text.primary }]}>‹</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
-      </View>
-      <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
-        <Text style={[styles.body, { color: colors.text.secondary }]}>{body}</Text>
-      </View>
-    </ScrollView>
+    <>
+      <ScrollView
+        style={{ backgroundColor: colors.background.screen }}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
+      >
+        <View style={styles.header}>
+          <Pressable onPress={back} accessibilityRole="button" accessibilityLabel="Back to Today" hitSlop={12}>
+            <Text style={[styles.back, { color: colors.text.primary }]}>‹</Text>
+          </Pressable>
+          <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
+        </View>
+        <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
+          <Text style={[styles.body, { color: colors.text.secondary }]}>{body}</Text>
+        </View>
+      </ScrollView>
+      <StatusBarBackdrop />
+    </>
   );
 }
 

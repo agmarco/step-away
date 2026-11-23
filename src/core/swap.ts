@@ -43,5 +43,5 @@ export function swapReplacement(
   const sameArea = candidates.filter((e) => e.bodyArea === swapped?.bodyArea);
   const newArea = candidates.filter((e) => !elsewhere.has(e.bodyArea));
   const tier = [sameArea, newArea, candidates].find((t) => t.length > 0) ?? candidates;
-  return snapshotOf(pickByArea(tier, () => 1, random));
+  return snapshotOf(pickByArea(tier, () => 1, random), settings);
 }

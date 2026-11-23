@@ -62,7 +62,7 @@ Rewrite the source instructions; never copy them as they are.
 
 - Short imperative sentences, one action per step, usually 3–5 steps.
 - **Remove every dose or count mention**: "hold for 30 seconds", "repeat 10 times", "for the recommended number of repetitions", "3 sets", "rest and repeat". The Dose field carries that.
-- **One exception:** a count may appear in a step **only** to say how a reps Dose splits across directions or phases ("10 times forwards, then 10 times backwards", "each way"), and it must repeat the Dose's own number. Never a different count, never a hold time, never sets. (The Dose has no direction field, so `reps: 10` for Wrist Circles means 10 in each direction, and the steps say so.)
+- **No count or number in a step, ever.** The Dose, which the user can change, carries it, so a number in a step would contradict an overridden Dose. When a reps Dose applies in each direction or phase, say so without a number ("Then circle them backwards the same number of times."). The build step fails on any digit in a step, naming the Id.
 - Remove gym tips, "this will be your starting position", anatomy lectures and asides.
 - Start with the set-up position. For Either moves, start with "Sit or stand tall."
 - For Each Side moves, end with "…, then switch sides."
@@ -149,7 +149,7 @@ Source: *Wrist Circles* · stretching · beginner · forearms · 3 steps startin
 | difficulty | Beginner | Trivial. |
 | dose | 10 reps | Repeating movement; both wrists at once, so not Each Side. |
 | cue | Arms out wide, circle both wrists | Set-up plus action. |
-| steps | "Repeat for…" removed; "forwards 10 times", then "backwards 10 times" | Standing set-up replaced by "Sit or stand tall." The Dose's 10 reps means 10 in each direction; the steps repeat the Dose's number to say so (the one allowed count, section 7). |
+| steps | "Repeat for…" removed; "circle both wrists forwards", then "backwards the same number of times" | Standing set-up replaced by "Sit or stand tall." The Dose's 10 reps means 10 in each direction; the steps say so without a number (section 7). |
 
 ### Energetic: `Star_Jump`
 
@@ -176,7 +176,7 @@ The owner reviewed the five calibration drafts and accepted all as recommended:
 
 1. **Strength move:** keep Chest Squeeze (`Isometric_Chest_Squeezes`, renamed, `exerciseType: Strength` override). The calibration set should cover all Body Areas; Bodyweight Squat comes in the first batch.
 2. **Star Jump:** kept as the Energetic example, graded Intermediate. The Energetic switch is what lets the user turn it off.
-3. **Wrist Circles:** "10 reps" means 10 in each direction, and the steps say so ("forwards 10 times", then "backwards 10 times"). The Dose stays `reps: 10` with no `eachSide`, because the Dose has no direction field. Rule added to section 7: a count in a step is allowed only to say how a reps Dose splits across directions or phases, repeating the Dose's own number.
+3. **Wrist Circles:** "10 reps" means 10 in each direction, and the steps say so ("forwards 10 times", then "backwards 10 times"). The Dose stays `reps: 10` with no `eachSide`, because the Dose has no direction field. Rule added to section 7: a count in a step is allowed only to say how a reps Dose splits across directions or phases, repeating the Dose's own number. *Superseded 2026-11 (#30): steps never carry a number, since the user can change the Dose; see section 7.*
 4. **Positions:** keep "Either whenever the legs aren't involved". Seated is for moves that need the chair, such as a chair dip or a seated twist (section 2).
 5. **Dose defaults** confirmed: 20 s for stretches (30 s only for a larger stretch), 15 s for isometric holds (section 5).
 6. **Spelling:** British (centre, colour) in curated text and in this guide.

@@ -1,10 +1,11 @@
 /**
- * ChangeSettings validation (#29): whether a change from the Settings page is
- * one the page could make. The event can come from an untyped caller (a stale
- * store, a bug), so every field is checked at runtime.
+ * ChangeSettings validation (#29, #30): whether a settings change is one the
+ * app could make. The event can come from an untyped caller (a stale store, a
+ * bug), so every field is checked at runtime.
  */
 
-import { DIFFICULTIES, EQUIPMENT } from './exercise';
+import { MAX_DOSE_AMOUNT, MIN_DOSE_AMOUNT } from './dose';
+import { DIFFICULTIES, EQUIPMENT, type Dose } from './exercise';
 import type { AppearanceSetting, BodyAreaMode, SettingsChange, Weekday } from './types';
 
 /**
@@ -45,6 +46,23 @@ const isEquipmentList = (value: unknown) =>
 
 const isStringList = (value: unknown) => Array.isArray(value) && value.every((item) => typeof item === 'string');
 
+/** A record: a plain object, not null and not an array. */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const DOSE_KINDS = allOf<Dose['kind']>()(['reps', 'seconds']);
+
+/** A Dose: exactly `kind` (reps or seconds), `amount` (an integer from `MIN_DOSE_AMOUNT` to `MAX_DOSE_AMOUNT`, 1–999) and `eachSide` (a boolean). */
+const isDose = (value: unknown) =>
+  isRecord(value) &&
+  Object.keys(value).length === 3 &&
+  isOneOf(DOSE_KINDS)(value.kind) &&
+  isIntegerIn(value.amount, MIN_DOSE_AMOUNT, MAX_DOSE_AMOUNT) &&
+  isBoolean(value.eachSide);
+
+/** Dose overrides: a record whose every value is a Dose. Its keys are any Exercise Ids, unchecked. */
+const isDoseOverrides = (value: unknown) => isRecord(value) && Object.values(value).every(isDose);
+
 /** `null` (a day off) or an integer `[start, end)` window within the day. */
 const isDay = (value: unknown): boolean => {
   if (value === null) return true;
@@ -55,7 +73,7 @@ const isDay = (value: unknown): boolean => {
 
 /** A complete record: exactly the 7 weekdays, each a valid day. */
 const isActiveHours = (value: unknown) => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  if (!isRecord(value)) return false;
   const days = Object.keys(value);
   return (
     days.length === WEEKDAYS.length &&
@@ -74,6 +92,7 @@ const RULES: Record<keyof SettingsChange, (value: unknown) => boolean> = {
   floor: isBoolean,
   equipment: isEquipmentList,
   excluded: isStringList,
+  doseOverrides: isDoseOverrides,
   appearance: isOneOf(APPEARANCE_SETTINGS),
 };
 

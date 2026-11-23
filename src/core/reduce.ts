@@ -40,6 +40,7 @@ export const defaultSettings: Settings = {
   floor: false,
   equipment: [],
   excluded: [],
+  doseOverrides: {},
   appearance: 'System',
 };
 

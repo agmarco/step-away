@@ -3,15 +3,15 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useColors } from '../../theme';
 
-/** Back to Today: pop this page, or, opened with nothing under it, go to Today. */
+/** Back: pop this page, or, opened with nothing under it, go to Today. */
 const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
-/** The page header: a back arrow and the title, as on the other pages Today pushes. */
-export function PageHeader({ title }: { title: string }) {
+/** A pushed page's header: a back arrow and the title. `backLabel` names where back goes: Today by default, else the page under it. */
+export function PageHeader({ title, backLabel = 'Back to Today' }: { title: string; backLabel?: string }) {
   const colors = useColors();
   return (
     <View style={styles.header}>
-      <Pressable onPress={back} accessibilityRole="button" accessibilityLabel="Back to Today" hitSlop={12}>
+      <Pressable onPress={back} accessibilityRole="button" accessibilityLabel={backLabel} hitSlop={12}>
         <Text style={[styles.back, { color: colors.text.primary }]}>‹</Text>
       </Pressable>
       <Text style={[styles.title, { color: colors.text.primary }]} accessibilityRole="header">

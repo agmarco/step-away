@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
-import { useRef, useState } from 'react';
+import { router } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { APPEARANCE_SETTINGS, BODY_AREA_MODES, SNOOZE_DELAYS, type BodyAreaMode, type SettingsChange } from '../core';
@@ -7,11 +8,15 @@ import { changeSettings, resetSettings, setDailyGoal } from '../platform/handler
 import { useCoreState } from '../platform/useCoreState';
 import { openSystemSettings, useNotificationsOn } from '../platform/notificationPermission';
 import { appVariant, isDevelopment } from '../platform/variant';
+import { exercises } from '../library';
 import { dailyGoalRow } from '../screens/settings/dailyGoal';
 import { minutes } from '../screens/settings/format';
+import { libraryBrowser } from '../screens/settings/libraryBrowser';
 import { Chip, ChipsRow, Divider, PageHeader, RadioRow, Row, Section } from '../screens/settings/parts';
 import { PickerSheet } from '../screens/settings/PickerSheet';
 import { ScheduleRows } from '../screens/settings/ScheduleRows';
+import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
+import { useOneChange } from '../screens/useOneChange';
 import { WhatICanDoRows } from '../screens/settings/WhatICanDoRows';
 import { useColors } from '../theme';
 
@@ -29,33 +34,20 @@ type Picker = 'snooze' | 'goal' | null;
 /**
  * Settings (#29): one scrolling page, every row showing its current value
  * from the stored state, in #15's order: Schedule, Daily Goal, Suggestions,
- * What I can do, Exercise Library (a placeholder until #30) and App. Every
- * change goes through the handler (`changeSettings`, `setDailyGoal`,
- * `resetSettings`); a change the core rejects writes nothing, so the row keeps
- * its value. One change at a time: the controls are disabled while one is in
- * flight.
+ * What I can do, Exercise Library (a row with the browser's counts that
+ * opens it, `app/library/`, #30) and App. Every change goes through the
+ * handler (`changeSettings`, `setDailyGoal`, `resetSettings`); a change the
+ * core rejects writes nothing, so the row keeps its value. One change at a
+ * time (`useOneChange`): the controls are disabled while one is in flight.
  */
 export default function Settings() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { state, now } = useCoreState();
   const notifications = useNotificationsOn();
-  const [busy, setBusy] = useState(false);
-  const busyRef = useRef(false);
+  const { busy, run } = useOneChange('settings');
   const [picker, setPicker] = useState<Picker>(null);
 
-  /** Runs one handler call at a time; a second tap in the same tick is dropped. */
-  const run = (label: string, call: () => Promise<boolean>) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setBusy(true);
-    call()
-      .catch((e: unknown) => console.warn(`[settings] ${label} failed: ${e}`))
-      .finally(() => {
-        busyRef.current = false;
-        setBusy(false);
-      });
-  };
   const change = (c: SettingsChange) => run(Object.keys(c).join(', '), () => changeSettings(c));
 
   if (!state) return <View style={[styles.root, { backgroundColor: colors.background.screen }]} />;
@@ -63,6 +55,8 @@ export default function Settings() {
   const s = state.settings;
   const goal = dailyGoalRow(state, now);
   const closePicker = () => setPicker(null);
+  const { counts } = libraryBrowser(s, exercises, 'All');
+  const librarySummary = `${counts.All} ${counts.All === 1 ? 'Exercise' : 'Exercises'} · ${counts.Excluded} Excluded · ${counts.Customised} Customised`;
 
   const confirmReset = () =>
     Alert.alert(
@@ -140,8 +134,7 @@ export default function Settings() {
         </Section>
 
         <Section title="Exercise Library">
-          {/* Placeholder until the Exercise Library browser (#30). */}
-          <Row label="Browse and exclude Exercises: coming soon" disabled />
+          <Row label="Browse Exercises" note={librarySummary} onPress={() => router.push('/library')} />
         </Section>
 
         <Section title="App">
@@ -185,6 +178,7 @@ export default function Settings() {
           <Row label="Version" value={isDevelopment ? `${version} (${appVariant})` : version} />
         </Section>
       </ScrollView>
+      <StatusBarBackdrop />
 
       <PickerSheet
         visible={picker === 'snooze'}

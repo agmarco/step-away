@@ -56,6 +56,7 @@ import { exercises, photoSource } from '../../library';
 import { finishGuided, respond, startGuided, swap } from '../../platform/handler';
 import { dismissReminder } from '../../platform/notifications';
 import { useCoreState } from '../../platform/useCoreState';
+import { StatusBarBackdrop } from '../../screens/StatusBarBackdrop';
 import { type Palette, useColors } from '../../theme';
 
 const backToToday = () => router.dismissTo('/');
@@ -184,90 +185,93 @@ export default function Guided() {
   const snoozeAllowed = outstanding !== undefined && canSnooze(outstanding, now);
 
   return (
-    <ScrollView
-      style={screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
-    >
-      <View style={styles.topBar}>
-        <Pressable onPress={leave} disabled={busy} accessibilityRole="link" hitSlop={8}>
-          <Text style={[styles.small, { color: colors.accent.hero }]}>‹ Today</Text>
-        </Pressable>
-        <Text style={[styles.counter, { color: colors.text.secondary }]}>
-          {step + 1} of {total}
-        </Text>
-      </View>
+    <>
+      <ScrollView
+        style={screen}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
+      >
+        <View style={styles.topBar}>
+          <Pressable onPress={leave} disabled={busy} accessibilityRole="link" hitSlop={8}>
+            <Text style={[styles.small, { color: colors.accent.hero }]}>‹ Today</Text>
+          </Pressable>
+          <Text style={[styles.counter, { color: colors.text.secondary }]}>
+            {step + 1} of {total}
+          </Text>
+        </View>
 
-      {reminder.fallback && (
-        <View style={[styles.banner, { backgroundColor: colors.background.banner }]}>
-          <Text style={[styles.bannerText, { color: colors.text.primary }]}>{FALLBACK_LINE}</Text>
-          <Pressable onPress={() => router.push('/settings')} accessibilityRole="link" hitSlop={8}>
-            <Text style={[styles.bannerLink, { color: colors.accent.hero }]}>Settings</Text>
+        {reminder.fallback && (
+          <View style={[styles.banner, { backgroundColor: colors.background.banner }]}>
+            <Text style={[styles.bannerText, { color: colors.text.primary }]}>{FALLBACK_LINE}</Text>
+            <Pressable onPress={() => router.push('/settings')} accessibilityRole="link" hitSlop={8}>
+              <Text style={[styles.bannerLink, { color: colors.accent.hero }]}>Settings</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Keyed by the Exercise too, so a Swap remounts the card and resets its timer. */}
+        <Card key={`${reminder.id}-${step}-${exercise.id}`} exercise={exercise} colors={colors} />
+
+        <View style={styles.answers}>
+          <Pressable
+            onPress={swapCard}
+            disabled={busy}
+            accessibilityRole="button"
+            style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
+          >
+            <Text style={[styles.buttonText, { color: colors.text.primary }]}>Swap</Text>
+          </Pressable>
+          {nothingToSwap && (
+            <Text style={[styles.body, styles.centered, { color: colors.text.secondary }]}>Nothing else fits your settings</Text>
+          )}
+          <Pressable
+            onPress={() => answer(false)}
+            disabled={busy}
+            accessibilityRole="button"
+            style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
+          >
+            <Text style={[styles.buttonText, { color: colors.text.primary }]}>Not this one</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => answer(true)}
+            disabled={busy}
+            accessibilityRole="button"
+            style={[styles.button, { backgroundColor: colors.accent.hero, opacity: busy ? 0.5 : 1 }]}
+          >
+            <Text style={[styles.buttonText, { color: colors.text.onHero }]}>Did it ✓</Text>
           </Pressable>
         </View>
-      )}
 
-      {/* Keyed by the Exercise too, so a Swap remounts the card and resets its timer. */}
-      <Card key={`${reminder.id}-${step}-${exercise.id}`} exercise={exercise} colors={colors} />
-
-      <View style={styles.answers}>
-        <Pressable
-          onPress={swapCard}
-          disabled={busy}
-          accessibilityRole="button"
-          style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
-        >
-          <Text style={[styles.buttonText, { color: colors.text.primary }]}>Swap</Text>
-        </Pressable>
-        {nothingToSwap && (
-          <Text style={[styles.body, styles.centered, { color: colors.text.secondary }]}>Nothing else fits your settings</Text>
-        )}
-        <Pressable
-          onPress={() => answer(false)}
-          disabled={busy}
-          accessibilityRole="button"
-          style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
-        >
-          <Text style={[styles.buttonText, { color: colors.text.primary }]}>Not this one</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => answer(true)}
-          disabled={busy}
-          accessibilityRole="button"
-          style={[styles.button, { backgroundColor: colors.accent.hero, opacity: busy ? 0.5 : 1 }]}
-        >
-          <Text style={[styles.buttonText, { color: colors.text.onHero }]}>Did it ✓</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.breaks}>
-        {step > 0 ? (
-          <Pressable onPress={() => finish(did)} disabled={busy} accessibilityRole="button" hitSlop={8}>
-            <Text style={[styles.link, { color: colors.text.secondary }]}>End here</Text>
-          </Pressable>
-        ) : (
-          <>
-            {snoozeAllowed && (
+        <View style={styles.breaks}>
+          {step > 0 ? (
+            <Pressable onPress={() => finish(did)} disabled={busy} accessibilityRole="button" hitSlop={8}>
+              <Text style={[styles.link, { color: colors.text.secondary }]}>End here</Text>
+            </Pressable>
+          ) : (
+            <>
+              {snoozeAllowed && (
+                <Pressable
+                  onPress={() => send({ type: 'Response', reminderId, kind: 'Snooze' })}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  hitSlop={8}
+                >
+                  <Text style={[styles.link, { color: colors.text.secondary }]}>Snooze</Text>
+                </Pressable>
+              )}
               <Pressable
-                onPress={() => send({ type: 'Response', reminderId, kind: 'Snooze' })}
+                onPress={() => finish([])}
                 disabled={busy}
                 accessibilityRole="button"
                 hitSlop={8}
               >
-                <Text style={[styles.link, { color: colors.text.secondary }]}>Snooze</Text>
+                <Text style={[styles.link, { color: colors.text.secondary }]}>Skip</Text>
               </Pressable>
-            )}
-            <Pressable
-              onPress={() => finish([])}
-              disabled={busy}
-              accessibilityRole="button"
-              hitSlop={8}
-            >
-              <Text style={[styles.link, { color: colors.text.secondary }]}>Skip</Text>
-            </Pressable>
-          </>
-        )}
-      </View>
-    </ScrollView>
+            </>
+          )}
+        </View>
+      </ScrollView>
+      <StatusBarBackdrop />
+    </>
   );
 }
 
@@ -363,7 +367,8 @@ const styles = StyleSheet.create({
   dose: { fontSize: 44, fontWeight: '800', fontVariant: ['tabular-nums'] },
   cue: { fontSize: 17, fontStyle: 'italic', lineHeight: 24 },
   photos: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  // The source photos are 850×567; the box sets the size (see app/debug/library.tsx).
+  // The source photos are 850×567. The box sets the size: on web an Image's own
+  // aspectRatio loses to the asset's intrinsic height.
   photoBox: { flex: 1, aspectRatio: 850 / 567, borderRadius: 8, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
   timer: { alignItems: 'center', gap: 8, marginTop: 12 },

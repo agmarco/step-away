@@ -6,6 +6,7 @@
 import { BODY_AREAS, DIFFICULTIES, type BodyArea, type Exercise } from './exercise';
 import { addDays, instantAt, localDateOf } from './localTime';
 import { dateKey, dayOf } from './days';
+import { doseOf } from './dose';
 import type { Instant, Random, Reminder, Settings, SuggestedExercise } from './types';
 
 /** The no-repeat window: an Exercise can't reappear within this many Suggestions before. */
@@ -33,21 +34,26 @@ export function suggestionSource(
 }
 
 /**
- * The eligible pool: Difficulty at or below the ceiling, Energetic only when
- * switched on, Position Floor only when Floor is on, no Equipment or owned
- * Equipment, and not Excluded.
+ * The Exercises the settings allow, Exclusions ignored: Difficulty at or
+ * below the ceiling, Energetic only when switched on, Position Floor only
+ * when Floor is on, no Equipment or owned Equipment. The Exercise Library
+ * browser lists these, the Excluded ones marked.
  */
-export function eligiblePool(settings: Settings, library: readonly Exercise[]): Exercise[] {
-  return library.filter((e) => eligible(e, settings));
+export function allowedBySettings(settings: Settings, library: readonly Exercise[]): Exercise[] {
+  return library.filter((e) => allowed(e, settings));
 }
 
-function eligible(e: Exercise, settings: Settings): boolean {
+/** The eligible pool: the Exercises the settings allow (`allowedBySettings`) that aren't Excluded. */
+export function eligiblePool(settings: Settings, library: readonly Exercise[]): Exercise[] {
+  return allowedBySettings(settings, library).filter((e) => !settings.excluded.includes(e.id));
+}
+
+function allowed(e: Exercise, settings: Settings): boolean {
   return (
     DIFFICULTIES.indexOf(e.difficulty) <= DIFFICULTIES.indexOf(settings.difficulty) &&
     (settings.energetic || !e.energetic) &&
     (settings.floor || e.position !== 'Floor') &&
-    (e.equipment === null || settings.equipment.includes(e.equipment)) &&
-    !settings.excluded.includes(e.id)
+    (e.equipment === null || settings.equipment.includes(e.equipment))
   );
 }
 
@@ -123,7 +129,7 @@ export function buildSuggestion(
   }
 
   return {
-    suggestion: picks.map(snapshotOf),
+    suggestion: picks.map((e) => snapshotOf(e, settings)),
     ...(source.fallback ? { fallback: true as const } : {}),
     ...(rotation !== undefined ? { rotation } : {}),
   };
@@ -144,9 +150,10 @@ export function without(exercises: readonly Exercise[], ids: ReadonlySet<string>
   return exercises.filter((e) => !ids.has(e.id));
 }
 
-/** The text snapshot a Suggestion keeps of an Exercise. */
-export function snapshotOf({ id, name, dose, cue, bodyArea }: Exercise): SuggestedExercise {
-  return { id, name, dose, cue, bodyArea };
+/** The text snapshot a Suggestion keeps of an Exercise, with its Dose under `settings` (`doseOf`). */
+export function snapshotOf(exercise: Exercise, settings: Settings): SuggestedExercise {
+  const { id, name, cue, bodyArea } = exercise;
+  return { id, name, dose: doseOf(exercise, settings), cue, bodyArea };
 }
 
 /**
