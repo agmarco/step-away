@@ -12,6 +12,8 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
  */
 export const EXACT_ALARM_PERMISSION: 'USE_EXACT_ALARM' | 'SCHEDULE_EXACT_ALARM' = 'USE_EXACT_ALARM';
 
+const EAS_PROJECT_ID = 'ad2beed2-abdc-4c1c-ad2b-f761b129a4da';
+
 const BASE_ADAPTIVE_ICON = {
   foregroundImage: './assets/android-icon-foreground.png',
   monochromeImage: './assets/android-icon-monochrome.png',
@@ -31,6 +33,8 @@ const VARIANTS = {
       backgroundColor: '#E6F4FE',
       backgroundImage: './assets/android-icon-background.png',
     },
+    // EAS Update, channel "preview" (set by the eas.json profile).
+    updates: true,
   },
   development: {
     name: 'Activity Reminder (dev)',
@@ -39,6 +43,8 @@ const VARIANTS = {
     // A plain amber background instead of the light-blue grid, so the dev app
     // is easy to tell apart from the daily app on the launcher.
     adaptiveIcon: { ...BASE_ADAPTIVE_ICON, backgroundColor: '#F59E0B' },
+    // The dev client loads JS from the dev server, never from EAS Update.
+    updates: false,
   },
 } as const;
 
@@ -62,7 +68,19 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
+    // An update only reaches a build with the same native fingerprint.
     runtimeVersion: { policy: 'fingerprint' },
+    // expo-updates is configured, not imported: check for an update on launch
+    // without waiting for it (fallbackToCacheTimeout 0), apply it on the next
+    // launch. No app code imports expo-updates.
+    updates: v.updates
+      ? {
+          enabled: true,
+          url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
+          checkAutomatically: 'ON_LOAD',
+          fallbackToCacheTimeout: 0,
+        }
+      : { enabled: false },
     android: {
       package: v.package,
       allowBackup: true,
@@ -77,6 +95,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-sqlite',
       'expo-notifications',
       'expo-task-manager',
+      'expo-updates',
       // The launcher's Pause shortcuts open this variant's pause deep link.
       ['./plugins/withPauseShortcuts', { scheme: v.scheme, package: v.package }],
     ],
@@ -85,7 +104,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...config.extra,
       // Read at runtime with expo-constants; gates the dev-only test mode.
       appVariant,
-      eas: { projectId: 'ad2beed2-abdc-4c1c-ad2b-f761b129a4da' },
+      eas: { projectId: EAS_PROJECT_ID },
     },
   };
 };
