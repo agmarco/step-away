@@ -2,6 +2,7 @@
 
 - **Decisions:** each one lives on its closed ticket; [the map](https://github.com/agmarco/activityReminder/issues/1) has a one-line index ("Decisions so far").
 - **Glossary:** [`../CONTEXT.md`](../CONTEXT.md).
+- **Device checklist:** [`device-checklist.md`](device-checklist.md), the run sheet for the standalone `preview` build on the Pixel (#32).
 - **ADRs:** `docs/adr/NNNN-<slug>.md`. Only for decisions that are hard to reverse, surprising without context, and the result of a real trade-off. None yet.
 
 ## Research
