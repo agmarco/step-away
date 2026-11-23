@@ -92,6 +92,7 @@ const CUSTOM: Settings = {
   floor: true,
   equipment: ['dumbbells', 'foam roller'],
   excluded: ['Neck_0', 'Neck_1'],
+  doseOverrides: { Hips_Legs_0: { kind: 'seconds', amount: 45, eachSide: true } },
   appearance: 'Dark',
 };
 

@@ -385,6 +385,31 @@ describe('Pauses and Days Off', () => {
   });
 });
 
+describe('Dose overrides (#30)', () => {
+  it('round-trips the Dose overrides', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    const saved: CoreState = {
+      ...state([]),
+      settings: { ...defaultSettings, doseOverrides: { Neck_Turn: { kind: 'seconds', amount: 25, eachSide: true } } },
+    };
+    await saveState(d, saved, NOW);
+    expect((await loadState(d)).settings.doseOverrides).toEqual({
+      Neck_Turn: { kind: 'seconds', amount: 25, eachSide: true },
+    });
+  });
+
+  it('reads no Dose overrides from settings stored before #30', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    // As pre-#30 settings: the stored JSON has no `doseOverrides` key.
+    const { doseOverrides: _, ...before } = defaultSettings;
+    await d.runAsync(`UPDATE meta SET value = ? WHERE key = 'settings'`, JSON.stringify(before));
+    expect((await loadState(d)).settings.doseOverrides).toEqual({});
+  });
+});
+
 describe('the onboarding flag (#31)', () => {
   it('is not done on a fresh DB', async () => {
     const d = fakeDb();

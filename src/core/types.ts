@@ -71,11 +71,20 @@ export interface Settings {
   equipment: Equipment[];
   /** The Excluded Exercises, by Exercise Id: never suggested. */
   excluded: string[];
+  /**
+   * The Dose overrides, by Exercise Id: a Suggestion snapshots an Exercise
+   * with its override instead of its library Dose. Ids are not checked
+   * against the library.
+   */
+  doseOverrides: Record<string, Dose>;
   /** The app's colour scheme. */
   appearance: AppearanceSetting;
 }
 
-/** A change on the Settings page: any subset of the settings but the time zone. */
+/**
+ * A change of the settings: any subset of them but the time zone. A field it
+ * has replaces the whole field (all of `excluded`, all of `doseOverrides`).
+ */
 export type SettingsChange = Partial<Omit<Settings, 'timeZone'>>;
 
 /** One Exercise of a Suggestion: a text snapshot, not a link to the library entry. */
@@ -250,7 +259,7 @@ export type CoreEvent =
    */
   | { type: 'Swap'; reminderId: string; exerciseId: string }
   /**
-   * A change on the Settings page: applies the validated change and rearms.
+   * A settings change: applies the validated change and rearms.
    * An invalid change returns the input state with no intents.
    */
   | { type: 'ChangeSettings'; change: SettingsChange }

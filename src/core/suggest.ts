@@ -6,6 +6,7 @@
 import { BODY_AREAS, DIFFICULTIES, type BodyArea, type Exercise } from './exercise';
 import { addDays, instantAt, localDateOf } from './localTime';
 import { dateKey, dayOf } from './days';
+import { doseOf } from './dose';
 import type { Instant, Random, Reminder, Settings, SuggestedExercise } from './types';
 
 /** The no-repeat window: an Exercise can't reappear within this many Suggestions before. */
@@ -123,7 +124,7 @@ export function buildSuggestion(
   }
 
   return {
-    suggestion: picks.map(snapshotOf),
+    suggestion: picks.map((e) => snapshotOf(e, settings)),
     ...(source.fallback ? { fallback: true as const } : {}),
     ...(rotation !== undefined ? { rotation } : {}),
   };
@@ -144,9 +145,10 @@ export function without(exercises: readonly Exercise[], ids: ReadonlySet<string>
   return exercises.filter((e) => !ids.has(e.id));
 }
 
-/** The text snapshot a Suggestion keeps of an Exercise. */
-export function snapshotOf({ id, name, dose, cue, bodyArea }: Exercise): SuggestedExercise {
-  return { id, name, dose, cue, bodyArea };
+/** The text snapshot a Suggestion keeps of an Exercise, with its Dose under `settings` (`doseOf`). */
+export function snapshotOf(exercise: Exercise, settings: Settings): SuggestedExercise {
+  const { id, name, cue, bodyArea } = exercise;
+  return { id, name, dose: doseOf(exercise, settings), cue, bodyArea };
 }
 
 /**
