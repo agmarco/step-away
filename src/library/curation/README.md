@@ -28,6 +28,6 @@ The format allows leaving `difficulty` out, in which case it falls back to the s
 
 A self-authored entry has an Id starting `custom/` and writes every field above except `sourceId`, including `equipment` (`null` for none). It has no photos.
 
-Group rules: `floor` entries have `position: Floor` and no Equipment (a floor move that needs Equipment, such as a dumbbell floor press, goes in that Equipment's file with `position: Floor`); `base` entries are never Floor and have no Equipment; each Equipment file holds only that Equipment. Unknown keys fail the build.
+Group rules: `floor` entries have `position: Floor` and no Equipment (a floor move that needs Equipment, such as a dumbbell floor press, goes in that Equipment's file with `position: Floor`); `base` entries are never Floor and have no Equipment; each Equipment file holds only that Equipment. Unknown keys fail the build, and so does a digit in a step: steps never carry a count, the Dose does.
 
 `npm run library:draft -- <group>` prints the candidates for a group with the script-filled fields. After editing, run `npm run library:photos` and `npm run library:build`, and commit the curation file, the photos and the generated output together. [`DRAFTING.md`](DRAFTING.md) is the drafting guide: how to fill each field, with the calibration set as worked examples.
