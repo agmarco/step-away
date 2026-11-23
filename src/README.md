@@ -8,7 +8,7 @@ The app. This folder is the Expo project root (SDK 58, TypeScript, Expo Router):
 | `index.ts` | The app entry: imports `platform/task.ts` first (the background notification task must be defined at module scope before the app registers), then `expo-router/entry`. |
 | `app.config.ts` | Expo app config; picks the app variant from `APP_VARIANT` (see below), holds the exact-alarm switch and adds the config plugins (Expo's and `plugins/withPauseShortcuts`). |
 | `plugins/` | Local config plugins, run by `expo prebuild` (and so by EAS builds). `withPauseShortcuts.ts` adds the launcher's Pause shortcuts (see [Launcher shortcuts](#launcher-shortcuts)); its pure XML-building parts are tested in `withPauseShortcuts.test.ts`. |
-| `eas.json` | EAS build profiles. |
+| `eas.json` | EAS build profiles; `preview` builds on the EAS Update channel `preview`. |
 | `tsconfig.json`, `eslint.config.js`, `vitest.config.ts` | TypeScript, ESLint and Vitest config. |
 | `assets/` | App icon, Android adaptive-icon layers and web favicon. |
 | `tools/` | Project tooling. `tools/eslint/no-literal-colors.js` is the local ESLint rule; `tools/library/` is the Exercise Library build step (see below). |
@@ -209,6 +209,30 @@ The two packages differ, so both apps install side by side. Both set `android.al
 [`fingerprint.config.js`](fingerprint.config.js) keeps the default (balanced) fingerprint but skips every `package.json` script, so adding or editing a script doesn't change the runtime fingerprint or need a new EAS build.
 
 The app is linked to the EAS project `@agmarco/activity-reminder`: `app.config.ts` sets `owner` and `extra.eas.projectId` (the owner ran `eas init`; a dynamic config can't be written by EAS, so the ID lives there). EAS commands run from `src/`, like everything else. Builds are **owner steps**: `eas build --profile development --platform android` and `eas build --profile preview --platform android` need the Expo account and are run by the owner, not by agents.
+
+### EAS Update and when to rebuild
+
+The `preview` app gets JavaScript and asset changes over the air with EAS Update; the dev app never does (it loads JS from the dev server).
+
+- **Config.** `expo-updates` is installed and **configured, not imported**: no app code imports it, so the current dev build, which doesn't have its native module, keeps running from the dev server. `app.config.ts` sets `updates` per variant: for `preview`, `enabled: true`, `url: https://u.expo.dev/<extra.eas.projectId>`, `checkAutomatically: 'ON_LOAD'` and `fallbackToCacheTimeout: 0`; for `development`, `enabled: false`. The `expo-updates` config plugin writes these to the Android manifest (`expo.modules.updates.ENABLED`, `EXPO_UPDATE_URL`, `EXPO_UPDATES_CHECK_ON_LAUNCH` `ALWAYS`, `EXPO_UPDATES_LAUNCH_WAIT_MS` `0`, `EXPO_RUNTIME_VERSION`).
+- **Channel.** The `preview` profile in `eas.json` sets `"channel": "preview"`, so the `preview` build asks for updates on that channel. The `development` profile has no channel.
+- **Check on launch, apply on next launch.** At each launch the app starts with the JS it has (the APK's, or the last update it downloaded) and checks the channel in the background without waiting (timeout 0). A new update is downloaded then and runs from the **next** launch (close the app from Recents and open it again).
+- **Runtime guard.** `runtimeVersion: { policy: 'fingerprint' }`: the runtime version is a hash of the native project (native modules and their versions, config plugins and the native fields of `app.config.ts`, with `fingerprint.config.js`'s skips). A build only takes updates with its own runtime version, so an update published from JS that needs different native code is ignored by the old build.
+- **Publish (owner step, from `src/`):** `APP_VARIANT=preview npx eas-cli@latest update --channel preview --message "<what changed>"`. Like builds, this needs the Expo account and is never run by agents.
+
+**Rebuild or update?**
+
+| Change | Ships with |
+|---|---|
+| JS or TypeScript under `app/`, `screens/`, `core/`, `platform/`, `theme/`; the Exercise Library output; images and other assets | **EAS Update** |
+| Adding, removing or upgrading a package with native code (an `expo-*` module, `react-native`), an `expo` SDK upgrade | **New EAS build** |
+| A config plugin, built-in or local (`plugins/`, e.g. the launcher shortcuts), or its options | **New EAS build** |
+| Android permissions (e.g. `EXACT_ALARM_PERMISSION`), and other native `app.config.ts` fields: `android.*`, `scheme`, `name`, icons, `userInterfaceStyle`, `updates` | **New EAS build** |
+| `package.json` scripts, docs, tests, `eas.json` | Neither (not in the app; skipped by the fingerprint) |
+
+**How to tell:** the fingerprint. From `src/`, `APP_VARIANT=preview npx expo-updates fingerprint:generate --platform android` prints the current native project's fingerprint as JSON (its `hash` is the runtime version). If it equals the installed build's runtime version (on its EAS build page, or `npx eas-cli@latest update:list --branch preview`), an EAS Update reaches the phone; if it differs, the change needs a new EAS build, and an update published now would be ignored by the installed app. `npx eas-cli@latest fingerprint:compare` (Expo account) compares against a build directly.
+
+The phone checks for this build (re-arm after reboot and after installing over the old build, Doze, shade taps, EAS Update, light/dark, the launcher shortcuts) are in [`../docs/device-checklist.md`](../docs/device-checklist.md).
 
 ### Launcher shortcuts
 
