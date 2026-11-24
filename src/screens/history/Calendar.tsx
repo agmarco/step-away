@@ -12,8 +12,9 @@ const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
  * `historyRange`), a Monday-first grid of the month's days by `monthMarks`
  * (each cell drawn as in the week panel, `markStyle`, with its number under
  * it), and the legend. Tapping a day selects it; a day before any data
- * (`none`) can't be selected. The selected day has a ring around its cell
- * and number.
+ * (`none`) can't be selected. The selected day, if any, has a ring around
+ * its cell and number. Each cell is keyed by its mark, so a mark change mounts
+ * a fresh view (see `markStyle`).
  */
 export function Calendar({
   month,
@@ -26,7 +27,7 @@ export function Calendar({
 }: {
   month: YearMonth;
   marks: { date: LocalDate; mark: DayMark }[];
-  selected: LocalDate;
+  selected: LocalDate | null;
   canGoBack: boolean;
   canGoForward: boolean;
   onStep: (by: -1 | 1) => void;
@@ -55,7 +56,7 @@ export function Calendar({
             {week.map((entry, i) => {
               if (!entry) return <View key={`b${i}`} style={styles.slot} />;
               const { date, mark } = entry;
-              const isSelected = sameDate(date, selected);
+              const isSelected = selected !== null && sameDate(date, selected);
               const blank = mark === 'none';
               return (
                 <View key={date.day} style={styles.slot}>
@@ -67,7 +68,7 @@ export function Calendar({
                     accessibilityState={blank ? undefined : { selected: isSelected }}
                     style={[styles.day, { borderColor: isSelected ? colors.text.primary : 'transparent' }]}
                   >
-                    <View style={[styles.cell, markStyle(mark, colors)]} />
+                    <View key={mark} style={[styles.cell, markStyle(mark, colors)]} />
                     <Text
                       style={[
                         styles.number,

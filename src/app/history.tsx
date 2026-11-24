@@ -17,7 +17,7 @@ import { ActionSheet } from '../screens/ActionSheet';
 import { Calendar } from '../screens/history/Calendar';
 import { DayPanel, type DayKind } from '../screens/history/DayPanel';
 import { longDayOf } from '../screens/history/format';
-import { monthBefore, shiftMonth } from '../screens/history/month';
+import { monthBefore, selectionAfterStep, shiftMonth } from '../screens/history/month';
 import { PageHeader } from '../screens/settings/parts';
 import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
 import { useOneChange } from '../screens/useOneChange';
@@ -27,11 +27,31 @@ import { useColors } from '../theme';
 const dayBefore = (a: LocalDate, b: LocalDate) =>
   a.year * 10_000 + a.month * 100 + a.day < b.year * 10_000 + b.month * 100 + b.day;
 
+/** The Day Off sheet's wording for `day`, by whether it is today and already a Day Off. */
+function confirmOf(day: LocalDate, isToday: boolean, off: boolean) {
+  return off
+    ? {
+        day,
+        title: isToday ? "Undo today's Day Off?" : `Undo the Day Off on ${longDayOf(day)}?`,
+        label: 'Undo Day Off',
+      }
+    : {
+        day,
+        title: isToday ? 'Take today off?' : `Mark ${longDayOf(day)} as a Day Off?`,
+        description: isToday
+          ? 'No more Reminders today. A Day Off neither breaks nor extends your Streak.'
+          : 'No Reminders that day. A Day Off neither breaks nor extends your Streak.',
+        label: 'Mark as Day Off',
+      };
+}
+
 /**
  * History (#27), pushed from Today's History tile and week panel: a month
  * calendar (`Calendar`, by `monthMarks`) that opens on the current month and
  * steps month by month within `historyRange`, and the selected day under it
- * (`DayPanel`), today at first. A past day is read only. Today and a day
+ * (`DayPanel`), today at first. Stepping to another month selects today in
+ * today's month and no day elsewhere (`selectionAfterStep`), where the panel
+ * just asks for a tap. A past day is read only. Today and a day
  * ahead have Mark as Day Off / Undo Day Off, confirmed in an `ActionSheet`,
  * then `setDayOff`; the calendar redraws when the write lands (`useCoreState`
  * re-reads after every write). The stored state is settled at `now` first, as
@@ -42,7 +62,8 @@ export default function History() {
   const insets = useSafeAreaInsets();
   const { state: stored, now, failed } = useCoreState();
   const [shown, setShown] = useState<YearMonth | null>(null);
-  const [selected, setSelected] = useState<LocalDate | null>(null);
+  // `undefined` until the first tap or step (today), `null` for no day.
+  const [selected, setSelected] = useState<LocalDate | null | undefined>(undefined);
   const [confirming, setConfirming] = useState(false);
   const { busy, run } = useOneChange('history');
   const state = stored && settle(stored, now);
@@ -67,19 +88,10 @@ export default function History() {
   const today = localDateOf(now, state.settings.timeZone);
   const { first, last } = historyRange(state, now);
   const month = shown ?? { year: today.year, month: today.month };
-  const day = selected ?? today;
-  const kind: DayKind = sameDate(day, today) ? 'today' : dayBefore(day, today) ? 'past' : 'future';
-  const off = isDayOff(state, day);
-  const isToday = kind === 'today';
-  const confirm = off
-    ? { title: isToday ? "Undo today's Day Off?" : `Undo the Day Off on ${longDayOf(day)}?`, label: 'Undo Day Off' }
-    : {
-        title: isToday ? 'Take today off?' : `Mark ${longDayOf(day)} as a Day Off?`,
-        description: isToday
-          ? 'No more Reminders today. A Day Off neither breaks nor extends your Streak.'
-          : 'No Reminders that day. A Day Off neither breaks nor extends your Streak.',
-        label: 'Mark as Day Off',
-      };
+  const day = selected === undefined ? today : selected;
+  const kind: DayKind | null = !day ? null : sameDate(day, today) ? 'today' : dayBefore(day, today) ? 'past' : 'future';
+  const off = day !== null && isDayOff(state, day);
+  const confirm = day && confirmOf(day, kind === 'today', off);
 
   return (
     <>
@@ -94,17 +106,29 @@ export default function History() {
           selected={day}
           canGoBack={monthBefore(first, month)}
           canGoForward={monthBefore(month, last)}
-          onStep={(by) => setShown(shiftMonth(month, by))}
+          onStep={(by) => {
+            const next = shiftMonth(month, by);
+            setShown(next);
+            setSelected(selectionAfterStep(next, today));
+          }}
           onSelect={setSelected}
         />
-        <DayPanel state={state} now={now} date={day} kind={kind} busy={busy} onDayOff={() => setConfirming(true)} />
+        {day && kind ? (
+          <DayPanel state={state} now={now} date={day} kind={kind} busy={busy} onDayOff={() => setConfirming(true)} />
+        ) : (
+          <Text style={[styles.note, { color: colors.text.secondary }]}>Tap a day to see it.</Text>
+        )}
       </ScrollView>
       <StatusBarBackdrop />
       <ActionSheet
-        visible={confirming}
-        title={confirm.title}
-        description={confirm.description}
-        actions={[{ key: 'dayOff', label: confirm.label, onPress: () => run(confirm.label, () => setDayOff(day, !off)) }]}
+        visible={confirming && confirm !== null}
+        title={confirm?.title ?? ''}
+        description={confirm?.description}
+        actions={
+          confirm
+            ? [{ key: 'dayOff', label: confirm.label, onPress: () => run(confirm.label, () => setDayOff(confirm.day, !off)) }]
+            : []
+        }
         onClose={() => setConfirming(false)}
       />
     </>

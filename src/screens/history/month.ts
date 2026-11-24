@@ -1,4 +1,4 @@
-import type { YearMonth } from '../../core';
+import type { LocalDate, YearMonth } from '../../core';
 
 /**
  * Month arithmetic for the History calendar, whose weeks run Monday to
@@ -33,4 +33,12 @@ export function shiftMonth(month: YearMonth, by: number): YearMonth {
 /** Whether `a` comes before `b`. */
 export function monthBefore(a: YearMonth, b: YearMonth): boolean {
   return a.year < b.year || (a.year === b.year && a.month < b.month);
+}
+
+/**
+ * The selected day after History steps to `month`: today when `month` holds
+ * it, else nothing, so a selection never outlives its month.
+ */
+export function selectionAfterStep(month: YearMonth, today: LocalDate): LocalDate | null {
+  return month.year === today.year && month.month === today.month ? today : null;
 }

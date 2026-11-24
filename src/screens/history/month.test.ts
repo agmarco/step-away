@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { leadingBlanks, monthBefore, shiftMonth, weeksOf } from './month';
+import { leadingBlanks, monthBefore, selectionAfterStep, shiftMonth, weeksOf } from './month';
 
 describe("leadingBlanks: the empty cells before a month's first day, weeks starting Monday", () => {
   it('is 0 for a month that starts on a Monday (June 2026)', () => {
@@ -66,5 +66,19 @@ describe("weeksOf: a month's days as Monday-first rows of seven, blanks as null"
       const days = new Date(Date.UTC(2026, month, 0)).getUTCDate();
       for (const row of weeksOf({ year: 2026, month }, daysOf(days))) expect(row).toHaveLength(7);
     }
+  });
+});
+
+describe('selectionAfterStep: the selected day after stepping to another month', () => {
+  const today = { year: 2026, month: 11, day: 24 };
+
+  it("is today when the month is today's month", () => {
+    expect(selectionAfterStep({ year: 2026, month: 11 }, today)).toEqual(today);
+  });
+
+  it('is nothing for any other month, even the same month of another year', () => {
+    expect(selectionAfterStep({ year: 2026, month: 10 }, today)).toBeNull();
+    expect(selectionAfterStep({ year: 2026, month: 12 }, today)).toBeNull();
+    expect(selectionAfterStep({ year: 2027, month: 11 }, today)).toBeNull();
   });
 });

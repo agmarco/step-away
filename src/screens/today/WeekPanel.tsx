@@ -29,7 +29,7 @@ export function WeekPanel({ state, now }: { state: CoreState; now: number }) {
       <View style={styles.cells}>
         {marks.map((m, i) => (
           <View key={i} style={styles.day}>
-            <View style={[styles.cell, markStyle(m.mark, colors)]} />
+            <View key={m.mark} style={[styles.cell, markStyle(m.mark, colors)]} />
             <Text style={[styles.letter, { color: colors.text.secondary }]}>{LETTERS[i]}</Text>
           </View>
         ))}

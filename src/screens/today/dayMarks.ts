@@ -17,6 +17,10 @@ export const MARK_LABEL: Record<DayMark, string> = {
  * Goal Day, missed and a Day Off are filled; a day without Active Hours is
  * muted; today has a ring; a day still ahead is outlined; a day before any
  * data (`none`) is blank, with no fill and no outline.
+ *
+ * Key the cell by its mark (`key={mark}`): on Android, a border added to a
+ * mounted view that had `borderRadius` but no border draws with square
+ * corners, so a cell that turns `future` or `today` must be a fresh view.
  */
 export function markStyle(mark: DayMark, colors: Palette) {
   switch (mark) {
