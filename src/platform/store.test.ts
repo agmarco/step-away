@@ -410,6 +410,18 @@ describe('Dose overrides (#30)', () => {
   });
 });
 
+describe('Equipment that left v1 (#20)', () => {
+  it('drops a stored Equipment that is no longer one of the types, keeping the rest in order', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    // As settings stored when kettlebell and foam roller were still Equipment.
+    const stored = { ...defaultSettings, equipment: ['kettlebell', 'dumbbells', 'foam roller', 'resistance bands'] };
+    await d.runAsync(`UPDATE meta SET value = ? WHERE key = 'settings'`, JSON.stringify(stored));
+    expect((await loadState(d)).settings.equipment).toEqual(['dumbbells', 'resistance bands']);
+  });
+});
+
 describe('the onboarding flag (#31)', () => {
   it('is not done on a fresh DB', async () => {
     const d = fakeDb();

@@ -57,9 +57,15 @@ function allowed(e: Exercise, settings: Settings): boolean {
   );
 }
 
-/** The fallback set (the base set): no Equipment, Position not Floor; Exclusions, the ceiling and Energetic ignored. */
+/**
+ * The fallback set, Exclusions ignored: the gentle base Exercises (no
+ * Equipment, Position not Floor, Beginner, not Energetic); when there are
+ * none, the whole base set, so a library with a base set always has one.
+ */
 export function fallbackSetOf(library: readonly Exercise[]): Exercise[] {
-  return library.filter((e) => e.equipment === null && e.position !== 'Floor');
+  const base = library.filter((e) => e.equipment === null && e.position !== 'Floor');
+  const gentle = base.filter((e) => e.difficulty === 'Beginner' && !e.energetic);
+  return gentle.length > 0 ? gentle : base;
 }
 
 /** What a Reminder carries from its Suggestion. Keys are absent, not undefined, when they don't apply. */

@@ -1,0 +1,190 @@
+# Resistance bands group: needs a resistance band and nothing else; any Position, Floor included. Format: README.md; how to fill each field: DRAFTING.md.
+# #20 pilot: approved by the owner as drafted on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Hip_Extension_with_Bands:
+  # Override: "Hip Extension" is anatomy jargon, and the move uses one band.
+  name: Band Leg Kickback
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Straight leg back slowly, back stays still
+  steps:
+    - Loop one end of the band round a desk leg, close to the floor, and the other round one ankle.
+    - Stand facing the desk, a step back from it, and hold its edge.
+    - Keep your chest up and the band leg straight.
+    - Move that leg back slowly, as far as you can without arching your lower back.
+    - Bring it forward again slowly and finish your reps, then switch sides.
+
+# #20 CP4: accepted by the owner as drafted, unreviewed, on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Band_Good_Morning:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hips back, back flat, stand up tall
+  steps:
+    - Stand on one end of a light band with your feet slightly apart.
+    - Bend at your hips and loop the other end behind your neck, across your upper back, holding it there with both hands.
+    - Keeping your back flat and your legs almost straight, stand up tall against the band.
+    - Push your hips back to lean forward again, still with a flat back.
+    - Keep your back flat as you stand up at the end.
+
+Band_Good_Morning_Pull_Through:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hips back, back flat, drive hips forward
+  steps:
+    - Loop one end of a light band round a desk leg, close to the floor, and the other behind your neck, holding it there with both hands.
+    - Stand facing away from the desk and walk forward until the band is taut.
+    - Push your hips back and lean forward, keeping your back flat and your knees soft.
+    - Drive your hips forward to stand up tall.
+    - Keep your back flat throughout, including as you stand up at the end.
+
+Band_Hip_Adductions:
+  # Override: "Hip Adductions" is anatomy jargon and plural.
+  name: Band Inner Thigh Pull
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Pull straight leg in, upper body stays still
+  steps:
+    - Loop one end of the band round a desk leg, close to the floor, and the other round one ankle.
+    - Stand side-on to the desk, a step away from it, with the band leg nearest, and hold its edge.
+    - Let the band draw that leg out to the side, keeping it straight.
+    - Pull the leg back in until your feet meet, keeping your upper body still.
+    - Let it out again slowly and finish your reps, then switch sides.
+
+Band_Pull_Apart:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms straight, pull apart, shoulders stay down
+  steps:
+    - Sit or stand tall.
+    - Hold the band in both hands, arms straight out in front at shoulder height.
+    - Keeping your arms straight, pull your hands apart and out to your sides.
+    - Squeeze your shoulder blades together as the band reaches your chest.
+    - Return slowly to the start.
+
+Calf_Raises_-_With_Bands:
+  # Override: "Calf Raises - With Bands" is plural and the move uses one band;
+  # named like Band Leg Kickback, and kept apart from the House Calf Raise.
+  name: Band Calf Raise
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hands at shoulders, rise onto toes, lower slowly
+  steps:
+    - Stand on the middle of the band with the balls of your feet, holding an end in each hand.
+    - Raise your hands to your shoulders, palms forward and elbows bent.
+    - Keeping your hands there, rise up onto your toes.
+    - Pause at the top, then lower your heels slowly.
+
+Hip_Flexion_with_Band:
+  # Override: "Hip Flexion" is anatomy jargon; named like Band Leg Kickback.
+  name: Band Knee Raise
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Knee up to hip height, chest stays up
+  steps:
+    - Loop one end of the band round a desk leg, close to the floor, and the other round one ankle.
+    - Stand with your back to the desk, a step away from it, and rest a hand on a wall or chair back.
+    - Keeping your chest up, raise the band knee in front of you to hip height.
+    - Pause, then lower it slowly and finish your reps, then switch sides.
+
+Lateral_Raise_-_With_Bands:
+  # Override: the move uses one band; named like Band Leg Kickback and Band
+  # Pull Apart.
+  name: Band Lateral Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms out to shoulder height, no shrugging
+  steps:
+    - Sit or stand tall, with the middle of the band under both feet.
+    - Hold an end in each hand by your sides, palms in and elbows slightly bent.
+    - Raise your arms out to the sides until your hands reach shoulder height.
+    - Lower them slowly.
+
+Monster_Walk:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Small steps, feet wide, keep the band tight
+  steps:
+    - Loop the band round both legs, just above your ankles.
+    - Stand with your feet shoulder-width apart so the band is taut, knees slightly bent.
+    - Take small steps forward, alternating feet and keeping the band taut.
+    - After a few steps, walk backwards to where you started.
+
+Shoulder_Press_-_With_Bands:
+  # Override: the move uses one band; named like Band Leg Kickback and Band
+  # Pull Apart.
+  name: Band Shoulder Press
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Press straight up, don't arch your back
+  steps:
+    - Sit or stand tall, with the middle of the band under both feet.
+    - Hold an end in each hand at shoulder height, palms forward and elbows bent.
+    - Press your hands straight up until your arms are straight overhead.
+    - Lower them slowly back to your shoulders.
+
+Squats_-_With_Bands:
+  # Override: "Squats - With Bands" is plural and the move uses one band;
+  # named like Band Leg Kickback.
+  name: Band Squat
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hands at shoulders, sit back, chest up
+  steps:
+    - Stand on the middle of the band with your feet shoulder-width apart.
+    - Hold an end in each hand and raise them to your shoulders, palms forward.
+    - Squat down, sitting your hips back and keeping your chest up.
+    - Push through your heels to stand back up.
+
+Upright_Row_-_With_Bands:
+  # Override: the move uses one band; named like Band Leg Kickback and Band
+  # Pull Apart.
+  name: Band Upright Row
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Elbows lead, hands stay close to body
+  steps:
+    - Sit or stand tall, with the middle of the band under both feet.
+    - Hold an end in each hand in front of your thighs, palms facing you.
+    - Lead with your elbows to pull your hands up, close to your body.
+    - Stop at chest height, with your elbows no higher than your shoulders.
+    - Lower them slowly.

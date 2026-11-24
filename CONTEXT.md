@@ -19,6 +19,10 @@ A single movement from the Exercise Library that can be done at or beside a desk
 The catalogue of Exercises that Suggestions are drawn from.
 _Avoid_: exercise DB (implementation term)
 
+**House Exercise**:
+An Exercise written for the Exercise Library by its curators, rather than taken from the open exercise source. It ships with the app like any other Exercise; users cannot add Exercises of their own.
+_Avoid_: self-authored, custom exercise, user exercise
+
 **Target Muscle**:
 The primary muscle an Exercise works (e.g. quadriceps, neck).
 
@@ -105,7 +109,7 @@ _Avoid_: category, kind
 An Exercise whose Position is Floor (lying, kneeling, plank). Excluded unless the user switches them on.
 
 **Equipment**:
-A light piece of kit an Exercise needs: dumbbells, kettlebell, resistance bands, medicine ball, exercise ball or foam roller. An Exercise is only suggested if the user has said they own its Equipment.
+A light piece of kit an Exercise needs: dumbbells or resistance bands (v1's only Equipment). An Exercise is only suggested if the user has said they own its Equipment.
 _Avoid_: gear
 
 **Excluded Exercise**:

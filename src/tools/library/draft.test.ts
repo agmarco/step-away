@@ -23,16 +23,7 @@ const entry = (id: string, overrides: Partial<SourceExercise> = {}): SourceExerc
 const ids = (entries: DraftEntry[]) => entries.map((e) => e.id);
 const none = new Set<string>();
 
-const ALL_GROUPS: LibraryGroup[] = [
-  'base',
-  'floor',
-  'dumbbells',
-  'kettlebell',
-  'resistance-bands',
-  'medicine-ball',
-  'exercise-ball',
-  'foam-roller',
-];
+const ALL_GROUPS: LibraryGroup[] = ['base', 'floor', 'dumbbells', 'resistance-bands'];
 
 describe('draftCandidates: which entries are candidates', () => {
   const source: SourceExercise[] = [
@@ -82,11 +73,7 @@ describe('draftCandidates: which entries are candidates', () => {
 
   it.each<[LibraryGroup, SourceEquipment]>([
     ['dumbbells', 'dumbbell'],
-    ['kettlebell', 'kettlebells'],
     ['resistance-bands', 'bands'],
-    ['medicine-ball', 'medicine ball'],
-    ['exercise-ball', 'exercise ball'],
-    ['foam-roller', 'foam roll'],
   ])('offers the %s group the source "%s" entries', (group, equipment) => {
     const everyKind: SourceExercise[] = (
       ['body only', 'dumbbell', 'kettlebells', 'bands', 'medicine ball', 'exercise ball', 'foam roll'] as const
@@ -97,13 +84,14 @@ describe('draftCandidates: which entries are candidates', () => {
     ]);
   });
 
-  it('never offers machine, cable, barbell, e-z curl bar or other Equipment in any group', () => {
-    const ineligible: SourceExercise[] = (['machine', 'cable', 'barbell', 'e-z curl bar', 'other'] as const).map(
-      (kind) => entry(`Move_With_${kind.replace(/[ -]/g, '_')}`, { equipment: kind }),
-    );
+  it.each<[string, SourceEquipment[]]>([
+    ['kettlebells, medicine ball, exercise ball or foam roll', ['kettlebells', 'medicine ball', 'exercise ball', 'foam roll']],
+    ['machine, cable, barbell, e-z curl bar or other', ['machine', 'cable', 'barbell', 'e-z curl bar', 'other']],
+  ])('never offers %s, which are not v1 Equipment, in any group', (_, kinds) => {
+    const notV1: SourceExercise[] = kinds.map((kind) => entry(`Move_With_${kind.replace(/[ -]/g, '_')}`, { equipment: kind }));
 
     for (const group of ALL_GROUPS) {
-      expect(draftCandidates({ source: ineligible, group, curatedIds: none }), group).toEqual([]);
+      expect(draftCandidates({ source: notV1, group, curatedIds: none }), group).toEqual([]);
     }
   });
 });

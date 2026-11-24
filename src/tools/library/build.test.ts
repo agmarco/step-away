@@ -11,7 +11,7 @@ const curation = {
   base: fixture('curation/base.yaml'),
   floor: fixture('curation/floor.yaml'),
   dumbbells: fixture('curation/dumbbells.yaml'),
-  kettlebell: fixture('curation/kettlebell.yaml'),
+  'resistance-bands': fixture('curation/resistance-bands.yaml'),
 } satisfies Partial<Record<LibraryGroup, string>>;
 const allPhotosPresent = () => true;
 
@@ -121,16 +121,16 @@ describe('buildLibrary: merge', () => {
     const { exercises } = build();
 
     expect(byId(exercises, 'Hammer_Curls').equipment).toBe('dumbbells');
-    expect(byId(exercises, 'Kettlebell_Windmill').equipment).toBe('kettlebell');
+    expect(byId(exercises, 'Band_Pull_Apart').equipment).toBe('resistance bands');
   });
 
   it('falls back to the source level for Difficulty and has no photos when the source has no images', () => {
-    const windmill = byId(build().exercises, 'Kettlebell_Windmill');
+    const pullApart = byId(build().exercises, 'Band_Pull_Apart');
 
-    expect(windmill.difficulty).toBe('Intermediate');
-    expect(windmill.bodyArea).toBe('Core & Lower Back');
-    expect(windmill.dose).toEqual({ kind: 'reps', amount: 5, eachSide: true });
-    expect(windmill.photos).toBeNull();
+    expect(pullApart.difficulty).toBe('Intermediate');
+    expect(pullApart.bodyArea).toBe('Shoulders & Upper Back');
+    expect(pullApart.dose).toEqual({ kind: 'reps', amount: 5, eachSide: true });
+    expect(pullApart.photos).toBeNull();
   });
 
   it('builds without warnings when nothing is renamed', () => {
@@ -141,10 +141,10 @@ describe('buildLibrary: merge', () => {
 describe('buildLibrary: curated only', () => {
   it('ships exactly the curated Exercises, sorted by Id, and nothing else from the source', () => {
     expect(build().exercises.map((e) => e.id)).toEqual([
+      'Band_Pull_Apart',
       'Bodyweight_Squat',
       'Chair_Upper_Body_Stretch',
       'Hammer_Curls',
-      'Kettlebell_Windmill',
       'Plank',
       'Side_Neck_Stretch',
       'Star_Jump',
@@ -238,7 +238,7 @@ describe('buildLibrary: photo index', () => {
 
     expect(photoIndex.match(/require\(/g)).toHaveLength(12);
     expect(photoIndex).not.toContain('chin_tuck');
-    expect(photoIndex).not.toContain('Kettlebell_Windmill');
+    expect(photoIndex).not.toContain('Band_Pull_Apart');
     expect(photoIndex).not.toContain('Leg_Extensions'); // not curated
   });
 
@@ -281,11 +281,15 @@ describe('buildLibrary: validation', () => {
     );
   });
 
-  it('rejects curating an entry whose source Equipment is ineligible', () => {
+  it.each([
+    ['Leg_Extensions', 'machine'],
+    ['Kettlebell_Windmill', 'kettlebells'],
+  ])('rejects curating %s, whose source Equipment "%s" is not v1 Equipment, naming the Id and the source Equipment', (id, equipment) => {
     expectBuildError(
-      () => build({ curation: { ...curation, base: curation.base + entryYaml('Leg_Extensions') } }),
-      'Leg_Extensions',
-      'machine',
+      () => build({ curation: { ...curation, base: curation.base + entryYaml(id) } }),
+      id,
+      `"${equipment}"`,
+      'not v1 Equipment',
     );
   });
 });
@@ -327,11 +331,20 @@ describe('buildLibrary: Target Muscles', () => {
 });
 
 describe('buildLibrary: unknown groups', () => {
-  it('rejects a curation group that is not one of the eight, naming the group', () => {
+  it('rejects a curation group that is not one of the four, naming the group', () => {
     const withStray: Record<string, string> = { ...curation, stretches: entryYaml('Arm_Circles_Standing') };
 
     expectBuildError(() => build({ curation: withStray as BuildInput['curation'] }), 'stretches');
   });
+
+  it.each(['kettlebell', 'medicine-ball', 'exercise-ball', 'foam-roller'])(
+    'rejects %s.yaml, a group that left v1, as an unknown group',
+    (group) => {
+      const withGone: Record<string, string> = { ...curation, [group]: fixture('curation/retired-group.yaml') };
+
+      expectBuildError(() => build({ curation: withGone as BuildInput['curation'] }), `Unknown curation group ${group}`);
+    },
+  );
 });
 
 describe('buildLibrary: group consistency', () => {
@@ -368,7 +381,7 @@ describe('buildLibrary: group consistency, base Equipment', () => {
   });
 
   it('rejects a self-authored base entry written with Equipment, naming the Id and the group', () => {
-    const bad = curation.base.replace('  equipment: null\n', '  equipment: foam roller\n');
+    const bad = curation.base.replace('  equipment: null\n', '  equipment: dumbbells\n');
 
     expectBuildError(() => build({ curation: { ...curation, base: bad } }), 'custom/chin_tuck', 'base');
   });
@@ -394,9 +407,12 @@ custom/band_chin_tuck:
 
   it('rejects a source entry in an Equipment group whose source Equipment differs, naming the Id and the group', () => {
     expectBuildError(
-      () => build({ curation: { ...curation, dumbbells: '', kettlebell: curation.kettlebell + entryYaml('Hammer_Curls') } }),
+      () =>
+        build({
+          curation: { ...curation, dumbbells: '', 'resistance-bands': curation['resistance-bands'] + entryYaml('Hammer_Curls') },
+        }),
       'Hammer_Curls',
-      'kettlebell',
+      'resistance-bands',
     );
   });
 
@@ -433,7 +449,7 @@ describe('buildLibrary: Equipment on a source-backed entry', () => {
   });
 
   it('rejects an equipment field that differs from the source mapping, naming the Id and the field', () => {
-    const bad = curation.dumbbells.replace('  position: Either\n', '  position: Either\n  equipment: kettlebell\n');
+    const bad = curation.dumbbells.replace('  position: Either\n', '  position: Either\n  equipment: resistance bands\n');
 
     expectBuildError(() => build({ curation: { ...curation, dumbbells: bad } }), 'Hammer_Curls', 'equipment');
   });

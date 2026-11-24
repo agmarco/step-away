@@ -39,9 +39,9 @@ describe('exerciseGroups: the groups with at least one Exercise', () => {
   });
 
   it('an Exercise that is both Floor and Equipment counts for both', () => {
-    const library = [exercise('Foam_Roll_Back', { position: 'Floor', equipment: 'foam roller' })];
+    const library = [exercise('Dumbbell_Floor_Press', { position: 'Floor', equipment: 'dumbbells' })];
 
-    expect(exerciseGroups(library)).toEqual({ floor: true, equipment: ['foam roller'] });
+    expect(exerciseGroups(library)).toEqual({ floor: true, equipment: ['dumbbells'] });
   });
 
   it('an empty library has no groups', () => {

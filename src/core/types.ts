@@ -138,8 +138,9 @@ export interface Reminder {
   droppedBy?: DropReason;
   /**
    * Present (and true) only when nothing matched the settings: the Suggestion
-   * is 1 fallback Exercise from the base set (no Equipment, Position not
-   * Floor), chosen ignoring Exclusions, the Difficulty ceiling and Energetic.
+   * is 1 fallback Exercise from the gentle base Exercises (no Equipment,
+   * Position not Floor, Beginner, not Energetic), or from the whole base set
+   * when there are none, chosen ignoring Exclusions (see `fallbackSetOf`).
    */
   fallback?: true;
   /**

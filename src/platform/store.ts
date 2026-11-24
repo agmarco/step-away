@@ -6,6 +6,7 @@
  */
 import {
   defaultSettings,
+  EQUIPMENT,
   MAX_SNOOZES,
   type CoreState,
   type DoneExercise,
@@ -60,6 +61,19 @@ const META = {
  */
 const BATCH = 90;
 
+/**
+ * Stored settings over the defaults: settings stored before a field existed
+ * (e.g. #21's, without `snoozeMinutes`) get its default. Equipment that is no
+ * longer one of the types (kettlebell, medicine ball, exercise ball and foam
+ * roller left in #20) is dropped, so the next ChangeSettings isn't rejected
+ * for a stale value.
+ */
+function loadSettings(json: string): Settings {
+  const settings: Settings = { ...defaultSettings, ...(JSON.parse(json) as Partial<Settings>) };
+  const known = new Set<string>(EQUIPMENT);
+  return { ...settings, equipment: settings.equipment.filter((e) => known.has(e)) };
+}
+
 export async function loadState(d: Db): Promise<CoreState> {
   const meta = new Map(
     (await d.getAllAsync<{ key: string; value: string }>('SELECT key, value FROM meta')).map((m) => [m.key, m.value]),
@@ -74,8 +88,7 @@ export async function loadState(d: Db): Promise<CoreState> {
   const pauses = meta.get(META.pauses);
   const daysOff = meta.get(META.daysOff);
   return {
-    // Over the defaults: settings stored before a field existed (e.g. #21's, without `snoozeMinutes`) get its default.
-    settings: settings ? { ...defaultSettings, ...(JSON.parse(settings) as Partial<Settings>) } : defaultSettings,
+    settings: settings ? loadSettings(settings) : defaultSettings,
     lastResponseAt: instant(META.lastResponseAt),
     lastAppOpenAt: instant(META.lastAppOpenAt),
     // Absent before #25: no Daily Goal change recorded, so the default goal.
