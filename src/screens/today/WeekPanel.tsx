@@ -1,36 +1,11 @@
 import { useOpenPage } from './useOpenPage';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { weekMarks, type CoreState, type DayMark } from '../../core';
+import { weekMarks, type CoreState } from '../../core';
 import { type Palette, useColors } from '../../theme';
+import { MARK_LABEL, markStyle } from './dayMarks';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const MARK_LABEL: Record<DayMark, string> = {
-  goal: 'Goal Day',
-  missed: 'goal missed',
-  off: 'no Active Hours',
-  today: 'today',
-  future: 'still ahead',
-  dayOff: 'Day Off',
-};
-
-/** A week cell's look by mark: Goal Day, missed and a Day Off are filled; today has a ring; the rest are empty. */
-function cellStyle(mark: DayMark, colors: Palette) {
-  switch (mark) {
-    case 'goal':
-      return { backgroundColor: colors.day.goalDay };
-    case 'missed':
-      return { backgroundColor: colors.outcome.missed };
-    case 'off':
-      return { backgroundColor: colors.line.divider };
-    case 'dayOff':
-      return { backgroundColor: colors.day.dayOff };
-    case 'today':
-      return { backgroundColor: colors.background.card, borderWidth: 2, borderColor: colors.accent.hero };
-    case 'future':
-      return { backgroundColor: colors.background.card, borderWidth: 1, borderColor: colors.line.divider };
-  }
-}
 
 /**
  * The History panel (B4): this week's Mon-Fri by `weekMarks`, with a Day Off
@@ -54,7 +29,7 @@ export function WeekPanel({ state, now }: { state: CoreState; now: number }) {
       <View style={styles.cells}>
         {marks.map((m, i) => (
           <View key={i} style={styles.day}>
-            <View style={[styles.cell, cellStyle(m.mark, colors)]} />
+            <View key={m.mark} style={[styles.cell, markStyle(m.mark, colors)]} />
             <Text style={[styles.letter, { color: colors.text.secondary }]}>{LETTERS[i]}</Text>
           </View>
         ))}

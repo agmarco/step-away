@@ -1,13 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
-  dropReason,
-  effectiveFire,
   outstandingReminder,
-  refireScheduled,
   todaysPauses,
   todaysReminders,
   type CoreState,
-  type DropReason,
   type Pause,
   type Reminder,
   type Tally,
@@ -16,6 +12,7 @@ import { openGuided } from '../../platform/useReminderRuntime';
 import { type Palette, useColors } from '../../theme';
 import { timeOf } from './format';
 import { pauseLine, todayLines } from './pauseDisplay';
+import { statusOf } from './reminderStatus';
 
 /**
  * The tally line, then today's fired Reminders and today's Pauses, newest
@@ -133,8 +130,8 @@ function Row({
   );
 }
 
-/** A Pause's line: its span (`pauseLine`). Not a Reminder: no dot colour of its own, no action. */
-function PauseRow({
+/** A Pause's line: its span (`pauseLine`). Not a Reminder: no dot colour of its own, no action. Also History's. */
+export function PauseRow({
   pause,
   now,
   timeZone,
@@ -155,39 +152,6 @@ function PauseRow({
       </Text>
     </View>
   );
-}
-
-/** A dropped Reminder's status, by what dropped it. */
-const DROPPED_LABEL: Record<DropReason, string> = {
-  pause: 'Ended by Pause',
-  dayOff: 'Ended: Day Off',
-  closing: 'Snoozed past closing',
-};
-
-/** One fired Reminder's line, from its settled status. */
-function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefined, now: number, colors: Palette) {
-  switch (r.status) {
-    case 'done':
-      return { label: r.done?.length ? `Done: ${r.done.map((e) => e.name).join(', ')}` : 'Done', color: colors.outcome.done };
-    case 'skipped':
-      return { label: 'Skipped', color: colors.outcome.skip };
-    case 'missed':
-      return { label: 'Missed', color: colors.outcome.missed };
-    // Dropped is not an Activity Log outcome (not Missed), so it takes no outcome colour.
-    case 'dropped':
-      return { label: DROPPED_LABEL[dropReason(r)], color: colors.text.secondary };
-    case 'scheduled':
-      if (refireScheduled(r, state.settings, now)) {
-        return { label: `Snoozed, back at ${timeOf(effectiveFire(r))}`, color: colors.text.secondary };
-      }
-      // Its re-fire lands past closing: never scheduled, dropped once the window ends.
-      if (r.refiresAt !== undefined && r.refiresAt > now) {
-        return { label: 'Snoozed past closing', color: colors.text.secondary };
-      }
-      if (r.id === outstandingId) return { label: 'Waiting for you', color: colors.accent.hero };
-      // Not reachable once settled; kept so the screen never shows nothing.
-      return { label: 'No Response', color: colors.text.secondary };
-  }
 }
 
 const styles = StyleSheet.create({

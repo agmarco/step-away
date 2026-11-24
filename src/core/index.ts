@@ -5,15 +5,37 @@ export { exerciseGroups } from './groups';
 export type { ExerciseGroups } from './groups';
 export { guidedFinish, guidedStart } from './guidedFinish';
 export type { GuidedFinishEvent } from './guidedFinish';
-export { DEFAULT_DAILY_GOAL, dailyGoalFor, dayTally, isDayOff, isGoalDay, streak, todayTally, weekMarks } from './days';
-export type { DayMark, Tally } from './days';
+export {
+  addMonths,
+  DEFAULT_DAILY_GOAL,
+  dailyGoalFor,
+  dateKey,
+  dayTally,
+  historyRange,
+  isDayOff,
+  isGoalDay,
+  monthMarks,
+  sameDate,
+  streak,
+  todayTally,
+  weekMarks,
+} from './days';
+export type { DayMark, Tally, YearMonth } from './days';
 export { addDays, localDateOf } from './localTime';
 export type { LocalDate } from './localTime';
 export { doseOf, formatDose, isCustomised, MAX_DOSE_AMOUNT, MIN_DOSE_AMOUNT, sameDose } from './dose';
 export { FALLBACK_LINE, MAX_SNOOZES } from './notification';
-export { canPause, endsAtMidnight, heroStatus, isRunning, todaysPauses } from './pause';
+export { canPause, endsAtMidnight, heroStatus, isRunning, pausesOn, todaysPauses } from './pause';
 export type { HeroStatus, NotificationsState } from './pause';
-export { isOutstanding, isReminderId, MAX_CHAIN, nextReminder, outstandingReminder, todaysReminders } from './schedule';
+export {
+  isOutstanding,
+  isReminderId,
+  MAX_CHAIN,
+  nextReminder,
+  outstandingReminder,
+  remindersOn,
+  todaysReminders,
+} from './schedule';
 export { seededRandom } from './random';
 export { allowedBySettings } from './suggest';
 export { dropReason, pauseLengthOf } from './types';

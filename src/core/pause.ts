@@ -4,7 +4,7 @@
  */
 
 import { isDayOff, sameDate } from './days';
-import { instantAt, localDateOf } from './localTime';
+import { instantAt, localDateOf, type LocalDate } from './localTime';
 import { nextReminder, outstandingReminder } from './schedule';
 import type { CoreState, Instant, Pause } from './types';
 
@@ -65,11 +65,15 @@ export function canPause(state: CoreState, now: Instant, status: HeroStatus = he
   return sameDate(localDateOf(status.at, timeZone), localDateOf(now, timeZone));
 }
 
-/** Today's Pauses (by the local date of `from`, Settings' time zone), oldest first. */
+/** Today's Pauses (by the local date of `from`, Settings' time zone; `pausesOn` of today), oldest first. */
 export function todaysPauses(state: CoreState, now: Instant): Pause[] {
+  return pausesOn(state, localDateOf(now, state.settings.timeZone));
+}
+
+/** The Pauses whose `from` falls on `date` (Settings' time zone), oldest first. */
+export function pausesOn(state: CoreState, date: LocalDate): Pause[] {
   const { timeZone } = state.settings;
-  const today = localDateOf(now, timeZone);
-  return state.pauses.filter((p) => sameDate(localDateOf(p.from, timeZone), today));
+  return state.pauses.filter((p) => sameDate(localDateOf(p.from, timeZone), date)).sort((a, b) => a.from - b.from);
 }
 
 /** The Pause running at `now` (`isRunning`), or undefined. */
