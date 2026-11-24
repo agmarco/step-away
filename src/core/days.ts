@@ -88,11 +88,8 @@ export function isDayOff(state: CoreState, date: LocalDate): boolean {
  * earliest Reminder's day: before it no day can be a Goal Day.
  */
 export function streak(state: CoreState, now: Instant): number {
-  const { timeZone } = state.settings;
-  let earliest = Infinity;
-  for (const r of state.reminders) earliest = Math.min(earliest, dateKey(dayOf(r, timeZone)));
-
-  const today = localDateOf(now, timeZone);
+  const earliest = earliestDayKey(state);
+  const today = localDateOf(now, state.settings.timeZone);
   let count = countsForStreak(state, today) && isGoalDay(state, today) ? 1 : 0;
   for (let date = addDays(today, -1); dateKey(date) >= earliest; date = addDays(date, -1)) {
     if (!countsForStreak(state, date)) continue;
@@ -119,23 +116,32 @@ export function mondayOf(date: LocalDate): LocalDate {
 /**
  * Mon-Fri of the current week (the local week of `now`, Monday to Sunday),
  * one mark per day, in this order of precedence: `today` (even if already a
- * Goal Day or a Day Off), `dayOff`, `future`, `off` (no Active Hours by the
- * current Settings), `goal`, else `missed`.
+ * Goal Day or a Day Off), `dayOff`, `future`, `none` (a past day before the
+ * earliest Reminder's day, or any past day when there are no Reminders: no
+ * data yet), `off` (no Active Hours by the current Settings), `goal`, else
+ * `missed`.
  */
 export function weekMarks(state: CoreState, now: Instant): { date: LocalDate; mark: DayMark }[] {
   const today = localDateOf(now, state.settings.timeZone);
   const monday = mondayOf(today);
+  const earliest = earliestDayKey(state);
   const marks: { date: LocalDate; mark: DayMark }[] = [];
   for (let i = 0; i < 5; i++) {
     const date = addDays(monday, i);
-    marks.push({ date, mark: markFor(state, date, today) });
+    marks.push({ date, mark: markFor(state, date, today, earliest) });
   }
   return marks;
 }
 
 /** Every date of `month`, in order, one mark per day, by the same rule as `weekMarks`. */
-export function monthMarks(_state: CoreState, _month: YearMonth, _now: Instant): { date: LocalDate; mark: DayMark }[] {
-  throw new Error('not implemented');
+export function monthMarks(state: CoreState, month: YearMonth, now: Instant): { date: LocalDate; mark: DayMark }[] {
+  const today = localDateOf(now, state.settings.timeZone);
+  const earliest = earliestDayKey(state);
+  const marks: { date: LocalDate; mark: DayMark }[] = [];
+  for (let date = { ...month, day: 1 }; date.month === month.month; date = addDays(date, 1)) {
+    marks.push({ date, mark: markFor(state, date, today, earliest) });
+  }
+  return marks;
 }
 
 /**
@@ -143,8 +149,30 @@ export function monthMarks(_state: CoreState, _month: YearMonth, _now: Instant):
  * (the current month when there are none or that is later) to 12 months past
  * the current month.
  */
-export function historyRange(_state: CoreState, _now: Instant): { first: YearMonth; last: YearMonth } {
-  throw new Error('not implemented');
+export function historyRange(state: CoreState, now: Instant): { first: YearMonth; last: YearMonth } {
+  const { year, month } = localDateOf(now, state.settings.timeZone);
+  const current = year * 12 + (month - 1);
+  const earliest = earliestDayKey(state);
+  const earliestMonth = Number.isFinite(earliest)
+    ? Math.floor(earliest / 10_000) * 12 + (Math.floor(earliest / 100) % 100) - 1
+    : current;
+  return { first: yearMonthOf(Math.min(earliestMonth, current)), last: yearMonthOf(current + 12) };
+}
+
+/** The month `index` months after January of year 0. */
+function yearMonthOf(index: number): YearMonth {
+  return { year: Math.floor(index / 12), month: (index % 12) + 1 };
+}
+
+/**
+ * The `dateKey` of the earliest Reminder's day (see `dayOf`), or Infinity
+ * when there are no Reminders: before it no day has data. Callers that judge
+ * many days compute it once and pass it on.
+ */
+function earliestDayKey(state: CoreState): number {
+  let earliest = Infinity;
+  for (const r of state.reminders) earliest = Math.min(earliest, dateKey(dayOf(r, state.settings.timeZone)));
+  return earliest;
 }
 
 /** The day a Reminder belongs to: the local date of its first fire, `firesAt` (a Snooze re-fire doesn't move it). */
@@ -159,11 +187,13 @@ export function sameDate(a: LocalDate, b: LocalDate): boolean {
 
 const DAYS_SINCE_MONDAY: Record<Weekday, number> = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
 
-function markFor(state: CoreState, date: LocalDate, today: LocalDate): DayMark {
+/** One day's mark, by the precedence in `weekMarks`; `earliest` is `earliestDayKey(state)`. */
+function markFor(state: CoreState, date: LocalDate, today: LocalDate, earliest: number): DayMark {
   const day = dateKey(date);
   if (day === dateKey(today)) return 'today';
   if (isDayOff(state, date)) return 'dayOff';
   if (day > dateKey(today)) return 'future';
+  if (day < earliest) return 'none';
   if (!state.settings.activeHours[weekdayOf(date)]) return 'off';
   return isGoalDay(state, date) ? 'goal' : 'missed';
 }

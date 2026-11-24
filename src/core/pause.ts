@@ -65,16 +65,15 @@ export function canPause(state: CoreState, now: Instant, status: HeroStatus = he
   return sameDate(localDateOf(status.at, timeZone), localDateOf(now, timeZone));
 }
 
-/** Today's Pauses (by the local date of `from`, Settings' time zone), oldest first. */
+/** Today's Pauses (by the local date of `from`, Settings' time zone; `pausesOn` of today), oldest first. */
 export function todaysPauses(state: CoreState, now: Instant): Pause[] {
-  const { timeZone } = state.settings;
-  const today = localDateOf(now, timeZone);
-  return state.pauses.filter((p) => sameDate(localDateOf(p.from, timeZone), today));
+  return pausesOn(state, localDateOf(now, state.settings.timeZone));
 }
 
 /** The Pauses whose `from` falls on `date` (Settings' time zone), oldest first. */
-export function pausesOn(_state: CoreState, _date: LocalDate): Pause[] {
-  throw new Error('not implemented');
+export function pausesOn(state: CoreState, date: LocalDate): Pause[] {
+  const { timeZone } = state.settings;
+  return state.pauses.filter((p) => sameDate(localDateOf(p.from, timeZone), date)).sort((a, b) => a.from - b.from);
 }
 
 /** The Pause running at `now` (`isRunning`), or undefined. */

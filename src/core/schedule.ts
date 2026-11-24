@@ -5,7 +5,7 @@
  * Recomputed whenever JS runs, because nothing runs when a notification fires.
  */
 
-import { dateKey } from './days';
+import { dateKey, dayOf, sameDate } from './days';
 import { addDays, instantAt, localDateOf, MINUTE, weekdayOf, type LocalDate } from './localTime';
 import { effectiveFire, refireScheduled, settle } from './settle';
 import type { CoreState, Instant, Reminder } from './types';
@@ -46,20 +46,17 @@ export function nextReminder(state: CoreState, now: Instant): Reminder | undefin
   return next;
 }
 
-/** The fired Reminders (any status) whose local date in the Settings' time zone is today, newest first. */
+/** The fired Reminders (any status) belonging to today, the local date of `now`: `remindersOn` of today. */
 export function todaysReminders(state: CoreState, now: Instant): Reminder[] {
-  const { timeZone } = state.settings;
-  const today = localDateOf(now, timeZone);
-  const isToday = (at: Instant) => {
-    const d = localDateOf(at, timeZone);
-    return d.year === today.year && d.month === today.month && d.day === today.day;
-  };
-  return state.reminders.filter((r) => r.firesAt <= now && isToday(r.firesAt)).sort((a, b) => b.firesAt - a.firesAt);
+  return remindersOn(state, localDateOf(now, state.settings.timeZone), now);
 }
 
 /** The fired Reminders (`firesAt <= now`, any status) belonging to `date` (see `dayOf`), newest first. */
-export function remindersOn(_state: CoreState, _date: LocalDate, _now: Instant): Reminder[] {
-  throw new Error('not implemented');
+export function remindersOn(state: CoreState, date: LocalDate, now: Instant): Reminder[] {
+  const { timeZone } = state.settings;
+  return state.reminders
+    .filter((r) => r.firesAt <= now && sameDate(dayOf(r, timeZone), date))
+    .sort((a, b) => b.firesAt - a.firesAt);
 }
 
 /**
