@@ -1,4 +1,4 @@
-import { endsAtMidnight, isRunning, type Instant, type Pause, type Reminder } from '../../core';
+import { endsAtMidnight, isRunning, type Instant, type Pause, type Reminder } from '../core';
 
 /** One line of Today's list: a fired Reminder, or a Pause. */
 export type TodayLine = { kind: 'reminder'; reminder: Reminder } | { kind: 'pause'; pause: Pause };

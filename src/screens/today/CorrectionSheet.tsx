@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Outcome, Reminder } from '../../core';
 import { correct } from '../../platform/handler';
 import { type Palette, useColors } from '../../theme';
-import { timeOf } from './format';
+import { timeOf } from '../format';
 
 const OUTCOMES: Outcome[] = ['Done', 'Skip', 'Missed'];
 

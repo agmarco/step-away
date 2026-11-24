@@ -1,6 +1,6 @@
 import { dropReason, effectiveFire, refireScheduled, type CoreState, type DropReason, type Reminder } from '../core';
 import type { Palette } from '../theme';
-import { timeOf } from './today/format';
+import { timeOf } from './format';
 
 /** A dropped Reminder's status, by what dropped it. */
 const DROPPED_LABEL: Record<DropReason, string> = {

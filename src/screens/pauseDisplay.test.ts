@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Pause, Reminder } from '../../core';
+import type { Pause, Reminder } from '../core';
 import { pauseLine, todayLines } from './pauseDisplay';
 
 const reminder = (id: string, firesAt: number): Reminder => ({ id, firesAt, suggestion: [], status: 'done' });

@@ -11,8 +11,8 @@ import { openGuided } from '../../platform/useReminderRuntime';
 import { type Palette, useColors } from '../../theme';
 import { PauseRow } from '../PauseRow';
 import { statusOf } from '../reminderStatus';
-import { timeOf } from './format';
-import { todayLines } from './pauseDisplay';
+import { timeOf } from '../format';
+import { todayLines } from '../pauseDisplay';
 
 /**
  * The tally line, then today's fired Reminders and today's Pauses, newest

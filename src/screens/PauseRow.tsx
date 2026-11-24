@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import type { Pause } from '../core';
 import type { Palette } from '../theme';
-import { timeOf } from './today/format';
-import { pauseLine } from './today/pauseDisplay';
+import { timeOf } from './format';
+import { pauseLine } from './pauseDisplay';
 
 /**
  * A Pause's line (`pauseLine`), on Today's list and History's day panel. Not

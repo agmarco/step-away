@@ -13,8 +13,8 @@ import { exercises, photoSource } from '../../library';
 import { type Palette, useColors } from '../../theme';
 import { PauseRow } from '../PauseRow';
 import { statusOf } from '../reminderStatus';
-import { timeOf } from '../today/format';
-import { todayLines } from '../today/pauseDisplay';
+import { timeOf } from '../format';
+import { todayLines } from '../pauseDisplay';
 import { exercisesShown, type ShownExercise } from './entries';
 import { longDayOf } from './format';
 
