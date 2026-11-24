@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { dayKindOf, leadingBlanks, monthBefore, selectionAfterStep, shiftMonth, weeksOf } from './month';
+import { addMonths, monthBefore } from '../../core';
+import { dayKindOf, leadingBlanks, selectionAfterStep, weeksOf } from './month';
 
 describe("leadingBlanks: the empty cells before a month's first day, weeks starting Monday", () => {
   it('is 0 for a month that starts on a Monday (June 2026)', () => {
@@ -15,16 +16,16 @@ describe("leadingBlanks: the empty cells before a month's first day, weeks start
   });
 });
 
-describe('shiftMonth: the month some months before or after', () => {
+describe('addMonths: the month some months before or after', () => {
   it('steps forward and back within a year', () => {
-    expect(shiftMonth({ year: 2026, month: 6 }, 1)).toEqual({ year: 2026, month: 7 });
-    expect(shiftMonth({ year: 2026, month: 6 }, -1)).toEqual({ year: 2026, month: 5 });
+    expect(addMonths({ year: 2026, month: 6 }, 1)).toEqual({ year: 2026, month: 7 });
+    expect(addMonths({ year: 2026, month: 6 }, -1)).toEqual({ year: 2026, month: 5 });
   });
 
   it('crosses a year end both ways', () => {
-    expect(shiftMonth({ year: 2026, month: 12 }, 1)).toEqual({ year: 2027, month: 1 });
-    expect(shiftMonth({ year: 2026, month: 1 }, -1)).toEqual({ year: 2025, month: 12 });
-    expect(shiftMonth({ year: 2026, month: 11 }, 12)).toEqual({ year: 2027, month: 11 });
+    expect(addMonths({ year: 2026, month: 12 }, 1)).toEqual({ year: 2027, month: 1 });
+    expect(addMonths({ year: 2026, month: 1 }, -1)).toEqual({ year: 2025, month: 12 });
+    expect(addMonths({ year: 2026, month: 11 }, 12)).toEqual({ year: 2027, month: 11 });
   });
 });
 

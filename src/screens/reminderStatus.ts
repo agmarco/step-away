@@ -1,5 +1,5 @@
-import { dropReason, effectiveFire, refireScheduled, type CoreState, type DropReason, type Reminder } from '../../core';
-import type { Palette } from '../../theme';
+import { dropReason, effectiveFire, refireScheduled, type CoreState, type DropReason, type Reminder } from '../core';
+import type { Palette } from '../theme';
 import { timeOf } from './format';
 
 /** A dropped Reminder's status, by what dropped it. */

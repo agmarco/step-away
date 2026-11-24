@@ -10,7 +10,7 @@ import {
   type NotificationsState,
 } from '../../core';
 import { useColors } from '../../theme';
-import { longDateOf, timeOf, weekdayOf } from './format';
+import { longDateOf, timeOf, weekdayOf } from '../format';
 
 /** What the status line's action does: Pause (opens the sheet), Resume, or Undo the Day Off. */
 export type HeroAction = 'pause' | 'resume' | 'undoDayOff';

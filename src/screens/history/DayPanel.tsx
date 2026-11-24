@@ -1,7 +1,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  canSetDayOff,
   dayTally,
-  isDayOff,
   outstandingReminder,
   pausesOn,
   remindersOn,
@@ -11,10 +11,10 @@ import {
 } from '../../core';
 import { exercises, photoSource } from '../../library';
 import { type Palette, useColors } from '../../theme';
-import { timeOf } from '../today/format';
-import { todayLines } from '../today/pauseDisplay';
-import { PauseRow } from '../today/ReminderList';
-import { statusOf } from '../today/reminderStatus';
+import { PauseRow } from '../PauseRow';
+import { statusOf } from '../reminderStatus';
+import { timeOf } from '../format';
+import { todayLines } from '../pauseDisplay';
 import { exercisesShown, type ShownExercise } from './entries';
 import { longDayOf } from './format';
 
@@ -30,14 +30,16 @@ export type DayKind = 'past' | 'today' | 'future';
  *    lists its Exercises with thumbnails (`exercisesShown`: its Done list),
  *    any other lists none. A day with nothing recorded says so;
  *  - a day still ahead: whether it is a Day Off.
- * Today and a day ahead also have Mark as Day Off / Undo Day Off, through
- * `onDayOff` (the page confirms it in a sheet).
+ * `off` is whether the day is a Day Off (the page's `isDayOff`). Today and a
+ * day ahead (the core's `canSetDayOff`) also have Mark as Day Off / Undo Day
+ * Off, through `onDayOff` (the page confirms it in a sheet).
  */
 export function DayPanel({
   state,
   now,
   date,
   kind,
+  off,
   busy,
   onDayOff,
 }: {
@@ -45,11 +47,11 @@ export function DayPanel({
   now: number;
   date: LocalDate;
   kind: DayKind;
+  off: boolean;
   busy: boolean;
   onDayOff: () => void;
 }) {
   const colors = useColors();
-  const off = isDayOff(state, date);
   const lines = kind === 'future' ? [] : todayLines(remindersOn(state, date, now), pausesOn(state, date));
   const tally = dayTally(state, date);
   const outstandingId = kind === 'today' ? outstandingReminder(state, now)?.id : undefined;
@@ -98,7 +100,7 @@ export function DayPanel({
           )}
         </>
       )}
-      {kind !== 'past' && (
+      {canSetDayOff(state, date, now) && (
         <Pressable
           onPress={onDayOff}
           disabled={busy}

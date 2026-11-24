@@ -7,6 +7,7 @@ export { guidedFinish, guidedStart } from './guidedFinish';
 export type { GuidedFinishEvent } from './guidedFinish';
 export {
   addMonths,
+  canSetDayOff,
   DEFAULT_DAILY_GOAL,
   dailyGoalFor,
   dateKey,
@@ -14,13 +15,15 @@ export {
   historyRange,
   isDayOff,
   isGoalDay,
+  monthBefore,
   monthMarks,
   sameDate,
+  sameMonth,
   streak,
   todayTally,
   weekMarks,
 } from './days';
-export type { DayMark, Tally, YearMonth } from './days';
+export type { DayMark, MarkedDay, Tally, YearMonth } from './days';
 export { addDays, localDateOf } from './localTime';
 export type { LocalDate } from './localTime';
 export { doseOf, formatDose, isCustomised, MAX_DOSE_AMOUNT, MIN_DOSE_AMOUNT, sameDose } from './dose';

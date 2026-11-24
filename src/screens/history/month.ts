@@ -1,4 +1,4 @@
-import { addMonths, dateKey, sameDate, type LocalDate, type YearMonth } from '../../core';
+import { dateKey, sameDate, sameMonth, type LocalDate, type YearMonth } from '../../core';
 import type { DayKind } from './DayPanel';
 
 /**
@@ -25,22 +25,13 @@ export function weeksOf<T>(month: YearMonth, days: readonly T[]): (T | null)[][]
   return weeks;
 }
 
-/** The month `by` months after `month` (before it when `by` is negative): the core's `addMonths`. */
-export function shiftMonth(month: YearMonth, by: number): YearMonth {
-  return addMonths(month, by);
-}
-
-/** Whether `a` comes before `b`. */
-export function monthBefore(a: YearMonth, b: YearMonth): boolean {
-  return a.year < b.year || (a.year === b.year && a.month < b.month);
-}
-
 /**
  * The selected day after History steps to `month`: today when `month` holds
- * it, else nothing, so a selection never outlives its month.
+ * it (the core's `sameMonth`), else nothing, so a selection never outlives
+ * its month.
  */
 export function selectionAfterStep(month: YearMonth, today: LocalDate): LocalDate | null {
-  return month.year === today.year && month.month === today.month ? today : null;
+  return sameMonth(month, today) ? today : null;
 }
 
 /** Whether `date` is before `today`, today or after it, by the core's date order (`sameDate`, `dateKey`). */

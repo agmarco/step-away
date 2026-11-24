@@ -4,15 +4,15 @@ import {
   todaysPauses,
   todaysReminders,
   type CoreState,
-  type Pause,
   type Reminder,
   type Tally,
 } from '../../core';
 import { openGuided } from '../../platform/useReminderRuntime';
 import { type Palette, useColors } from '../../theme';
-import { timeOf } from './format';
-import { pauseLine, todayLines } from './pauseDisplay';
-import { statusOf } from './reminderStatus';
+import { PauseRow } from '../PauseRow';
+import { statusOf } from '../reminderStatus';
+import { timeOf } from '../format';
+import { todayLines } from '../pauseDisplay';
 
 /**
  * The tally line, then today's fired Reminders and today's Pauses, newest
@@ -130,30 +130,6 @@ function Row({
   );
 }
 
-/** A Pause's line: its span (`pauseLine`). Not a Reminder: no dot colour of its own, no action. Also History's. */
-export function PauseRow({
-  pause,
-  now,
-  timeZone,
-  divided,
-  colors,
-}: {
-  pause: Pause;
-  now: number;
-  timeZone: string;
-  divided: boolean;
-  colors: Palette;
-}) {
-  return (
-    <View style={[styles.row, divided && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line.divider }]}>
-      <View style={[styles.dot, { backgroundColor: colors.text.secondary }]} />
-      <Text style={[styles.pause, { color: colors.text.secondary }]}>
-        {pauseLine(pause, now, timeZone, timeOf)}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   section: { gap: 8 },
   tally: { fontSize: 14 },
@@ -170,7 +146,6 @@ const styles = StyleSheet.create({
   start: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   startText: { fontSize: 15, fontWeight: '700' },
   edit: { fontSize: 16 },
-  pause: { flex: 1, fontSize: 15, fontWeight: '600' },
   tag: {
     fontSize: 11,
     fontWeight: '600',

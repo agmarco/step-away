@@ -4,9 +4,9 @@
  * recomputed on every call.
  */
 
-import { countsForStreak, dateKey, dayOf, mondayOf, reachesDailyGoal } from './days';
-import { BODY_AREAS, type BodyArea } from './exercise';
-import { addDays, localDateOf, type LocalDate } from './localTime';
+import { countsForStreak, dateKey, isGoalDayIn, logByDay, mondayOf, reachesDailyGoal, type DayLog } from './days';
+import { BODY_AREAS } from './exercise';
+import { addDays, localDateOf } from './localTime';
 import type { CoreState, Instant, UnlockedBadge } from './types';
 
 /** How the Achievements page groups the Badges. */
@@ -66,16 +66,16 @@ export interface Records {
  * Active Hours included.
  */
 export function records(state: CoreState, now: Instant): Records {
-  const days = logByDay(state);
+  const log = logByDay(state);
   const weeks = new Map<number, number>();
   let mostDoneInDay = 0;
-  for (const day of days.values()) {
+  for (const day of log.days.values()) {
     mostDoneInDay = Math.max(mostDoneInDay, day.done);
     const week = dateKey(mondayOf(day.date));
     weeks.set(week, (weeks.get(week) ?? 0) + day.done);
   }
   return {
-    longestStreak: longestStreak(state, days, now),
+    longestStreak: longestStreak(state, log, now),
     mostDoneInDay,
     mostDoneInWeek: Math.max(0, ...weeks.values()),
   };
@@ -110,7 +110,7 @@ export function isNewBadge(badge: UnlockedBadge, seenAt: Instant | null): boolea
  */
 export function badgesToUnlock(state: CoreState, now: Instant): BadgeId[] {
   const held = new Set(state.badges.map((b) => b.id));
-  const days = logByDay(state);
+  const log = logByDay(state);
   let totalDone = 0;
   const exercises = new Set<string>();
   for (const r of state.reminders) {
@@ -118,12 +118,12 @@ export function badgesToUnlock(state: CoreState, now: Instant): BadgeId[] {
     totalDone += 1;
     for (const e of r.done ?? []) exercises.add(e.id);
   }
-  const dayList = [...days.values()];
+  const dayList = [...log.days.values()];
   const balance = dayList.some((day) => BODY_AREAS.every((area) => day.areas.has(area)));
   const perfectDay = dayList.some(
     (day) => reachesDailyGoal(state, day.date, day.done) && day.skipped === 0 && day.missed === 0,
   );
-  const runs = longestStreak(state, days, now);
+  const runs = longestStreak(state, log, now);
 
   const met = (badge: Badge): boolean => {
     switch (badge.group) {
@@ -140,50 +140,21 @@ export function badgesToUnlock(state: CoreState, now: Instant): BadgeId[] {
   return BADGES.filter((badge) => !held.has(badge.id) && met(badge)).map((badge) => badge.id);
 }
 
-/** One day of the Activity Log: its Done, skipped and Missed counts and the Body Areas in its `done` lists. */
-interface LoggedDay {
-  date: LocalDate;
-  done: number;
-  skipped: number;
-  missed: number;
-  areas: Set<BodyArea>;
-}
-
-/** The Activity Log by day (`dayOf`), keyed by `dateKey`: one pass over the Reminders. */
-function logByDay(state: CoreState): Map<number, LoggedDay> {
-  const days = new Map<number, LoggedDay>();
-  for (const r of state.reminders) {
-    const date = dayOf(r, state.settings.timeZone);
-    const key = dateKey(date);
-    let day = days.get(key);
-    if (!day) {
-      day = { date, done: 0, skipped: 0, missed: 0, areas: new Set() };
-      days.set(key, day);
-    }
-    if (r.status === 'done') {
-      day.done += 1;
-      for (const e of r.done ?? []) day.areas.add(e.bodyArea);
-    } else if (r.status === 'skipped') day.skipped += 1;
-    else if (r.status === 'missed') day.missed += 1;
-  }
-  return days;
-}
-
 /**
  * The longest run of Goal Days (`reachesDailyGoal`, the hero `streak`'s rule)
  * from the earliest Reminder's day to today, under the Streak rules (see
- * `records`). Each day is judged on its Done count in `days`, so the whole
- * history costs one pass over the Reminders plus one step per day.
+ * `records`). Each day is judged on its Done count in `log` (`isGoalDayIn`), so
+ * the whole history costs one pass over the Reminders plus one step per day.
  */
-function longestStreak(state: CoreState, days: Map<number, LoggedDay>, now: Instant): number {
-  if (days.size === 0) return 0;
+function longestStreak(state: CoreState, log: DayLog, now: Instant): number {
+  if (!log.earliest) return 0;
   const today = dateKey(localDateOf(now, state.settings.timeZone));
-  let date = [...days.values()].reduce((a, b) => (dateKey(b.date) < dateKey(a.date) ? b : a)).date;
+  let date = log.earliest;
   let run = 0;
   let longest = 0;
   for (; dateKey(date) <= today; date = addDays(date, 1)) {
     if (!countsForStreak(state, date)) continue;
-    if (reachesDailyGoal(state, date, days.get(dateKey(date))?.done ?? 0)) longest = Math.max(longest, ++run);
+    if (isGoalDayIn(state, log, date)) longest = Math.max(longest, ++run);
     else if (dateKey(date) !== today) run = 0;
   }
   return longest;

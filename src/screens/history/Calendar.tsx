@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { sameDate, type DayMark, type LocalDate, type YearMonth } from '../../core';
+import { sameDate, type LocalDate, type MarkedDay, type YearMonth } from '../../core';
 import { type Palette, useColors } from '../../theme';
-import { MARK_LABEL, markStyle } from '../today/dayMarks';
+import { MARK_LABEL, markStyle } from '../dayMarks';
 import { longDayOf, monthTitleOf } from './format';
 import { weeksOf } from './month';
 
@@ -26,7 +26,7 @@ export function Calendar({
   onSelect,
 }: {
   month: YearMonth;
-  marks: { date: LocalDate; mark: DayMark }[];
+  marks: MarkedDay[];
   selected: LocalDate | null;
   canGoBack: boolean;
   canGoForward: boolean;
