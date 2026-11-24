@@ -6,6 +6,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type BuildInput, LibraryBuildError } from './build';
+import { photoFile } from './photos';
 import type { LibraryGroup, SourceExercise } from './types';
 
 /** The free-exercise-db commit `library/source/exercises.json` was fetched at. SOURCE.md records the same SHA. */
@@ -48,8 +49,9 @@ export function readCuration(): BuildInput['curation'] {
   return curation as Partial<Record<LibraryGroup, string>>;
 }
 
-export function photoExists(relPath: string): boolean {
-  return existsSync(join(PHOTOS_DIR, relPath));
+/** Whether the bundled file of a photo key (`photoFile`: `Plank/0.jpg` → `Plank/0.webp`) is in the photo folder. */
+export function photoExists(key: string, dir: string = PHOTOS_DIR): boolean {
+  return existsSync(join(dir, photoFile(key)));
 }
 
 export function readBuildInput(): BuildInput {
