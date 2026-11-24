@@ -186,6 +186,39 @@ export interface CoreState {
   pauses: Pause[];
   /** The Days Off (local dates in the Settings' time zone): no Reminder fires on them. */
   daysOff: LocalDate[];
+  /**
+   * The Badges unlocked, in unlock order (catalogue order within one event).
+   * Never shrunk: a Badge, once unlocked, is never taken away.
+   */
+  badges: UnlockedBadge[];
+  /** When Achievements was last opened, or null if never (see `hasNewBadge`). */
+  achievementsSeenAt: Instant | null;
+}
+
+/** A Badge of the catalogue (`BADGES`, which has them in order). */
+export type BadgeId =
+  | 'streak-3'
+  | 'streak-7'
+  | 'streak-14'
+  | 'streak-30'
+  | 'streak-60'
+  | 'streak-100'
+  | 'done-1'
+  | 'done-10'
+  | 'done-50'
+  | 'done-100'
+  | 'done-250'
+  | 'done-500'
+  | 'variety-10'
+  | 'variety-25'
+  | 'variety-50'
+  | 'balance'
+  | 'perfect-day';
+
+/** A Badge held: which one, and when it unlocked. */
+export interface UnlockedBadge {
+  id: BadgeId;
+  unlockedAt: Instant;
 }
 
 /** A Pause: no Reminder fires in [from, until), and nothing in it is Missed. */
@@ -280,7 +313,9 @@ export type CoreEvent =
    * Mark `date` (today or later) as a Day Off, or undo it. Taking today off
    * drops the outstanding Reminder. Rejected for a past date or a no-op.
    */
-  | { type: 'SetDayOff'; date: LocalDate; off: boolean };
+  | { type: 'SetDayOff'; date: LocalDate; off: boolean }
+  /** Achievements was opened: settles and sets `achievementsSeenAt` to now. No intents. */
+  | { type: 'AchievementsOpened' };
 
 /** The notification actions, in order. */
 export type NotificationAction = 'start' | 'snooze' | 'skip';
@@ -300,7 +335,15 @@ export type Intent =
   /** Replaces the whole previously scheduled chain: cancel all, schedule these. */
   | { type: 'ScheduleChain'; reminders: ScheduledNotification[] }
   /** Remove this Reminder's notification from the shade, if it is there. */
-  | { type: 'DismissNotification'; reminderId: string };
+  | { type: 'DismissNotification'; reminderId: string }
+  /** These Badges were just unlocked, in catalogue order. */
+  | { type: 'BadgesUnlocked'; badges: BadgeId[] }
+  /**
+   * The event recorded a Done on `reminderId` and reached today's Daily Goal
+   * (`goalReached`) or unlocked Badges (`badges`, possibly empty). The guided
+   * flow shows the celebration card; no notification is posted.
+   */
+  | { type: 'CelebrationDue'; reminderId: string; goalReached: boolean; badges: BadgeId[] };
 
 /** Injected source of the current time. The core never reads the system clock. */
 export interface Clock {

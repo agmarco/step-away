@@ -65,6 +65,8 @@ const state = (reminders: Reminder[]): CoreState => ({
   goalChanges: [],
   pauses: [],
   daysOff: [],
+  badges: [],
+  achievementsSeenAt: null,
   reminders,
 });
 

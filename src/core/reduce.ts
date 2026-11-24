@@ -52,6 +52,8 @@ export const initialState: CoreState = {
   goalChanges: [],
   pauses: [],
   daysOff: [],
+  badges: [],
+  achievementsSeenAt: null,
 };
 
 /**
@@ -237,6 +239,9 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
         : dropped.daysOff.filter((d) => dateKey(d) !== day);
       return rearmAfterDrop({ ...dropped, daysOff }, intents, deps);
     }
+    case 'AchievementsOpened':
+      // #28 CP2.
+      throw new Error('not implemented');
   }
 }
 

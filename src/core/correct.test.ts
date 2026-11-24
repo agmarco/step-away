@@ -61,12 +61,22 @@ const reminder = (day: string, time: string, status: Reminder['status'], extra: 
 });
 const idAt = (day: string, time: string) => `reminder-${local(day, time)}`;
 
+/**
+ * Badges already held (#28), so a correction here unlocks nothing new: Badges
+ * are not this file's subject (see badges.test.ts).
+ */
+const HELD: CoreState['badges'] = [
+  { id: 'done-1', unlockedAt: local(FRI_BEFORE, '09:50') },
+  { id: 'perfect-day', unlockedAt: local(FRI_BEFORE, '12:05') },
+];
+
 const inMadrid = (lastResponseAt: number, ...reminders: Reminder[]): CoreState => ({
   ...initialState,
   settings: { ...initialState.settings, timeZone: ZONE },
   lastAppOpenAt: lastResponseAt,
   lastResponseAt,
   reminders,
+  badges: HELD,
 });
 
 /**

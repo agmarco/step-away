@@ -96,6 +96,9 @@ export async function loadState(d: Db): Promise<CoreState> {
     // Absent before #26: no Pause and no Day Off recorded.
     pauses: pauses ? (JSON.parse(pauses) as Pause[]) : [],
     daysOff: daysOff ? (JSON.parse(daysOff) as LocalDate[]) : [],
+    // #28 CP3: persist
+    badges: [],
+    achievementsSeenAt: null,
     reminders: rows.map(
       (r): Reminder => ({
         id: r.id,
