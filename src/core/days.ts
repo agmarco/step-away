@@ -36,6 +36,16 @@ export function addMonths(month: YearMonth, n: number): YearMonth {
   return { year: Math.floor(index / 12), month: (index % 12) + 1 };
 }
 
+/** Not implemented yet (#65 CP2 red). */
+export function monthBefore(_a: YearMonth, _b: YearMonth): boolean {
+  return false;
+}
+
+/** Not implemented yet (#65 CP2 red). */
+export function sameMonth(_a: YearMonth, _b: YearMonth): boolean {
+  return false;
+}
+
 /**
  * The Daily Goal a day is judged against: the last change whose `from` is on
  * or before `date`, else `DEFAULT_DAILY_GOAL`.
@@ -89,6 +99,11 @@ export function todayTally(state: CoreState, now: Instant): Tally {
 export function isDayOff(state: CoreState, date: LocalDate): boolean {
   const day = dateKey(date);
   return state.daysOff.some((d) => dateKey(d) === day);
+}
+
+/** Not implemented yet (#65 CP2 red). */
+export function canSetDayOff(_state: CoreState, _date: LocalDate, _now: Instant): boolean {
+  return false;
 }
 
 /**

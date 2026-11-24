@@ -7,6 +7,7 @@ export { guidedFinish, guidedStart } from './guidedFinish';
 export type { GuidedFinishEvent } from './guidedFinish';
 export {
   addMonths,
+  canSetDayOff,
   DEFAULT_DAILY_GOAL,
   dailyGoalFor,
   dateKey,
@@ -14,8 +15,10 @@ export {
   historyRange,
   isDayOff,
   isGoalDay,
+  monthBefore,
   monthMarks,
   sameDate,
+  sameMonth,
   streak,
   todayTally,
   weekMarks,
