@@ -33,15 +33,19 @@ export default function Achievements() {
   useEffect(() => {
     if (opened.current) return;
     opened.current = true;
+    // The visit is recorded once whatever the read did: after a failed read the
+    // page treats it as never opened (`null`, every held Badge New) and still
+    // clears Today's dot.
     readState()
-      .then((s) => {
-        setSeenBefore(s.achievementsSeenAt);
-        return openAchievements();
-      })
-      .catch((e) => {
-        console.warn(`[achievements] open failed: ${e}`);
-        setSeenBefore((s) => (s === undefined ? null : s));
-      });
+      .then(
+        (s) => setSeenBefore(s.achievementsSeenAt),
+        (e) => {
+          console.warn(`[achievements] read failed: ${e}`);
+          setSeenBefore(null);
+        },
+      )
+      .then(() => openAchievements())
+      .catch((e) => console.warn(`[achievements] open failed: ${e}`));
   }, []);
 
   const settled = state && seenBefore !== undefined ? settle(state, now) : null;

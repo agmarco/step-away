@@ -1,5 +1,5 @@
 export { canSnooze, defaultSettings, initialState, reduce } from './reduce';
-export { BADGES, hasNewBadge, records } from './achievements';
+export { BADGES, hasNewBadge, isNewBadge, records } from './achievements';
 export type { Badge, BadgeGroup, Records } from './achievements';
 export { exerciseGroups } from './groups';
 export type { ExerciseGroups } from './groups';

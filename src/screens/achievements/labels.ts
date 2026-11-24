@@ -4,7 +4,7 @@
  * and group labels, the Records row, and the Badges by group with which are
  * unlocked and which are New. Pure; the page and the celebration card render it.
  */
-import { BADGES, type BadgeGroup, type BadgeId, type CoreState, type Instant, type Records } from '../../core';
+import { BADGES, isNewBadge, type BadgeGroup, type BadgeId, type CoreState, type Instant, type Records } from '../../core';
 
 const GROUP_LABELS: Record<BadgeGroup, string> = {
   Streak: 'Streak',
@@ -70,10 +70,10 @@ export interface BadgeSection {
  * Every Badge of the catalogue, by group in `BADGES` order, with whether it is
  * held and whether it is New: unlocked strictly after `seenAt` (the previous
  * visit), or any held Badge when Achievements was never opened (`null`), the
- * core's `hasNewBadge` rule per Badge.
+ * core's `isNewBadge`.
  */
 export function badgeSections(held: CoreState['badges'], seenAt: Instant | null): BadgeSection[] {
-  const unlockedAt = new Map(held.map((b) => [b.id, b.unlockedAt]));
+  const heldById = new Map(held.map((b) => [b.id, b]));
   const sections: BadgeSection[] = [];
   for (const badge of BADGES) {
     let section = sections.find((s) => s.group === badge.group);
@@ -81,12 +81,12 @@ export function badgeSections(held: CoreState['badges'], seenAt: Instant | null)
       section = { group: badge.group, label: groupLabel(badge.group), badges: [] };
       sections.push(section);
     }
-    const at = unlockedAt.get(badge.id);
+    const unlocked = heldById.get(badge.id);
     section.badges.push({
       id: badge.id,
       label: badgeLabel(badge.id),
-      unlocked: at !== undefined,
-      isNew: at !== undefined && (seenAt === null || at > seenAt),
+      unlocked: unlocked !== undefined,
+      isNew: unlocked !== undefined && isNewBadge(unlocked, seenAt),
     });
   }
   return sections;

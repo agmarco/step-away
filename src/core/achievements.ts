@@ -4,10 +4,10 @@
  * recomputed on every call.
  */
 
-import { countsForStreak, dailyGoalFor, dateKey, dayOf, mondayOf } from './days';
+import { countsForStreak, dailyGoalFor, dateKey, dayOf, isGoalDay, mondayOf } from './days';
 import { BODY_AREAS, type BodyArea } from './exercise';
 import { addDays, localDateOf, type LocalDate } from './localTime';
-import type { CoreState, Instant } from './types';
+import type { CoreState, Instant, UnlockedBadge } from './types';
 
 /** How the Achievements page groups the Badges. */
 export type BadgeGroup = 'Streak' | 'Total Done' | 'Variety' | 'One-day';
@@ -86,8 +86,15 @@ export function records(state: CoreState, now: Instant): Records {
  * was last opened (strictly after), or any Badge if it was never opened.
  */
 export function hasNewBadge(state: CoreState): boolean {
-  const seen = state.achievementsSeenAt;
-  return state.badges.some((b) => seen === null || b.unlockedAt > seen);
+  return state.badges.some((b) => isNewBadge(b, state.achievementsSeenAt));
+}
+
+/**
+ * Whether a held Badge is New: unlocked strictly after `seenAt` (when
+ * Achievements was last opened), or any Badge when it was never opened (`null`).
+ */
+export function isNewBadge(badge: UnlockedBadge, seenAt: Instant | null): boolean {
+  return seenAt === null || badge.unlockedAt > seenAt;
 }
 
 /**
@@ -163,8 +170,9 @@ function logByDay(state: CoreState): Map<number, LoggedDay> {
 }
 
 /**
- * The longest run of Goal Days from the earliest Reminder's day to today,
- * under the Streak rules (see `records`).
+ * The longest run of Goal Days (`isGoalDay`, the hero `streak`'s rule) from the
+ * earliest Reminder's day to today, under the Streak rules (see `records`).
+ * `days` only gives the earliest day.
  */
 function longestStreak(state: CoreState, days: Map<number, LoggedDay>, now: Instant): number {
   if (days.size === 0) return 0;
@@ -174,9 +182,8 @@ function longestStreak(state: CoreState, days: Map<number, LoggedDay>, now: Inst
   let longest = 0;
   for (; dateKey(date) <= today; date = addDays(date, 1)) {
     if (!countsForStreak(state, date)) continue;
-    const key = dateKey(date);
-    if ((days.get(key)?.done ?? 0) >= dailyGoalFor(state, date)) longest = Math.max(longest, ++run);
-    else if (key !== today) run = 0;
+    if (isGoalDay(state, date)) longest = Math.max(longest, ++run);
+    else if (dateKey(date) !== today) run = 0;
   }
   return longest;
 }

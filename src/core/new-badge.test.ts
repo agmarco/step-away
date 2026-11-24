@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   hasNewBadge,
   initialState,
+  isNewBadge,
   reduce,
   seededRandom,
   settle,
@@ -92,5 +93,19 @@ describe('New-Badge dot: AchievementsOpened', () => {
     expect(hasNewBadge(unlocked)).toBe(true);
 
     expect(hasNewBadge(opened(unlocked, local(MON, '10:00')).state)).toBe(false);
+  });
+});
+
+describe('New-Badge rule: isNewBadge', () => {
+  const badge = { id: 'done-1', unlockedAt: UNLOCKED_AT } as const;
+
+  it('is New when Achievements was never opened', () => {
+    expect(isNewBadge(badge, null)).toBe(true);
+  });
+
+  it('is New when unlocked strictly after the last visit, not at or before it', () => {
+    expect(isNewBadge(badge, UNLOCKED_AT - 1)).toBe(true);
+    expect(isNewBadge(badge, UNLOCKED_AT)).toBe(false);
+    expect(isNewBadge(badge, UNLOCKED_AT + 1)).toBe(false);
   });
 });
