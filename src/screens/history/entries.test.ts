@@ -43,23 +43,31 @@ const reminder = (overrides: Partial<Reminder>): Reminder => ({
 });
 
 describe("exercisesShown: a History row's Exercises", () => {
-  it("shows an unanswered Reminder's Suggestion, with each Exercise's start photo when it has one", () => {
-    const r = reminder({ suggestion: [suggested('Neck_Tilt', 'Neck Tilt'), suggested('Wrist_Circles', 'Wrist Circles')] });
+  it.each(['scheduled', 'skipped', 'missed', 'dropped'] as const)('shows no Exercises for a %s Reminder', (status) => {
+    const r = reminder({ status, suggestion: [suggested('Neck_Tilt', 'Neck Tilt'), suggested('Wrist_Circles', 'Wrist Circles')] });
 
-    expect(exercisesShown(r, LIBRARY)).toEqual([
-      { id: 'Neck_Tilt', name: 'Neck Tilt', photo: 'Neck_Tilt/0.jpg' },
-      { id: 'Wrist_Circles', name: 'Wrist Circles' },
-    ]);
+    expect(exercisesShown(r, LIBRARY)).toEqual([]);
   });
 
   it("uses the library's current name for a renamed Exercise", () => {
-    const r = reminder({ suggestion: [suggested('Shoulder_Roll', 'Shoulder Roll')] });
+    const r = reminder({
+      status: 'done',
+      suggestion: [suggested('Shoulder_Roll', 'Shoulder Roll')],
+      done: [{ id: 'Shoulder_Roll', name: 'Shoulder Roll', bodyArea: 'Shoulders & Upper Back' }],
+    });
 
     expect(exercisesShown(r, LIBRARY)).toEqual([{ id: 'Shoulder_Roll', name: 'Shoulder Rolls', photo: 'Shoulder_Roll/0.jpg' }]);
   });
 
   it('falls back to the snapshot name, with no photo, for an Exercise no longer in the library', () => {
-    const r = reminder({ suggestion: [suggested('Gone_Stretch', 'Gone Stretch'), suggested('Neck_Tilt', 'Neck Tilt')] });
+    const r = reminder({
+      status: 'done',
+      suggestion: [suggested('Gone_Stretch', 'Gone Stretch'), suggested('Neck_Tilt', 'Neck Tilt')],
+      done: [
+        { id: 'Gone_Stretch', name: 'Gone Stretch', bodyArea: 'Neck' },
+        { id: 'Neck_Tilt', name: 'Neck Tilt', bodyArea: 'Neck' },
+      ],
+    });
 
     expect(exercisesShown(r, LIBRARY)).toEqual([
       { id: 'Gone_Stretch', name: 'Gone Stretch' },

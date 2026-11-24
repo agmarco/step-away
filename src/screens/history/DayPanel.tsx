@@ -26,9 +26,9 @@ export type DayKind = 'past' | 'today' | 'future';
  *  - a past day or today: the day's tally (`dayTally`) and its Reminders and
  *    Pauses, newest first (`todayLines` of `remindersOn` and `pausesOn`), read
  *    only. A Reminder row has its time, its outcome dot and label (Today's
- *    `statusOf`, a done one plain "Done"), "snoozed ×N", and its Exercises with thumbnails
- *    (`exercisesShown`: the Done list of a done Reminder, else the
- *    Suggestion). A day with nothing recorded says so;
+ *    `statusOf`, a done one plain "Done") and "snoozed ×N"; a done one also
+ *    lists its Exercises with thumbnails (`exercisesShown`: its Done list),
+ *    any other lists none. A day with nothing recorded says so;
  *  - a day still ahead: whether it is a Day Off.
  * Today and a day ahead also have Mark as Day Off / Undo Day Off, through
  * `onDayOff` (the page confirms it in a sheet).
@@ -113,7 +113,10 @@ export function DayPanel({
   );
 }
 
-/** A Reminder's row, read only: time, outcome dot, status and "snoozed ×N", then its Exercises. */
+/**
+ * A Reminder's row, read only: time, outcome dot, status and "snoozed ×N",
+ * then its Exercises (only a done one has any; with none the row is just its head).
+ */
 function ReminderRow({
   reminder: r,
   status,
