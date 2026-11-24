@@ -57,6 +57,9 @@ A default Dose is reps **or** seconds, never sets.
 - **Seconds** for anything held: stretches **20 s** by default (30 s only for a larger stretch, which means the hips or hamstrings are the main target, as in `Seated_Glute`; a calf, side or arm stretch stays at 20), isometric holds **15 s**, planks **20 s** (the low end, since they are done cold).
 - **`eachSide: true`** when the move is done on one side and then the other (a neck tilt, a lunge, a one-arm stretch). The Dose is then per side. One-sided moves are **never** split into left and right Exercises.
 - Moves done with both sides at once (both wrists, both shoulders) are not Each Side.
+- **Alternating moves** (left, right, left within one set: a walking lunge, a dead bug, an alternate curl) are **reps: 10**, not Each Side, and their last step says "keep alternating" (`Bodyweight_Walking_Lunge`, `Dead_Bug`).
+- **Front and back count as two sides**: a move done to the front and then to the back is Each Side, like left and right (`Isometric_Neck_Exercise_-_Front_And_Back`).
+- **A hard move keeps the default 10 reps.** The Difficulty grade gates it, not a smaller Dose (`Handstand_Push-Ups`, Expert, 10 reps).
 
 ## 6. Cue
 
@@ -77,7 +80,9 @@ Rewrite the source instructions; never copy them as they are.
 - Start with the set-up position. For Either moves, start with "Sit or stand tall."
 - For Each Side moves, end with "…, then switch sides." A held move's last step keeps that form ("Release slowly, then switch sides."); a reps move's last step finishes the reps first ("…finish your reps, then switch sides.").
 - For reaching moves, write "reach towards … until you feel the stretch", never a fixed end position the untrained can't reach (not "touch your toes").
-- A partner stretch done alone (section 1) keeps its press phase only when your own hand can resist it: "Press the elbow up into your hand for a few seconds, without letting it move." Otherwise the steps leave the press out.
+- A partner stretch done alone (section 1) keeps its press phase only when your own hand can resist it: "Press the elbow up into your hand for a few seconds, without letting it move." Otherwise the steps leave the press out, including when both arms are working and no hand is free to resist (`Seated_Front_Deltoid`, `Seated_Biceps`).
+- **Travelling moves** (walking lunges, skips, bounds, crawls) are done on the spot or as a short out-and-back ("after a few steps forward, turn round and come back"), never "as far as you can" (`Bodyweight_Walking_Lunge`, `Fast_Skipping`).
+- **Upright rows and elbow-led raises stop at chest height**, not at the chin or shoulders: "Stop at about chest height, with your elbows higher than your hands." (`Standing_Dumbbell_Upright_Row`, `Upright_Row_-_With_Bands`).
 - British spelling (centre, colour) in every curated field and in this guide.
 
 Before (`Isometric_Chest_Squeezes`, source):
@@ -97,9 +102,13 @@ Leave a field out to take the script mapping. Write it only when the mapping is 
 - **`name`**: only if the source name is awkward, jargon or a bare body part (`Adductor/Groin`, `Isometric Chest Squeezes`). Keep it short and recognisable. The Id never changes.
   - The rename may be **descriptive**, not just a minimal fix, when the source name is jargon, a bare body part, or would be confused with another Exercise: `Overhead_Triceps` becomes Triceps Press and Stretch, because `Triceps_Stretch` already exists; `Hip_Extension_with_Bands` becomes Band Leg Kickback.
   - Drop Position words that contradict section 2: `Standing_Lateral_Stretch` is Either, so it becomes Side Stretch ("Lateral" is jargon too).
+  - Drop "Seated" from the name of a move done sitting on the floor: it reads as a chair move (`Seated_Calf_Stretch` becomes Floor Calf Stretch). The same goes for a move drafted as Either (`Seated_Front_Deltoid` becomes Front Shoulder Stretch).
+  - Jargon to rename: Oblique, Lateral, Delt/Deltoid, Scaption, Flexor, Extensor, Isometric, alongside the anatomy terms above (Adductor, Gastrocnemius). A source "… - With Bands" name becomes "Band …" (`Lateral_Raise_-_With_Bands` becomes Band Lateral Raise), as with Band Leg Kickback.
   - Other pilot renames: Standing Calf Stretch (`Standing_Gastrocnemius_Calf_Stretch`, jargon), Seated Glute Stretch (`Seated_Glute`, a bare body part), Split Squat (`Split_Squats`, plural).
-  - Don't re-punctuate a kept source name: Bent Over Two-Dumbbell Row stays as it is.
+  - Don't re-punctuate a kept source name: Bent Over Two-Dumbbell Row stays as it is. This holds even next to renamed entries that read "Push-Up": Plyo Push-up (`Plyo_Push-up`) and Push Up to Side Plank (`Push_Up_to_Side_Plank`) keep the source's punctuation.
 - **`exerciseType`**: when the source category is wrong for the move, e.g. a static hold filed under `plyometrics`. Posture and activation moves (a chin tuck, wrist mobility) are `Stretch`, following `Wrist_Circles`; a House Exercise writes it (`custom/Chin_Tuck`).
+  - A repeated rep move filed under `stretching` is `Strength` (`Sit_Squats`, `Scissor_Kick`).
+  - An explosive move filed under another category is `Plyometric`, even when nothing jumps: the hands leave the floor on every rep of `Clock_Push-Up`. A repeated jump filed elsewhere is `Plyometric` too (`Freehand_Jump_Squat`).
 - **`bodyArea`**: when the first source Target Muscle doesn't match where the move is felt (e.g. a full-body jump whose first muscle is not the point). Prefer overriding `bodyArea` alone over reordering `targetMuscles`.
 - **`difficulty`**: always written, after re-grading (section 4), even when it equals the source.
 
@@ -236,3 +245,23 @@ The owner reviewed the eleven pilot drafts (seven base, Chin Tuck, Plank, the be
 6. **Dose:** planks take 20 s; a stretch is "larger" (30 s) only when the hips or hamstrings are the main target (section 5).
 7. **Reach:** reaching moves say "reach towards … until you feel the stretch", never a fixed end position (section 7).
 8. **Position from photos:** a move whose photos sit on the floor but that uses only the head or arms is Either (section 2).
+
+### 2026-11-23: #20 CP4 (accepted as drafted, unreviewed)
+
+The owner accepted all 193 CP4 drafts (base 60 including 8 House Exercises, floor 79, dumbbells 43, resistance bands 11) as drafted, without reviewing them card by card. Every open question took the drafted answer: Handstand Push-Up is kept as Expert at 10 reps, Vertical Swing is one-handed and Each Side, the renames stand as drafted, and the duplicate source photos are kept. The drafters' guide-gap decisions became these rules:
+
+1. **Alternating moves** are 10 reps, not Each Side, and the steps say "keep alternating" (section 5).
+2. **Travelling moves** are done on the spot or as a short out-and-back, never "as far as you can" (section 7).
+3. **Front and back** count as two sides, for Each Side (section 5).
+4. **"Seated"** is dropped from the names of floor-sitting moves (section 8).
+5. **Jargon:** the list grows by Oblique, Lateral, Delt/Deltoid, Scaption, Flexor, Extensor and Isometric; "- With Bands" becomes "Band …" (section 8).
+6. **Partner press:** dropped when no hand is free to resist (section 7).
+7. **Wrong source category:** overridden, to Strength for rep moves filed as stretching and to Plyometric for non-jump explosive moves (section 8).
+8. **Punctuation:** kept source punctuation stays, even next to renamed "Push-Up" entries (section 8).
+9. **Upright rows and elbow-led raises** stop at chest height (section 7).
+10. **Hard moves** keep the default 10 reps; the owner accepted Handstand Push-Up at 10 (section 5).
+
+Known source photo issues, kept as they are:
+
+- `Leg-Up_Hamstring_Stretch` shares `90_90_Hamstring`'s photos.
+- `One_Half_Locust` shares a start photo with `All_Fours_Quad_Stretch`.
