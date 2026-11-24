@@ -1,6 +1,7 @@
 import { MAX_SNOOZES, notificationFor, refireNotificationFor } from './notification';
 import { chainTimes, outstandingReminder, reminderId } from './schedule';
-import { dateKey, dayOf, DEFAULT_DAILY_GOAL, isDayOff, sameDate } from './days';
+import { badgesToUnlock } from './achievements';
+import { dailyGoalFor, dateKey, dayOf, dayTally, DEFAULT_DAILY_GOAL, isDayOff, sameDate } from './days';
 import { addDays, instantAt, localDateOf, MINUTE } from './localTime';
 import { runningPause } from './pause';
 import { refirePending, refireScheduled, settle } from './settle';
@@ -66,6 +67,7 @@ export const initialState: CoreState = {
  * also needs its re-fire (if any) to have fired and fewer than 2 Snoozes. A
  * Done or Skip is final: it cancels a pending re-fire and rebuilds the chain
  * from now. A Done with none of its Ids in the Suggestion counts as a Skip.
+ * An accepted Done or Skip then evaluates Badges (`evaluateAchievements`).
  *
  * GuidedStarted (the guided screen opened) is not a Response: on the
  * outstanding Reminder with a re-fire pending it cancels the re-fire (the
@@ -80,8 +82,9 @@ export const initialState: CoreState = {
  * settled state): to Done with the same mapping as a Done Response (at least
  * one Id left, else rejected), to Skip or Missed without its `done` list. A
  * correction is history: `lastResponseAt`, `snoozes`, `refiresAt` and the
- * chain stay. Anything else (a past day, outstanding, not fired, unknown)
- * returns the input state. Neither returns intents.
+ * chain stay. An accepted one evaluates Badges (`evaluateAchievements`),
+ * whose intents are the only ones it returns. Anything else (a past day, outstanding, not fired,
+ * unknown) returns the input state. SetDailyGoal returns no intents.
  *
  * Swap replaces one Exercise of a Suggestion in place (see `swapReplacement`)
  * and appends it to `swappedOut`. Accepted, on the settled state, on the
@@ -106,6 +109,10 @@ export const initialState: CoreState = {
  * taking today off drops the outstanding Reminder. All three rebuild the
  * chain (see `chainTimes`); a rejected one returns the input state with no
  * intents.
+ *
+ * AchievementsOpened settles and sets `achievementsSeenAt` to now, with no
+ * intents. No event but an accepted Done or Skip Response or Correct
+ * evaluates Badges.
  */
 export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): CoreResult {
   const now = deps.clock.now();
@@ -122,23 +129,21 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       const target = outstandingReminder(settled, now);
       if (target?.id !== event.reminderId) return { state, intents: [dismiss] };
 
-      let answered: CoreState;
       if (event.kind === 'Snooze') {
         if (!canSnooze(target, now)) return { state, intents: [dismiss] };
         const refiresAt = now + settled.settings.snoozeMinutes * MINUTE;
-        // Not a final Response: lastResponseAt stays as it is.
+        // Not a final Response: lastResponseAt stays as it is, and no Badge is evaluated.
         const snoozes = (target.snoozes ?? 0) + 1;
-        answered = { ...settled, reminders: replace(settled, { ...target, snoozes, refiresAt }) };
-      } else {
-        // A final Response before a pending re-fire cancels it; the Snooze count stays.
-        const { refiresAt: _cancelled, ...withoutRefire } = target;
-        const base: Reminder = refirePending(target, now) ? withoutRefire : target;
-        const done = event.kind === 'Done' ? doneExercises(target, event.did) : [];
-        const answer: Reminder = done.length > 0 ? { ...base, status: 'done', done } : { ...base, status: 'skipped' };
-        answered = { ...settled, lastResponseAt: now, reminders: replace(settled, answer) };
+        const rebuilt = rearm({ ...settled, reminders: replace(settled, { ...target, snoozes, refiresAt }) }, deps);
+        return { state: rebuilt.state, intents: [dismiss, ...rebuilt.intents] };
       }
-      const rebuilt = rearm(answered, deps);
-      return { state: rebuilt.state, intents: [dismiss, ...rebuilt.intents] };
+      // A final Response before a pending re-fire cancels it; the Snooze count stays.
+      const { refiresAt: _cancelled, ...withoutRefire } = target;
+      const base: Reminder = refirePending(target, now) ? withoutRefire : target;
+      const done = event.kind === 'Done' ? doneExercises(target, event.did) : [];
+      const answer: Reminder = done.length > 0 ? { ...base, status: 'done', done } : { ...base, status: 'skipped' };
+      const rebuilt = rearm({ ...settled, lastResponseAt: now, reminders: replace(settled, answer) }, deps);
+      return evaluateAchievements(settled, { state: rebuilt.state, intents: [dismiss, ...rebuilt.intents] }, now, answer);
     }
     case 'GuidedStarted': {
       const settled = settle(state, now);
@@ -171,8 +176,9 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
         // Only the outcome changes: `snoozes` and `refiresAt` stay.
         corrected = { ...outcomeless, status: event.to === 'Skip' ? 'skipped' : 'missed' };
       }
-      // History only: lastResponseAt and the chain stay, and there are no intents.
-      return { state: { ...settled, reminders: replace(settled, corrected) }, intents: [] };
+      // History only: lastResponseAt and the chain stay. The only intents are the achievements'.
+      const result = { state: { ...settled, reminders: replace(settled, corrected) }, intents: [] };
+      return evaluateAchievements(settled, result, now, corrected);
     }
     case 'Swap': {
       // Settled first, so a fired Reminder replaced but not yet persisted counts as Missed.
@@ -240,8 +246,7 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       return rearmAfterDrop({ ...dropped, daysOff }, intents, deps);
     }
     case 'AchievementsOpened':
-      // #28 CP2.
-      throw new Error('not implemented');
+      return { state: { ...settle(state, now), achievementsSeenAt: now }, intents: [] };
   }
 }
 
@@ -253,6 +258,34 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
 function rearmAfterDrop(state: CoreState, intents: Intent[], deps: CoreDeps): CoreResult {
   const rebuilt = rearm(state, deps);
   return { state: rebuilt.state, intents: [...intents, ...rebuilt.intents] };
+}
+
+/**
+ * Badge evaluation, after an accepted Done or Skip Response or an accepted
+ * Correct: `before` is the settled state before the event, `result` what the
+ * event returns, and `recorded` the Reminder as it recorded it. Every Badge
+ * met and not yet held (`badgesToUnlock`) is appended with `unlockedAt =
+ * now`, and the intents are appended after `result`'s:
+ * - `BadgesUnlocked` when at least one Badge is new;
+ * - `CelebrationDue` when `recorded` is Done and either a Badge is new or
+ *   today's Done count (the local date of `now`) crossed today's Daily Goal:
+ *   below it in `before`, at or above it after (`goalReached`).
+ */
+function evaluateAchievements(before: CoreState, result: CoreResult, now: Instant, recorded: Reminder): CoreResult {
+  const badges = badgesToUnlock(result.state, now);
+  const today = localDateOf(now, before.settings.timeZone);
+  const goal = dailyGoalFor(before, today);
+  const goalReached =
+    recorded.status === 'done' && dayTally(before, today).done < goal && dayTally(result.state, today).done >= goal;
+
+  const intents: Intent[] = [...result.intents];
+  if (badges.length > 0) intents.push({ type: 'BadgesUnlocked', badges });
+  if (recorded.status === 'done' && (goalReached || badges.length > 0)) {
+    intents.push({ type: 'CelebrationDue', reminderId: recorded.id, goalReached, badges });
+  }
+  if (badges.length === 0) return { state: result.state, intents };
+  const unlocked = badges.map((id) => ({ id, unlockedAt: now }));
+  return { state: { ...result.state, badges: [...result.state.badges, ...unlocked] }, intents };
 }
 
 /**

@@ -7,6 +7,7 @@
  * intents described in the v1 spec (#17, Modules -> Domain core).
  */
 
+import type { BadgeId } from './achievements';
 import type { BodyArea, Difficulty, Dose, Equipment, Exercise } from './exercise';
 import type { LocalDate } from './localTime';
 
@@ -195,25 +196,8 @@ export interface CoreState {
   achievementsSeenAt: Instant | null;
 }
 
-/** A Badge of the catalogue (`BADGES`, which has them in order). */
-export type BadgeId =
-  | 'streak-3'
-  | 'streak-7'
-  | 'streak-14'
-  | 'streak-30'
-  | 'streak-60'
-  | 'streak-100'
-  | 'done-1'
-  | 'done-10'
-  | 'done-50'
-  | 'done-100'
-  | 'done-250'
-  | 'done-500'
-  | 'variety-10'
-  | 'variety-25'
-  | 'variety-50'
-  | 'balance'
-  | 'perfect-day';
+/** A Badge of the catalogue: derived from `BADGES`, its one source. */
+export type { BadgeId };
 
 /** A Badge held: which one, and when it unlocked. */
 export interface UnlockedBadge {
@@ -283,7 +267,9 @@ export type CoreEvent =
   /**
    * A correction from Today: changes the outcome of one of today's Reminders
    * already Done, skipped, Missed or dropped. To Done, `did` must keep at
-   * least one Id of the Suggestion. History only: no Response, no intents.
+   * least one Id of the Suggestion. History only: no Response, nothing
+   * scheduled. Accepted, it evaluates Badges, so its only intents are
+   * `BadgesUnlocked` and `CelebrationDue`.
    */
   | { type: 'Correct'; reminderId: string; to: Outcome; did?: string[] }
   /**
