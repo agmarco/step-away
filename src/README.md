@@ -85,7 +85,8 @@ Also exported: `guidedFinish(state, reminderId, did, now)`, what finishing the g
 
 **Days, Daily Goal and Streak** (`days.ts`, derived, never stored). A Reminder belongs to the local date (Settings' time zone) of its `firesAt`, its first fire; a Snooze re-fire doesn't move it.
 - `dailyGoalFor(state, date)`: the last `goalChanges` entry with `from` on or before `date`, else `DEFAULT_DAILY_GOAL` (4).
-- `isGoalDay(state, date)`: the day's `done` Reminders reach that day's goal.
+- `reachesDailyGoal(state, date, done)`: the Goal Day rule, `done` ≥ that day's goal; the one place it lives (`isGoalDay`, `longestStreak` and Perfect day all go through it).
+- `isGoalDay(state, date)`: the day's `done` Reminders reach that day's goal (`reachesDailyGoal` on `dayTally`).
 - `dayTally(state, date)` / `todayTally(state, now)`: `{ done, skipped, missed, exercises }`, `exercises` being the total length of the day's `done` lists. Dropped and still-`scheduled` Reminders aren't counted.
 - `streak(state, now)`: consecutive Goal Days backwards. Today counts if it is already a Goal Day; otherwise the count starts from yesterday, so an unfinished today doesn't break it. Days Off and days without Active Hours (by the current Settings' weekdays) are skipped, even one that reached its goal. A Pause gets nothing special: a paused day is judged as usual. The first earlier day with Active Hours that isn't a Goal Day ends it; it looks back no further than the earliest Reminder's day.
 - `weekMarks(state, now)`: Mon–Fri of the current week (Monday to Sunday, so on a weekend the whole past Mon–Fri), one `DayMark` per day, by precedence `today` (even if already a Goal Day or a Day Off), `dayOff`, `future`, `off` (no Active Hours), `goal`, else `missed`.

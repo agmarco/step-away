@@ -4,7 +4,7 @@
  * recomputed on every call.
  */
 
-import { countsForStreak, dailyGoalFor, dateKey, dayOf, isGoalDay, mondayOf } from './days';
+import { countsForStreak, dateKey, dayOf, mondayOf, reachesDailyGoal } from './days';
 import { BODY_AREAS, type BodyArea } from './exercise';
 import { addDays, localDateOf, type LocalDate } from './localTime';
 import type { CoreState, Instant, UnlockedBadge } from './types';
@@ -121,7 +121,7 @@ export function badgesToUnlock(state: CoreState, now: Instant): BadgeId[] {
   const dayList = [...days.values()];
   const balance = dayList.some((day) => BODY_AREAS.every((area) => day.areas.has(area)));
   const perfectDay = dayList.some(
-    (day) => day.done >= dailyGoalFor(state, day.date) && day.skipped === 0 && day.missed === 0,
+    (day) => reachesDailyGoal(state, day.date, day.done) && day.skipped === 0 && day.missed === 0,
   );
   const runs = longestStreak(state, days, now);
 
@@ -170,9 +170,10 @@ function logByDay(state: CoreState): Map<number, LoggedDay> {
 }
 
 /**
- * The longest run of Goal Days (`isGoalDay`, the hero `streak`'s rule) from the
- * earliest Reminder's day to today, under the Streak rules (see `records`).
- * `days` only gives the earliest day.
+ * The longest run of Goal Days (`reachesDailyGoal`, the hero `streak`'s rule)
+ * from the earliest Reminder's day to today, under the Streak rules (see
+ * `records`). Each day is judged on its Done count in `days`, so the whole
+ * history costs one pass over the Reminders plus one step per day.
  */
 function longestStreak(state: CoreState, days: Map<number, LoggedDay>, now: Instant): number {
   if (days.size === 0) return 0;
@@ -182,7 +183,7 @@ function longestStreak(state: CoreState, days: Map<number, LoggedDay>, now: Inst
   let longest = 0;
   for (; dateKey(date) <= today; date = addDays(date, 1)) {
     if (!countsForStreak(state, date)) continue;
-    if (isGoalDay(state, date)) longest = Math.max(longest, ++run);
+    if (reachesDailyGoal(state, date, days.get(dateKey(date))?.done ?? 0)) longest = Math.max(longest, ++run);
     else if (dateKey(date) !== today) run = 0;
   }
   return longest;

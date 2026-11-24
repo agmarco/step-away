@@ -33,9 +33,18 @@ export function dailyGoalFor(state: CoreState, date: LocalDate): number {
   return goal;
 }
 
-/** Whether the day's Done Reminders reach that day's Daily Goal. */
+/**
+ * The Goal Day rule, given the day's Done count: `done` reaches that day's
+ * Daily Goal. The one place the rule lives; callers that already counted the
+ * day's Done Reminders pass the count, the rest go through `isGoalDay`.
+ */
+export function reachesDailyGoal(state: CoreState, date: LocalDate, done: number): boolean {
+  return done >= dailyGoalFor(state, date);
+}
+
+/** Whether the day's Done Reminders reach that day's Daily Goal (`reachesDailyGoal`). */
 export function isGoalDay(state: CoreState, date: LocalDate): boolean {
-  return dayTally(state, date).done >= dailyGoalFor(state, date);
+  return reachesDailyGoal(state, date, dayTally(state, date).done);
 }
 
 /** The tally of the Reminders belonging to `date` (see `dayOf`). */
