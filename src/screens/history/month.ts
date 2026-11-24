@@ -1,4 +1,5 @@
-import type { LocalDate, YearMonth } from '../../core';
+import { addMonths, dateKey, sameDate, type LocalDate, type YearMonth } from '../../core';
+import type { DayKind } from './DayPanel';
 
 /**
  * Month arithmetic for the History calendar, whose weeks run Monday to
@@ -24,10 +25,9 @@ export function weeksOf<T>(month: YearMonth, days: readonly T[]): (T | null)[][]
   return weeks;
 }
 
-/** The month `by` months after `month` (before it when `by` is negative). */
+/** The month `by` months after `month` (before it when `by` is negative): the core's `addMonths`. */
 export function shiftMonth(month: YearMonth, by: number): YearMonth {
-  const index = month.year * 12 + (month.month - 1) + by;
-  return { year: Math.floor(index / 12), month: (index % 12) + 1 };
+  return addMonths(month, by);
 }
 
 /** Whether `a` comes before `b`. */
@@ -41,4 +41,10 @@ export function monthBefore(a: YearMonth, b: YearMonth): boolean {
  */
 export function selectionAfterStep(month: YearMonth, today: LocalDate): LocalDate | null {
   return month.year === today.year && month.month === today.month ? today : null;
+}
+
+/** Whether `date` is before `today`, today or after it, by the core's date order (`sameDate`, `dateKey`). */
+export function dayKindOf(date: LocalDate, today: LocalDate): DayKind {
+  if (sameDate(date, today)) return 'today';
+  return dateKey(date) < dateKey(today) ? 'past' : 'future';
 }

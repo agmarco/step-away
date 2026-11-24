@@ -3,7 +3,7 @@ import type { Palette } from '../../theme';
 import { timeOf } from './format';
 
 /** A dropped Reminder's status, by what dropped it. */
-export const DROPPED_LABEL: Record<DropReason, string> = {
+const DROPPED_LABEL: Record<DropReason, string> = {
   pause: 'Ended by Pause',
   dayOff: 'Ended: Day Off',
   closing: 'Snoozed past closing',

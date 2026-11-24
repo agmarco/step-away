@@ -6,7 +6,6 @@ import {
   isDayOff,
   localDateOf,
   monthMarks,
-  sameDate,
   settle,
   type LocalDate,
   type YearMonth,
@@ -15,17 +14,13 @@ import { setDayOff } from '../platform/handler';
 import { useCoreState } from '../platform/useCoreState';
 import { ActionSheet } from '../screens/ActionSheet';
 import { Calendar } from '../screens/history/Calendar';
-import { DayPanel, type DayKind } from '../screens/history/DayPanel';
+import { DayPanel } from '../screens/history/DayPanel';
 import { longDayOf } from '../screens/history/format';
-import { monthBefore, selectionAfterStep, shiftMonth } from '../screens/history/month';
+import { dayKindOf, monthBefore, selectionAfterStep, shiftMonth } from '../screens/history/month';
 import { PageHeader } from '../screens/settings/parts';
 import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
 import { useOneChange } from '../screens/useOneChange';
 import { useColors } from '../theme';
-
-/** Whether `a` comes before `b`. */
-const dayBefore = (a: LocalDate, b: LocalDate) =>
-  a.year * 10_000 + a.month * 100 + a.day < b.year * 10_000 + b.month * 100 + b.day;
 
 /** The Day Off sheet's wording for `day`, by whether it is today and already a Day Off. */
 function confirmOf(day: LocalDate, isToday: boolean, off: boolean) {
@@ -89,7 +84,7 @@ export default function History() {
   const { first, last } = historyRange(state, now);
   const month = shown ?? { year: today.year, month: today.month };
   const day = selected === undefined ? today : selected;
-  const kind: DayKind | null = !day ? null : sameDate(day, today) ? 'today' : dayBefore(day, today) ? 'past' : 'future';
+  const kind = day && dayKindOf(day, today);
   const off = day !== null && isDayOff(state, day);
   const confirm = day && confirmOf(day, kind === 'today', off);
 

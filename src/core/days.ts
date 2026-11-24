@@ -28,6 +28,12 @@ export interface YearMonth {
   month: number;
 }
 
+/** The month `n` months after `month` (before it when `n` is negative). */
+export function addMonths(month: YearMonth, n: number): YearMonth {
+  const index = month.year * 12 + (month.month - 1) + n;
+  return { year: Math.floor(index / 12), month: (index % 12) + 1 };
+}
+
 /**
  * The Daily Goal a day is judged against: the last change whose `from` is on
  * or before `date`, else `DEFAULT_DAILY_GOAL`.
@@ -151,17 +157,13 @@ export function monthMarks(state: CoreState, month: YearMonth, now: Instant): { 
  */
 export function historyRange(state: CoreState, now: Instant): { first: YearMonth; last: YearMonth } {
   const { year, month } = localDateOf(now, state.settings.timeZone);
-  const current = year * 12 + (month - 1);
+  const current = { year, month };
   const earliest = earliestDayKey(state);
-  const earliestMonth = Number.isFinite(earliest)
-    ? Math.floor(earliest / 10_000) * 12 + (Math.floor(earliest / 100) % 100) - 1
-    : current;
-  return { first: yearMonthOf(Math.min(earliestMonth, current)), last: yearMonthOf(current + 12) };
-}
-
-/** The month `index` months after January of year 0. */
-function yearMonthOf(index: number): YearMonth {
-  return { year: Math.floor(index / 12), month: (index % 12) + 1 };
+  const first =
+    earliest < dateKey({ ...current, day: 1 })
+      ? { year: Math.floor(earliest / 10_000), month: Math.floor(earliest / 100) % 100 }
+      : current;
+  return { first, last: addMonths(current, 12) };
 }
 
 /**

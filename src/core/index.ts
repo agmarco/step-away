@@ -6,8 +6,10 @@ export type { ExerciseGroups } from './groups';
 export { guidedFinish, guidedStart } from './guidedFinish';
 export type { GuidedFinishEvent } from './guidedFinish';
 export {
+  addMonths,
   DEFAULT_DAILY_GOAL,
   dailyGoalFor,
+  dateKey,
   dayTally,
   historyRange,
   isDayOff,

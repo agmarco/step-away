@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { leadingBlanks, monthBefore, selectionAfterStep, shiftMonth, weeksOf } from './month';
+import { dayKindOf, leadingBlanks, monthBefore, selectionAfterStep, shiftMonth, weeksOf } from './month';
 
 describe("leadingBlanks: the empty cells before a month's first day, weeks starting Monday", () => {
   it('is 0 for a month that starts on a Monday (June 2026)', () => {
@@ -80,5 +80,28 @@ describe('selectionAfterStep: the selected day after stepping to another month',
     expect(selectionAfterStep({ year: 2026, month: 10 }, today)).toBeNull();
     expect(selectionAfterStep({ year: 2026, month: 12 }, today)).toBeNull();
     expect(selectionAfterStep({ year: 2027, month: 11 }, today)).toBeNull();
+  });
+});
+
+describe('dayKindOf: whether a day is past, today or ahead', () => {
+  const today = { year: 2026, month: 11, day: 24 };
+
+  it('is today for the same date', () => {
+    expect(dayKindOf({ year: 2026, month: 11, day: 24 }, today)).toBe('today');
+  });
+
+  it('is past for an earlier day of the month and future for a later one', () => {
+    expect(dayKindOf({ year: 2026, month: 11, day: 23 }, today)).toBe('past');
+    expect(dayKindOf({ year: 2026, month: 11, day: 25 }, today)).toBe('future');
+  });
+
+  it('orders across a month boundary by month, not by day number', () => {
+    expect(dayKindOf({ year: 2026, month: 10, day: 31 }, today)).toBe('past');
+    expect(dayKindOf({ year: 2026, month: 12, day: 1 }, today)).toBe('future');
+  });
+
+  it('orders across a year boundary by year, not by month or day number', () => {
+    expect(dayKindOf({ year: 2025, month: 12, day: 31 }, today)).toBe('past');
+    expect(dayKindOf({ year: 2027, month: 1, day: 1 }, today)).toBe('future');
   });
 });

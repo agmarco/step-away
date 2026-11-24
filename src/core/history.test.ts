@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addMonths,
   BODY_AREAS,
   historyRange,
   initialState,
@@ -314,6 +315,29 @@ describe('History calendar: historyRange', () => {
       year: 2026,
       month: 12,
     });
+  });
+});
+
+describe('History calendar: addMonths', () => {
+  it('steps forward within a year', () => {
+    expect(addMonths({ year: 2026, month: 6 }, 1)).toEqual({ year: 2026, month: 7 });
+    expect(addMonths({ year: 2026, month: 3 }, 8)).toEqual({ year: 2026, month: 11 });
+  });
+
+  it('steps back within a year', () => {
+    expect(addMonths({ year: 2026, month: 6 }, -1)).toEqual({ year: 2026, month: 5 });
+    expect(addMonths({ year: 2026, month: 11 }, -10)).toEqual({ year: 2026, month: 1 });
+  });
+
+  it('wraps across a year end both ways, by more than a year too', () => {
+    expect(addMonths({ year: 2026, month: 12 }, 1)).toEqual({ year: 2027, month: 1 });
+    expect(addMonths({ year: 2026, month: 1 }, -1)).toEqual({ year: 2025, month: 12 });
+    expect(addMonths({ year: 2026, month: 11 }, 14)).toEqual({ year: 2028, month: 1 });
+    expect(addMonths({ year: 2026, month: 2 }, -14)).toEqual({ year: 2024, month: 12 });
+  });
+
+  it('is the same month for 0', () => {
+    expect(addMonths({ year: 2026, month: 11 }, 0)).toEqual({ year: 2026, month: 11 });
   });
 });
 
