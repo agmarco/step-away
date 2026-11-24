@@ -40,7 +40,7 @@ export interface BuildInput {
   /** Curation YAML text per group, e.g. `{ base: '…', floor: '…' }`. */
   curation: Partial<Record<LibraryGroup, string>>;
   /** Whether a bundled photo exists, by photo key (e.g. `Plank/0.jpg`, whose file is `Plank/0.webp`, see `photoFile`). */
-  photoExists: (relPath: string) => boolean;
+  photoExists: (key: string) => boolean;
 }
 
 export interface BuildResult {
