@@ -123,18 +123,17 @@ export function canSetDayOff(state: CoreState, date: LocalDate, now: Instant): b
  * day with Active Hours that isn't a Goal Day ends it. A Pause gets nothing
  * special: a paused day is judged as usual. It looks back no further than the
  * earliest Reminder's day: before it no day can be a Goal Day. Each day is
- * judged on its Done count in `logByDay`: one pass over the Reminders plus
- * one step per day.
+ * judged on its Done count in `logByDay` (`isGoalDayIn`): one pass over the
+ * Reminders plus one step per day.
  */
 export function streak(state: CoreState, now: Instant): number {
   const log = logByDay(state);
-  const isGoal = (date: LocalDate) => reachesDailyGoal(state, date, log.days.get(dateKey(date))?.done ?? 0);
   const earliest = log.earliest ? dateKey(log.earliest) : Infinity;
   const today = localDateOf(now, state.settings.timeZone);
-  let count = countsForStreak(state, today) && isGoal(today) ? 1 : 0;
+  let count = countsForStreak(state, today) && isGoalDayIn(state, log, today) ? 1 : 0;
   for (let date = addDays(today, -1); dateKey(date) >= earliest; date = addDays(date, -1)) {
     if (!countsForStreak(state, date)) continue;
-    if (!isGoal(date)) break;
+    if (!isGoalDayIn(state, log, date)) break;
     count += 1;
   }
   return count;
@@ -248,6 +247,16 @@ export function logByDay(state: CoreState): DayLog {
   return { days, earliest };
 }
 
+/**
+ * Whether `date` is a Goal Day, judged on its Done count in `log`
+ * (`logByDay(state)`, built once by the caller): `reachesDailyGoal`, the one
+ * rule, for callers that judge many days (`streak`, `weekMarks`, `monthMarks`,
+ * `longestStreak`). A day without Reminders has a Done count of 0.
+ */
+export function isGoalDayIn(state: CoreState, log: DayLog, date: LocalDate): boolean {
+  return reachesDailyGoal(state, date, log.days.get(dateKey(date))?.done ?? 0);
+}
+
 /** The day a Reminder belongs to: the local date of its first fire, `firesAt` (a Snooze re-fire doesn't move it). */
 export function dayOf(reminder: Reminder, timeZone: string): LocalDate {
   return localDateOf(reminder.firesAt, timeZone);
@@ -268,7 +277,7 @@ function markFor(state: CoreState, date: LocalDate, today: LocalDate, log: DayLo
   if (day > dateKey(today)) return 'future';
   if (!log.earliest || day < dateKey(log.earliest)) return 'none';
   if (!state.settings.activeHours[weekdayOf(date)]) return 'off';
-  return reachesDailyGoal(state, date, log.days.get(day)?.done ?? 0) ? 'goal' : 'missed';
+  return isGoalDayIn(state, log, date) ? 'goal' : 'missed';
 }
 
 /** A number that orders dates: YYYYMMDD. */

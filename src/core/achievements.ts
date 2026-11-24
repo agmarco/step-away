@@ -4,7 +4,7 @@
  * recomputed on every call.
  */
 
-import { countsForStreak, dateKey, logByDay, mondayOf, reachesDailyGoal, type DayLog } from './days';
+import { countsForStreak, dateKey, isGoalDayIn, logByDay, mondayOf, reachesDailyGoal, type DayLog } from './days';
 import { BODY_AREAS } from './exercise';
 import { addDays, localDateOf } from './localTime';
 import type { CoreState, Instant, UnlockedBadge } from './types';
@@ -143,7 +143,7 @@ export function badgesToUnlock(state: CoreState, now: Instant): BadgeId[] {
 /**
  * The longest run of Goal Days (`reachesDailyGoal`, the hero `streak`'s rule)
  * from the earliest Reminder's day to today, under the Streak rules (see
- * `records`). Each day is judged on its Done count in `log` (`logByDay`), so
+ * `records`). Each day is judged on its Done count in `log` (`isGoalDayIn`), so
  * the whole history costs one pass over the Reminders plus one step per day.
  */
 function longestStreak(state: CoreState, log: DayLog, now: Instant): number {
@@ -154,7 +154,7 @@ function longestStreak(state: CoreState, log: DayLog, now: Instant): number {
   let longest = 0;
   for (; dateKey(date) <= today; date = addDays(date, 1)) {
     if (!countsForStreak(state, date)) continue;
-    if (reachesDailyGoal(state, date, log.days.get(dateKey(date))?.done ?? 0)) longest = Math.max(longest, ++run);
+    if (isGoalDayIn(state, log, date)) longest = Math.max(longest, ++run);
     else if (dateKey(date) !== today) run = 0;
   }
   return longest;
