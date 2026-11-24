@@ -1,6 +1,6 @@
 # Drafting guide
 
-How to draft a curation entry from a free-exercise-db candidate. The agent drafts every field below; the owner reviews every field, batch by batch, on a throwaway review page (one card per Exercise: start and end photos, source steps, drafted fields). Format and validation rules: [README.md](README.md). Attribute definitions: issue #7. Terms: `CONTEXT.md`.
+How to draft a curation entry from a free-exercise-db candidate. The agent drafts every field below; the owner reviews every field, batch by batch, on a throwaway review page (one card per Exercise: start and end photos, source steps, drafted fields). The exception is #20 CP4: its 193 drafts were accepted as drafted, unreviewed (see Owner corrections). Format and validation rules: [README.md](README.md). Attribute definitions: issue #7. Terms: `CONTEXT.md`.
 
 The context to keep in mind for every judgment: **a quick break at or beside a desk**, in work clothes, a minute or two, no warm-up.
 
@@ -17,7 +17,7 @@ Keep a candidate only if all of these hold:
 
 Every variant that passes these rules is kept, even a near-identical one, because any variety is welcome (owner decision, #20).
 
-Drop sprint drills, Olympic-style technique drills, non-desk moves (e.g. trail running) and anything whose photos don't make the move clear. Dropped candidates get no entry; nothing records them. A candidate that passes these rules but is done lying or kneeling on the floor is not dropped: it is parked for the floor group (#33).
+Drop sprint drills, Olympic-style technique drills, non-desk moves (e.g. trail running) and anything whose photos don't make the move clear. Dropped candidates get no entry; nothing records them. A candidate that passes these rules but is done lying or kneeling on the floor is not dropped: it goes in the floor group (`floor.yaml`), curated in #20.
 
 ## 2. Position
 
@@ -101,9 +101,9 @@ Leave a field out to take the script mapping. Write it only when the mapping is 
 
 - **`name`**: only if the source name is awkward, jargon or a bare body part (`Adductor/Groin`, `Isometric Chest Squeezes`). Keep it short and recognisable. The Id never changes.
   - The rename may be **descriptive**, not just a minimal fix, when the source name is jargon, a bare body part, or would be confused with another Exercise: `Overhead_Triceps` becomes Triceps Press and Stretch, because `Triceps_Stretch` already exists; `Hip_Extension_with_Bands` becomes Band Leg Kickback.
-  - Drop Position words that contradict section 2: `Standing_Lateral_Stretch` is Either, so it becomes Side Stretch ("Lateral" is jargon too).
+  - Drop Position words that contradict section 2: `Standing_Lateral_Stretch` is Either, so it becomes Side Stretch.
   - Drop "Seated" from the name of a move done sitting on the floor: it reads as a chair move (`Seated_Calf_Stretch` becomes Floor Calf Stretch). The same goes for a move drafted as Either (`Seated_Front_Deltoid` becomes Front Shoulder Stretch).
-  - Jargon to rename: Oblique, Lateral, Delt/Deltoid, Scaption, Flexor, Extensor, Isometric, alongside the anatomy terms above (Adductor, Gastrocnemius). A source "… - With Bands" name becomes "Band …" (`Lateral_Raise_-_With_Bands` becomes Band Lateral Raise), as with Band Leg Kickback.
+  - Jargon to rename: Oblique, Delt/Deltoid, Scaption, Extensor, Isometric, alongside the anatomy terms above (Adductor, Gastrocnemius). A source "… - With Bands" name becomes "Band …" (`Lateral_Raise_-_With_Bands` becomes Band Lateral Raise), as with Band Leg Kickback.
   - Other pilot renames: Standing Calf Stretch (`Standing_Gastrocnemius_Calf_Stretch`, jargon), Seated Glute Stretch (`Seated_Glute`, a bare body part), Split Squat (`Split_Squats`, plural).
   - Don't re-punctuate a kept source name: Bent Over Two-Dumbbell Row stays as it is. This holds even next to renamed entries that read "Push-Up": Plyo Push-up (`Plyo_Push-up`) and Push Up to Side Plank (`Push_Up_to_Side_Plank`) keep the source's punctuation.
 - **`exerciseType`**: when the source category is wrong for the move, e.g. a static hold filed under `plyometrics`. Posture and activation moves (a chin tuck, wrist mobility) are `Stretch`, following `Wrist_Circles`; a House Exercise writes it (`custom/Chin_Tuck`).
@@ -213,19 +213,19 @@ Decisions for the base set, from the #20 grilling session:
 1. **No cap on size:** every base candidate that passes section 1 is kept, Energetic ones included.
 2. **No near-duplicate filter:** every variant that passes section 1 is its own Exercise, near-identical pairs included. The near-duplicate line is removed from section 1.
 3. **At least 5 Exercises in every Body Area.** House Exercises (`custom/…`, written by us, no photos) fill Neck and Wrists & Forearms, which the source can't fill.
-4. **Floor candidates** found among the base candidates are parked for #33 (floor moves), not dropped.
+4. **Floor candidates** found among the base candidates go in the floor group (`floor.yaml`), not dropped. (First parked for #33; the floor group was then curated in #20.)
 
 ### 2026-11-23: #20 triage
 
 The owner gave verdicts on all 212 candidates (base 147, dumbbells 50, resistance bands 15) on the triage page. Section 1 now reflects them.
 
 1. **Drops brought back** (owner decision after the first triage):
-   - **Partner stretches** that work alone are kept, and drafting rewrites their steps for doing them alone (e.g. `Seated_Front_Deltoid`, `Overhead_Triceps`, `Seated_Biceps`, `Seated_Glute`, `Standing_Towel_Triceps_Extension`). Their solo versions that lie or kneel on the floor are parked for #33. Only moves that truly need a second person stay dropped.
-   - **Explosive and hard moves** are kept, tagged Energetic or graded Intermediate or Expert, because the Energetic switch and the Difficulty ceiling gate them (e.g. `Knee_Tuck_Jump`, `Lateral_Bound`, `Handstand_Push-Ups`). Explosive push-ups are floor moves, so they are parked for #33.
+   - **Partner stretches** that work alone are kept, and drafting rewrites their steps for doing them alone (e.g. `Seated_Front_Deltoid`, `Overhead_Triceps`, `Seated_Biceps`, `Seated_Glute`, `Standing_Towel_Triceps_Extension`). Their solo versions that lie or kneel on the floor go in the floor group (`floor.yaml`; first parked for #33, then curated in #20). Only moves that truly need a second person stay dropped.
+   - **Explosive and hard moves** are kept, tagged Energetic or graded Intermediate or Expert, because the Energetic switch and the Difficulty ceiling gate them (e.g. `Knee_Tuck_Jump`, `Lateral_Bound`, `Handstand_Push-Ups`). Explosive push-ups are floor moves, so they go in the floor group (`floor.yaml`; first parked for #33, then curated in #20).
    - Sprint drills, Olympic-style lifts, moves needing a bench, bar or rack, unclear photos and non-desk moves stay dropped.
 2. **Four owner flips from drop to keep:**
    - `Linear_Acceleration_Wall_Drill`: recommended drop as a sprint drill. The owner left no note; unlike the other sprint drills it is done on the spot, leaning against a wall, so it is gated like the other explosive moves (Energetic).
-   - `One_Half_Locust`: recommended drop because the photos (all fours, then side-lying) contradict the steps (lying face down). Drafting writes the steps from the photos, or marks it for the owner. Both the photos and the steps are on the floor, which `base.yaml` doesn't allow, so the owner confirms its group before it is drafted.
+   - `One_Half_Locust`: recommended drop because the photos (all fours, then side-lying) contradict the steps (lying face down). Drafting writes the steps from the photos, or marks it for the owner. Both the photos and the steps are on the floor, which `base.yaml` doesn't allow, so the owner confirms its group before it is drafted. (Since then: it went to `floor.yaml` as Side-Lying Half Locust, drafted from the photos as a side-lying foot pull.)
    - `Split_Squats`: recommended drop because the photos show a static split-stance lunge while the steps describe a jumping leg switch. Drafting follows the photos (a static split squat); `Split_Jump` and `Scissors_Jump` already cover the jump.
    - `Standing_Gastrocnemius_Calf_Stretch`: recommended drop for its step. The owner: "we can just add a note that any small elevation can sub the box".
 3. **Small elevation:** any small elevation (a book, a stair, a door threshold) can replace a small step or box, so a move needing one is kept and its steps say so (section 1).
@@ -254,7 +254,7 @@ The owner accepted all 193 CP4 drafts (base 60 including 8 House Exercises, floo
 2. **Travelling moves** are done on the spot or as a short out-and-back, never "as far as you can" (section 7).
 3. **Front and back** count as two sides, for Each Side (section 5).
 4. **"Seated"** is dropped from the names of floor-sitting moves (section 8).
-5. **Jargon:** the list grows by Oblique, Lateral, Delt/Deltoid, Scaption, Flexor, Extensor and Isometric; "- With Bands" becomes "Band …" (section 8).
+5. **Jargon:** the list grows by Oblique, Lateral, Delt/Deltoid, Scaption, Flexor, Extensor and Isometric; "- With Bands" becomes "Band …" (section 8). (At the #20 final gate, Lateral and Flexor left the list: the accepted names keep them, as in Band Lateral Raise, Lateral Bound and Standing Hip Flexor Stretch.)
 6. **Partner press:** dropped when no hand is free to resist (section 7).
 7. **Wrong source category:** overridden, to Strength for rep moves filed as stretching and to Plyometric for non-jump explosive moves (section 8).
 8. **Punctuation:** kept source punctuation stays, even next to renamed "Push-Up" entries (section 8).

@@ -57,7 +57,7 @@ export interface BuildResult {
   warnings: string[];
 }
 
-/** Ids of self-authored Exercises start with this. */
+/** Ids of House Exercises (`source: 'self-authored'`) start with this. */
 const CUSTOM_PREFIX = 'custom/';
 
 type Entry = Record<string, unknown>;
