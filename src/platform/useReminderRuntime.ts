@@ -10,7 +10,6 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { handleAction, rearmOnOpen, reminderIdOf } from './handler';
 import { opensGuided, setup } from './notifications';
-import { describeNotification, trace } from './trace';
 
 function rearm() {
   rearmOnOpen().catch((e) => console.warn(`[runtime] rearm failed: ${e}`));
@@ -52,33 +51,10 @@ export function useReminderRuntime() {
       .then(rearm);
 
     const appState = AppState.addEventListener('change', (next) => {
-      trace.line(`appState ${next}`);
       if (next === 'active') rearm();
-    });
-    // #39: logging only, the identifier of each notification presented while JS runs here.
-    const received = Notifications.addNotificationReceivedListener((notification) => {
-      trace.line(
-        describeNotification({
-          what: 'fg received',
-          identifier: notification.request.identifier,
-          reminderId: reminderIdOf(notification.request.content),
-          date: notification.date,
-          now: Date.now(),
-        }),
-      );
     });
     const responses = Notifications.addNotificationResponseReceivedListener((response) => {
       const reminderId = reminderIdOf(response.notification.request.content);
-      trace.line(
-        describeNotification({
-          what: 'fg-listener response',
-          actionId: response.actionIdentifier,
-          identifier: response.notification.request.identifier,
-          reminderId,
-          date: response.notification.date,
-          now: Date.now(),
-        }),
-      );
       route(response);
       handleAction(response.actionIdentifier, { reminderId }, 'fg-listener').catch((e) =>
         console.warn(`[runtime] ${response.actionIdentifier} on ${reminderId} failed: ${e}`),
@@ -93,7 +69,6 @@ export function useReminderRuntime() {
     }
     return () => {
       appState.remove();
-      received.remove();
       responses.remove();
     };
   }, []);
