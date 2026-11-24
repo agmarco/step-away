@@ -19,8 +19,14 @@ export interface Tally {
   exercises: number;
 }
 
-/** One day of the week panel. */
-export type DayMark = 'goal' | 'missed' | 'off' | 'today' | 'future' | 'dayOff';
+/** One day of the week panel or the History calendar. */
+export type DayMark = 'goal' | 'missed' | 'off' | 'today' | 'future' | 'dayOff' | 'none';
+
+/** A calendar month: `month` runs 1-12. */
+export interface YearMonth {
+  year: number;
+  month: number;
+}
 
 /**
  * The Daily Goal a day is judged against: the last change whose `from` is on
@@ -125,6 +131,20 @@ export function weekMarks(state: CoreState, now: Instant): { date: LocalDate; ma
     marks.push({ date, mark: markFor(state, date, today) });
   }
   return marks;
+}
+
+/** Every date of `month`, in order, one mark per day, by the same rule as `weekMarks`. */
+export function monthMarks(_state: CoreState, _month: YearMonth, _now: Instant): { date: LocalDate; mark: DayMark }[] {
+  throw new Error('not implemented');
+}
+
+/**
+ * The months History can show: from the month of the earliest Reminder's day
+ * (the current month when there are none or that is later) to 12 months past
+ * the current month.
+ */
+export function historyRange(_state: CoreState, _now: Instant): { first: YearMonth; last: YearMonth } {
+  throw new Error('not implemented');
 }
 
 /** The day a Reminder belongs to: the local date of its first fire, `firesAt` (a Snooze re-fire doesn't move it). */

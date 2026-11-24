@@ -6,7 +6,7 @@
  */
 
 import { dateKey } from './days';
-import { addDays, instantAt, localDateOf, MINUTE, weekdayOf } from './localTime';
+import { addDays, instantAt, localDateOf, MINUTE, weekdayOf, type LocalDate } from './localTime';
 import { effectiveFire, refireScheduled, settle } from './settle';
 import type { CoreState, Instant, Reminder } from './types';
 
@@ -55,6 +55,11 @@ export function todaysReminders(state: CoreState, now: Instant): Reminder[] {
     return d.year === today.year && d.month === today.month && d.day === today.day;
   };
   return state.reminders.filter((r) => r.firesAt <= now && isToday(r.firesAt)).sort((a, b) => b.firesAt - a.firesAt);
+}
+
+/** The fired Reminders (`firesAt <= now`, any status) belonging to `date` (see `dayOf`), newest first. */
+export function remindersOn(_state: CoreState, _date: LocalDate, _now: Instant): Reminder[] {
+  throw new Error('not implemented');
 }
 
 /**

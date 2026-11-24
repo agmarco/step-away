@@ -12,6 +12,7 @@ const MARK_LABEL: Record<DayMark, string> = {
   today: 'today',
   future: 'still ahead',
   dayOff: 'Day Off',
+  none: 'no data',
 };
 
 /** A week cell's look by mark: Goal Day, missed and a Day Off are filled; today has a ring; the rest are empty. */
@@ -28,6 +29,7 @@ function cellStyle(mark: DayMark, colors: Palette) {
     case 'today':
       return { backgroundColor: colors.background.card, borderWidth: 2, borderColor: colors.accent.hero };
     case 'future':
+    case 'none':
       return { backgroundColor: colors.background.card, borderWidth: 1, borderColor: colors.line.divider };
   }
 }
