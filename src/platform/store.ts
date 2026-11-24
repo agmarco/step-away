@@ -52,6 +52,8 @@ const META = {
   goalChanges: 'goal_changes',
   pauses: 'pauses',
   daysOff: 'days_off',
+  badges: 'badges',
+  achievementsSeenAt: 'achievements_seen_at',
   onboardingDone: 'onboarding_done',
 } as const;
 
@@ -87,6 +89,7 @@ export async function loadState(d: Db): Promise<CoreState> {
   const goalChanges = meta.get(META.goalChanges);
   const pauses = meta.get(META.pauses);
   const daysOff = meta.get(META.daysOff);
+  const badges = meta.get(META.badges);
   return {
     settings: settings ? loadSettings(settings) : defaultSettings,
     lastResponseAt: instant(META.lastResponseAt),
@@ -96,9 +99,9 @@ export async function loadState(d: Db): Promise<CoreState> {
     // Absent before #26: no Pause and no Day Off recorded.
     pauses: pauses ? (JSON.parse(pauses) as Pause[]) : [],
     daysOff: daysOff ? (JSON.parse(daysOff) as LocalDate[]) : [],
-    // #28 CP3: persist
-    badges: [],
-    achievementsSeenAt: null,
+    // Absent before #28: no Badge unlocked and Achievements never opened.
+    badges: badges ? (JSON.parse(badges) as CoreState['badges']) : [],
+    achievementsSeenAt: instant(META.achievementsSeenAt),
     reminders: rows.map(
       (r): Reminder => ({
         id: r.id,
@@ -152,6 +155,8 @@ export async function saveState(d: Db, state: CoreState, now: Instant, previous?
   await setMeta(d, META.goalChanges, JSON.stringify(state.goalChanges));
   await setMeta(d, META.pauses, JSON.stringify(state.pauses));
   await setMeta(d, META.daysOff, JSON.stringify(state.daysOff));
+  await setMeta(d, META.badges, JSON.stringify(state.badges));
+  await setMeta(d, META.achievementsSeenAt, state.achievementsSeenAt === null ? null : String(state.achievementsSeenAt));
 
   if (previous) {
     const before = new Map(previous.reminders.map((r) => [r.id, rowOf(r)]));
