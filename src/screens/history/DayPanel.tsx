@@ -186,7 +186,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   exercise: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  // The source photos are 850×567 (see app/library/[exerciseId].tsx).
+  // The box sets the shape (850:567, most source photos'), and each photo is
+  // cover-fit in it (see app/library/[exerciseId].tsx).
   thumb: { width: 54, aspectRatio: 850 / 567, borderRadius: 6, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
   exerciseName: { fontSize: 15 },
