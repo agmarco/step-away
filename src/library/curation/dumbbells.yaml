@@ -15,3 +15,649 @@ Bent_Over_Two-Dumbbell_Row:
     - Let the weights hang below your shoulders.
     - Pull them up to your sides, elbows close to your body, and squeeze your shoulder blades together.
     - Lower them slowly, and keep your back flat as you stand up at the end.
+
+# #20 CP4: accepted by the owner as drafted, unreviewed, on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Alternate_Hammer_Curl:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Palms facing in, elbows pinned, alternate arms
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, arms by your sides.
+    - Turn your palms to face your body and keep your elbows close to your sides.
+    - Curl one dumbbell up towards your shoulder, keeping your palm facing in.
+    - Lower it slowly, then curl the other one.
+    - Keep alternating arms, moving only your forearms.
+
+Alternating_Deltoid_Raise:
+  # Override: "Deltoid" is anatomy jargon; the name says what the move does
+  # (a front raise, then a side raise) and sets it apart from the other raises.
+  name: Front and Side Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Front, then side, to shoulder height only
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, arms by your sides.
+    - With your elbows slightly bent, raise both weights in front of you to shoulder height.
+    - Lower them slowly to your sides.
+    - On the next rep, raise them out to your sides to shoulder height, then lower them slowly.
+    - Keep alternating front and side.
+
+Bent_Over_Two-Dumbbell_Row_With_Palms_In:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Back flat, palms in, pull elbows back
+  steps:
+    - Hold a light dumbbell in each hand, palms facing each other.
+    - Stand with your feet hip-width apart and your knees slightly bent.
+    - Push your hips back and lean forward, keeping your back flat and your head in line.
+    - Let the weights hang below your shoulders.
+    - Pull them up to your sides, palms still facing in, and squeeze your shoulder blades together.
+    - Lower them slowly, and keep your back flat as you stand up at the end.
+
+Cross_Body_Hammer_Curl:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Curl across to the opposite shoulder
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, palms facing in.
+    - Curl one dumbbell up and across your body towards the opposite shoulder.
+    - Keep your palm facing in; don't twist your wrist.
+    - Lower it slowly along the same path, then curl the other one.
+    - Keep alternating arms.
+
+Cuban_Press:
+  difficulty: Intermediate
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Elbows up, turn weights up, press overhead
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, palms facing back.
+    - Lift your elbows out to shoulder height, forearms hanging down.
+    - Keeping your elbows still, turn your forearms up until the weights are above your elbows.
+    - Press the weights straight up above your head.
+    - Reverse each step slowly to lower them.
+
+Dumbbell_Alternate_Bicep_Curl:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Twist palm up as you curl
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, palms facing your sides.
+    - Keeping your elbow close to your side, curl one dumbbell up, turning your palm up as it rises.
+    - Lower it slowly, turning your palm back in.
+    - Curl the other one the same way.
+    - Keep alternating arms.
+
+Dumbbell_Bicep_Curl:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Elbows pinned to sides, curl both up
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, arms by your sides.
+    - Turn your palms to face forward and keep your elbows close to your sides.
+    - Curl both dumbbells up towards your shoulders.
+    - Squeeze briefly at the top.
+    - Lower them slowly, moving only your forearms.
+
+Dumbbell_Floor_Press:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Upper arms touch the floor, press up together
+  steps:
+    - Lie on your back on the floor with your knees bent and a light dumbbell in each hand.
+    - Hold the weights straight up above your chest.
+    - Lower them slowly until your upper arms rest on the floor.
+    - Pause, then press them back up, bringing them together at the top.
+
+Dumbbell_Lunges:
+  # Override: "Dumbbell Lunges" is plural, which reads oddly as one Exercise.
+  name: Dumbbell Lunge
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Step forward, drop straight down, chest up
+  steps:
+    - Stand tall with a light dumbbell in each hand, arms by your sides.
+    - Take a long step forward with one foot.
+    - Bend both knees to lower your hips, keeping your chest up and your front knee over your ankle.
+    - Push through your front heel to step back to standing.
+    - Lead with the same leg until you finish your reps, then switch sides.
+
+Dumbbell_One-Arm_Upright_Row:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Elbow leads, weight close, up to chest
+  steps:
+    - Sit or stand tall with a light dumbbell in one hand, palm facing you, arm hanging in front.
+    - Rest your free hand on your waist.
+    - Lift the weight straight up close to your body, leading with your elbow.
+    - Stop at about chest height, with your elbow higher than your hand.
+    - Lower it slowly and finish your reps, then switch sides.
+
+Dumbbell_Raise:
+  # Override: "Dumbbell Raise" would be confused with the many other raises;
+  # the name says what sets this one apart (the elbows lead, arms bent).
+  name: Elbows-Up Side Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Elbows lead, lift weights up your sides
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand by your sides, palms facing back.
+    - Leading with your elbows, lift the weights up the sides of your body.
+    - Stop at about chest height, with your elbows higher than your hands.
+    - Lower them back down slowly.
+
+Dumbbell_Rear_Lunge:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Step back, drop straight down, chest up
+  steps:
+    - Stand tall with a light dumbbell in each hand, arms by your sides.
+    - Take a long step back with one foot.
+    - Bend both knees to lower your hips, keeping your chest up and your front knee over your ankle.
+    - Push through your front foot to step back to standing.
+    - Lead with the same leg until you finish your reps, then switch sides.
+
+Dumbbell_Scaption:
+  # Override: "Scaption" is jargon; the name says what the move does.
+  name: Thumbs-Up Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Thumbs up, raise arms in a wide V
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand by your sides, thumbs pointing up.
+    - Keeping your arms straight, raise them forward and out at an angle, in a wide V.
+    - Stop when your hands reach shoulder height.
+    - Lower them slowly.
+
+Dumbbell_Shrug:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Shoulders up to ears, arms stay straight
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, arms by your sides.
+    - Keeping your arms straight, lift your shoulders up towards your ears.
+    - Pause briefly at the top.
+    - Lower your shoulders slowly.
+
+Dumbbell_Side_Bend:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Bend sideways only, no leaning forward
+  steps:
+    - Stand tall with your feet shoulder-width apart and a light dumbbell in one hand by your side.
+    - Rest your other hand on your waist or behind your head.
+    - Keeping your back straight, bend sideways towards the dumbbell as far as is comfortable.
+    - Come back up through centre and bend slightly the other way.
+    - Return to centre and finish your reps, then switch sides.
+
+Dumbbell_Squat:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Sit back, chest up, heels down
+  steps:
+    - Stand with your feet shoulder-width apart, toes slightly out, a light dumbbell in each hand by your sides.
+    - Keeping your chest up and your back straight, bend your knees and sit your hips back.
+    - Lower until your thighs are about level with the floor, or as far as is comfortable.
+    - Push through your heels to stand back up.
+
+Front_Dumbbell_Raise:
+  # Override: "Front Dumbbell Raise" would be confused with Front Two-Dumbbell
+  # Raise (both use two dumbbells); this one alternates arms.
+  name: Alternating Front Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: One arm up front, body stays still
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand in front of your thighs, palms facing you.
+    - With a slight bend in your elbow, raise one weight in front of you to just above shoulder height, palm down.
+    - Lower it slowly as you raise the other one.
+    - Keep alternating arms without swinging your body.
+
+Front_Two-Dumbbell_Raise:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Both arms up front, no swinging
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand in front of your thighs, palms facing you.
+    - With a slight bend in your elbows, raise both weights in front of you to just above shoulder height, palms down.
+    - Pause briefly at the top.
+    - Lower them slowly, keeping your body still.
+
+Hammer_Curls:
+  # Override: "Hammer Curls" is plural, which reads oddly as one Exercise.
+  name: Hammer Curl
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Palms in, curl both, elbows still
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, arms by your sides.
+    - Turn your palms to face your body and keep your elbows close to your sides.
+    - Curl both dumbbells up towards your shoulders, palms still facing in.
+    - Lower them slowly, moving only your forearms.
+
+Iron_Cross:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Squat with arms forward, stand and open wide
+  steps:
+    - Stand with your feet shoulder-width apart and a light dumbbell in each hand.
+    - Raise your arms straight out in front of you at shoulder height.
+    - Bend your knees and sit your hips back into a squat, keeping your chest up.
+    - Stand up and open your arms out to your sides at shoulder height.
+    - Bring your arms back to the front as you squat again.
+
+Plie_Dumbbell_Squat:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Feet wide, toes out, knees follow toes
+  steps:
+    - Stand with your feet wider than your shoulders, toes pointing out.
+    - Hold one light dumbbell by one end with both hands, arms hanging in front of you.
+    - Keeping your chest up, bend your knees out over your toes and lower your hips.
+    - Stop when your thighs are about level with the floor, or as far as is comfortable.
+    - Push through your heels to stand back up.
+
+Power_Partials:
+  # Override: "Power Partials" is gym jargon and plural; the name says what
+  # the move does and sets it apart from the bent-arm side raises.
+  name: Straight-Arm Side Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms straight, lift out to shoulder height
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand by your sides, palms facing in.
+    - Keeping your arms straight, lift the weights out to your sides to shoulder height.
+    - Keep your palms facing down at the top.
+    - Lower them slowly.
+
+See-Saw_Press_Alternating_Side_Press:
+  # Override: the source name says "press" twice; "See-Saw Press" is the
+  # short, recognisable part.
+  name: See-Saw Press
+  difficulty: Intermediate
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Press one arm up, lean the other way
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand at shoulder height, palms facing you.
+    - Press one weight up, turning your palm forward, as you lean your body to the other side.
+    - Lower it back to your shoulder as you come upright.
+    - Press the other weight the same way, leaning the opposite way.
+    - Keep alternating sides.
+
+Side_Lateral_Raise:
+  # Override: "Lateral" is jargon (as in Side Stretch) and repeats "Side".
+  name: Dumbbell Side Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Lift out to the sides, no swinging
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand by your sides, palms facing in.
+    - With a slight bend in your elbows, lift the weights out to your sides.
+    - Stop at shoulder height, tilting the front of each weight slightly down.
+    - Lower them slowly, without swinging your body.
+
+Side_Laterals_to_Front_Raise:
+  # Override: "Laterals" is jargon and plural, and the source name has the
+  # order backwards; the name says what the move does.
+  name: Front Raise and Side Sweep
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Raise in front, sweep out, lower slowly
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand by your sides.
+    - With your elbows slightly bent, raise the weights in front of you to shoulder height.
+    - Keeping them at that height, sweep your arms out to your sides.
+    - Lower them slowly from your sides.
+
+Single_Dumbbell_Raise:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Both hands on one weight, arms straight
+  steps:
+    - Sit or stand tall, holding one light dumbbell by one end with both hands, arms hanging in front of you.
+    - Keeping your arms straight, raise the weight in front of you and up over your head.
+    - Keep your body still as you lift.
+    - Lower it slowly along the same path.
+
+Spell_Caster:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Slow turn, carry weights hip to hip
+  steps:
+    - Stand with your feet wide, holding a light dumbbell in each hand, palms facing back.
+    - Bring both dumbbells to one side, next to your hip, turning your upper body that way.
+    - Turn slowly to the other side, sweeping both weights up and across in front of you to the other hip.
+    - Keep the move smooth and controlled, letting your back heel turn with you.
+    - Keep alternating sides.
+
+Standing_Alternating_Dumbbell_Press:
+  # Override: the move is drafted as Either, so "Standing" no longer fits;
+  # "Shoulder" sets it apart from Dumbbell Floor Press.
+  name: Alternating Shoulder Press
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Press one weight up, no leaning
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand at shoulder height, palms forward, elbows out.
+    - Press one weight straight up, keeping the other in place.
+    - Lower it slowly back to your shoulder.
+    - Press the other one the same way.
+    - Keep alternating arms without leaning or jerking.
+
+Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Back flat, elbow still, straighten arm back
+  steps:
+    - Hold a light dumbbell in one hand, palm facing you.
+    - Stand with your feet hip-width apart and your knees slightly bent.
+    - Push your hips back and lean forward, keeping your back flat, and rest your free hand on your thigh.
+    - Lift the working elbow to your side, upper arm level with your back and forearm hanging down.
+    - Keeping the elbow still, straighten your arm back, then lower the weight slowly.
+    - Keep your back flat as you stand up when you finish your reps, then switch sides.
+
+Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Back flat, elbows still, straighten arms back
+  steps:
+    - Hold a light dumbbell in each hand, palms facing you.
+    - Stand with your feet hip-width apart and your knees slightly bent.
+    - Push your hips back and lean forward, keeping your back flat and your head in line.
+    - Lift your elbows to your sides, upper arms level with your back and forearms hanging down.
+    - Keeping your elbows still, straighten both arms back, then lower the weights slowly.
+    - Keep your back flat as you stand up at the end.
+
+Standing_Concentration_Curl:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Back flat, upper arm still, curl to chest
+  steps:
+    - Hold a light dumbbell in one hand and stand with your feet wide, knees slightly bent.
+    - Push your hips back and lean forward, keeping your back flat, and rest your free hand on your thigh.
+    - Let the weight hang straight down below your shoulder.
+    - Keeping your upper arm still, curl the weight up towards your chest, then lower it slowly.
+    - Keep your back flat as you stand up when you finish your reps, then switch sides.
+
+Standing_Dumbbell_Calf_Raise:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Rise onto your toes, lower slowly
+  steps:
+    - Stand tall on a flat floor, or with the balls of your feet on a small step; a book or a stair works.
+    - Hold a light dumbbell in each hand, arms by your sides.
+    - Rise up onto the balls of your feet.
+    - Pause briefly at the top.
+    - Lower your heels slowly.
+
+Standing_Dumbbell_Press:
+  # Override: the move is drafted as Either, so "Standing" no longer fits;
+  # "Shoulder" sets it apart from Dumbbell Floor Press.
+  name: Dumbbell Shoulder Press
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Press both straight up, don't lean back
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand at head height, elbows bent and out to the sides.
+    - Press both weights straight up above your head.
+    - Pause briefly at the top.
+    - Lower them slowly to head height, without leaning back.
+
+Standing_Dumbbell_Reverse_Curl:
+  # Override: the move is drafted as Either, so "Standing" no longer fits.
+  name: Dumbbell Reverse Curl
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Palms down, curl up, elbows still
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, arms by your sides.
+    - Hold them with your palms facing back, knuckles forward.
+    - Keeping your elbows close to your sides, curl both dumbbells up towards your shoulders.
+    - Lower them slowly, keeping your palms facing down.
+
+Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head:
+  # Override: the move is drafted as Either, so "Standing" no longer fits,
+  # "Delt" is jargon and the name is long; the short name says what it does.
+  name: Overhead Front Raise
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms long, raise in front to overhead
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand in front of your thighs, palms facing you.
+    - Keep your arms straight, with a soft bend in the elbows.
+    - Raise the weights in front of you and up until they are above your head.
+    - Lower them slowly along the same path.
+
+Standing_Dumbbell_Triceps_Extension:
+  # Override: the move is drafted as Either, so "Standing" no longer fits;
+  # "Overhead" sets it apart from the bent-over triceps extensions.
+  name: Overhead Dumbbell Triceps Extension
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Elbows in, lower behind head, press up
+  steps:
+    - Sit or stand tall, cupping one end of a light dumbbell in both hands.
+    - Lift it straight above your head, arms fully stretched.
+    - Keeping your upper arms close to your head, bend your elbows to lower the weight behind your head.
+    - Straighten your arms to press it back up.
+
+Standing_Dumbbell_Upright_Row:
+  # Override: the move is drafted as Either, so "Standing" no longer fits.
+  name: Dumbbell Upright Row
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Elbows lead, weights close, up to chest
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand in front of your thighs, palms facing you.
+    - Lift the weights straight up close to your body, leading with your elbows.
+    - Stop at about chest height, with your elbows higher than your hands.
+    - Lower them slowly.
+
+Standing_Inner-Biceps_Curl:
+  # Override: the move is drafted as Either, so "Standing" no longer fits.
+  name: Inner-Biceps Curl
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Curl out wide, turning palms up
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, palms facing in.
+    - Keeping your elbows close to your sides, curl both dumbbells up and slightly outwards.
+    - Turn your palms up as they rise, ending in line with your shoulders.
+    - Lower them slowly, turning your palms back in.
+
+Standing_One-Arm_Dumbbell_Triceps_Extension:
+  # Override: the move is drafted as Either, so "Standing" no longer fits;
+  # "Overhead" sets it apart from the bent-over one-arm triceps extension.
+  name: One-Arm Overhead Triceps Extension
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Elbow points up, lower behind head
+  steps:
+    - Sit or stand tall with a light dumbbell in one hand.
+    - Raise that arm straight above your head, palm facing forward.
+    - Keeping your upper arm close to your head, bend the elbow to lower the weight behind your head.
+    - Straighten your arm to press it back up.
+    - Bring the weight down when you finish your reps, then switch sides.
+
+Standing_Palms-In_Dumbbell_Press:
+  # Override: the move is drafted as Either, so "Standing" no longer fits;
+  # "Shoulder" sets it apart from Dumbbell Floor Press.
+  name: Palms-In Shoulder Press
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Palms face each other, press straight up
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand at shoulder height, palms facing each other.
+    - Press both weights straight up until your arms are straight.
+    - Lower them slowly back to shoulder height.
+    - Keep your palms facing each other throughout.
+
+Stiff-Legged_Dumbbell_Deadlift:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Back flat, hips back, weights down your legs
+  steps:
+    - Hold a light dumbbell in each hand in front of your thighs.
+    - Stand with your feet hip-width apart and your knees slightly bent.
+    - Keeping your knees still and your back flat, push your hips back and lower the weights down the front of your legs.
+    - Reach towards your feet until you feel the stretch in the back of your thighs.
+    - Push your hips forward to stand up, keeping your back flat all the way up.
+
+Vertical_Swing:
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Hips drive the swing, feet stay down
+  steps:
+    - Check you have clear space above and around you.
+    - Stand with your feet wider than your hips, a light dumbbell in one hand hanging between your legs.
+    - Push your hips back and swing the weight back between your legs, keeping your back flat.
+    - Drive your hips forward to swing the weight up over your head, arm straight and feet on the floor.
+    - Let it swing back down between your legs under control and finish your reps, then switch sides.
+
+Zottman_Curl:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Palms up to lift, palms down to lower
+  steps:
+    - Sit or stand tall with a light dumbbell in each hand, palms facing in.
+    - Keeping your elbows close to your sides, curl both dumbbells up, turning your palms up as they rise.
+    - At the top, turn your palms to face down.
+    - Lower them slowly with your palms down.
+    - Turn your palms back in at the bottom.

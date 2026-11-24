@@ -14,3 +14,1260 @@ Plank:
     - Hold your body in a straight line from head to heels.
     - Keep your hips level, neither sagging nor raised, and breathe.
     - Lower your knees to the floor to finish.
+
+# #20 CP4: accepted by the owner as drafted, unreviewed, on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+3_4_Sit-Up:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Sit right up, never lie back down
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Place your hands lightly behind your head.
+    - Curl up until your upper body is upright.
+    - Lower yourself most of the way back, stopping before your shoulders touch the floor.
+    - Sit straight back up from there.
+
+90_90_Hamstring:
+  # Override: "90/90" is jargon and "Hamstring" alone is a bare body part; the
+  # name says what the move does and sets it apart from the held
+  # Leg-Up Hamstring Stretch, which shares its photos.
+  name: Lying Leg Straightener
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Hold the thigh still, straighten the knee slowly
+  steps:
+    - Lie on your back on the floor with both legs straight.
+    - Lift one leg and bend the hip and knee to a right angle.
+    - Hold the back of that thigh with both hands.
+    - Straighten the knee slowly, pushing the foot up towards the ceiling.
+    - Bend it back to the start and finish your reps, then switch sides.
+
+Adductor_Groin:
+  # Override: "Adductor/Groin" is anatomy jargon and two bare body parts.
+  name: Legs-Up Groin Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+  cue: Press knees in, then relax them wider
+  steps:
+    - Lie on your back on the floor and raise both legs towards the ceiling.
+    - Open your legs into a wide V and rest your hands on the insides of your knees.
+    - Press your knees inwards against your hands for a few seconds, without letting them move.
+    - Relax your legs and let your hands ease them a little further apart.
+    - Bring your legs together slowly, bend your knees and lower your feet to the floor.
+
+Air_Bike:
+  # Override: "Air Bike" is also the name of a gym machine; this is the
+  # bicycle crunch.
+  name: Bicycle Crunch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Elbow to opposite knee, pedal slowly
+  steps:
+    - Lie on your back on the floor with your hands lightly beside your head.
+    - Lift your shoulders off the floor and raise your knees above your hips, shins level.
+    - Straighten one leg as you bring the opposite elbow towards the other knee.
+    - Switch legs and bring your other elbow towards the other knee.
+    - Keep alternating sides slowly, without pulling on your neck.
+
+All_Fours_Quad_Stretch:
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hold the foot, heel to bottom, hips forward
+  steps:
+    - Kneel on the floor on your hands and knees.
+    - Lift one foot and reach back with the hand on that side to hold it.
+    - Pull the heel towards your bottom, keeping your other hand under your shoulder.
+    - Gently push your hips forward until you feel the stretch in the front of your thigh.
+    - Release slowly, then switch sides.
+
+Alternate_Heel_Touchers:
+  # Override: "Heel Touchers" is plural, which reads oddly as one Exercise.
+  name: Alternate Heel Touch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Shoulders up, reach side to side
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat, a little apart.
+    - Rest your arms by your sides.
+    - Lift your shoulders slightly off the floor.
+    - Reach one hand towards that heel by bending your upper body sideways.
+    - Come back to the centre and reach to the other side.
+    - Keep alternating sides, with your shoulders off the floor.
+
+Ankle_On_The_Knee:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Ankle on knee, pull both legs in
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Cross one ankle over the opposite knee.
+    - Reach through and hold the back of the lower thigh with both hands.
+    - Pull both legs gently towards your chest until you feel the stretch in your buttock.
+    - Keep your neck and shoulders relaxed.
+    - Release slowly, then switch sides.
+
+Bent-Knee_Hip_Raise:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Knees to chest, roll hips up slowly
+  steps:
+    - Lie on your back on the floor with your arms by your sides.
+    - Bend your knees and lift your feet just off the floor.
+    - Keeping the bend in your knees, bring them in towards your chest.
+    - Roll your hips up off the floor until your knees are over your chest.
+    - Lower your hips and feet back down slowly.
+
+Body-Up:
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Forearm plank, press up onto your hands
+  steps:
+    - Lie face down on the floor, resting on your forearms with your elbows under your shoulders.
+    - Lift onto your toes into a forearm plank, body straight.
+    - Press your palms into the floor and straighten your arms to lift your forearms off it.
+    - Lower your forearms back down slowly, keeping your hips level.
+    - Lower your knees to the floor to finish.
+
+Bottoms_Up:
+  # Override: "Bottoms Up" is jargon; the name says what the move does.
+  name: Tuck and Leg Raise
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Tuck knees, straighten legs up, lift hips
+  steps:
+    - Lie on your back on the floor with your legs straight and your arms by your sides.
+    - Tuck your knees in towards your chest.
+    - Straighten your legs up towards the ceiling.
+    - Lift your hips a little off the floor, then lower them.
+    - Bend your knees and lower your legs slowly back to the floor.
+
+Butt-Ups:
+  # Override: "Butt-Ups" is plural, and the name now says it starts in a plank.
+  name: Plank Butt-Up
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: From plank, hips up high, lower without sagging
+  steps:
+    - Kneel on the floor and rest your forearms on it, elbows under your shoulders.
+    - Step your feet back one at a time into a plank.
+    - Lift your hips up high, keeping your forearms where they are.
+    - Lower them slowly back to the plank, without letting your hips sag.
+    - Lower your knees to the floor to finish.
+
+Butt_Lift_Bridge:
+  # Override: the bracketed "Butt Lift (Bridge)" reads awkwardly; Glute Bridge
+  # is the common name and pairs with Single Leg Glute Bridge.
+  name: Glute Bridge
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Push through heels, lift hips, don't arch
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat, shoulder-width apart.
+    - Rest your arms on the floor by your sides.
+    - Push through your heels to lift your hips until your body is straight from shoulders to knees.
+    - Pause briefly at the top without arching your back.
+    - Lower your hips slowly to the floor.
+
+Cat_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+  cue: On all fours, round your back, head down
+  steps:
+    - Kneel on the floor on your hands and knees.
+    - Place your hands under your shoulders and your knees under your hips.
+    - Pull your belly in and round your back up towards the ceiling.
+    - Let your head drop and breathe.
+    - Release slowly back to a flat back.
+
+Childs_Pose:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Sit back on heels, arms long, relax
+  steps:
+    - Kneel on the floor on your hands and knees.
+    - Walk your hands a little way forward.
+    - Sit your hips back towards your heels, letting your arms slide along the floor.
+    - Rest your forehead on the floor and breathe into your back.
+    - Walk your hands back in to come up slowly.
+
+Clock_Push-Up:
+  # Override: the source category is "strength", but the hands leave the
+  # floor on every rep: a plyometric move, like Plyo Push-up.
+  exerciseType: Plyometric
+  difficulty: Expert
+  position: Floor
+  energetic: true
+  dose:
+    reps: 10
+  cue: Small hop sideways each rep, land softly
+  steps:
+    - Kneel on the floor and place your hands under your shoulders.
+    - Step your feet back one at a time, resting on your toes.
+    - Lower your chest towards the floor, then push up briskly so your hands lift a little.
+    - Move your hands a short way to one side and land softly, elbows slightly bent.
+    - Step your feet round to follow, so you turn a little each rep.
+    - Keep going round the same way, like the hand of a clock.
+
+Cocoons:
+  # Override: "Cocoons" is plural and jargon; "Crunch" says what it is.
+  name: Cocoon Crunch
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms and knees meet over your middle
+  steps:
+    - Lie on your back on the floor with your legs straight and your arms stretched out behind your head.
+    - Bring your knees in towards your chest, lifting your hips slightly.
+    - At the same time, curl your upper body up and bring your arms over towards your knees.
+    - Pause briefly in the tuck.
+    - Uncurl slowly back to lying long.
+
+Cross-Body_Crunch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Shoulder to opposite knee, not just elbow
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Place your hands loosely behind your head.
+    - Curl up, bringing one shoulder across towards the opposite knee as that knee comes in.
+    - Lower back down slowly.
+    - Repeat with the other shoulder and knee, and keep alternating sides.
+
+Crunch_-_Hands_Overhead:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms stay beside your ears as you curl
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Stretch your arms up past your head, hands crossed.
+    - Curl your shoulders just off the floor, keeping your arms in line with your head.
+    - Pause briefly at the top.
+    - Lower back down slowly.
+
+Dancers_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hug bent knee, twist towards it, sit tall
+  steps:
+    - Sit on the floor with your legs straight out in front of you.
+    - Bend one knee and cross that foot over the straight leg, flat on the floor.
+    - Place the hand on that side on the floor behind you.
+    - Hook your other arm round the bent knee.
+    - Sit tall and turn your upper body towards the bent knee.
+    - Turn back slowly, then switch sides.
+
+Dead_Bug:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Back flat on the floor, one leg out
+  steps:
+    - Lie on your back on the floor with your arms pointing up at the ceiling.
+    - Lift your legs so your knees are over your hips and your shins are level.
+    - Breathe out and press your lower back flat into the floor.
+    - Straighten one leg out until it is just above the floor, keeping your back flat.
+    - Bring it back in, then keep alternating legs.
+
+Elbow_to_Knee:
+  # Override: the source name would be confused with Cross-Body Crunch and
+  # Bicycle Crunch; the crossed leg sets this one apart.
+  name: Crossed-Leg Elbow to Knee
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Leg crossed, twist elbow to raised knee
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Cross one ankle over the opposite knee.
+    - Clasp your hands lightly behind your head.
+    - Curl up and twist, bringing the opposite elbow towards the crossed knee.
+    - Lower back down slowly and finish your reps, then switch sides.
+
+Floor_Glute-Ham_Raise:
+  difficulty: Expert
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Body straight, lower slowly, catch with hands
+  steps:
+    - Kneel on the floor and hook your heels under something stable, such as a sofa or a heavy desk.
+    - Cross your arms on your chest and keep your body straight from knees to head.
+    - Lean forward slowly from the knees, without bending at the hips.
+    - When you can't control it any further, catch yourself on your hands.
+    - Push lightly off the floor to help yourself back up.
+
+Frog_Sit-Ups:
+  # Override: "Frog Sit-Ups" is plural, which reads oddly as one Exercise.
+  name: Frog Sit-Up
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Soles together, knees out, curl up a little
+  steps:
+    - Lie on your back on the floor.
+    - Bend your knees, let them fall out to the sides and press the soles of your feet together.
+    - Cross your arms over your chest.
+    - Press your lower back into the floor and curl your shoulders up off it.
+    - Pause briefly, then lower back down slowly.
+
+Glute_Kickback:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Knee stays bent, heel to ceiling, back flat
+  steps:
+    - Kneel on the floor on your hands and knees, hands under your shoulders.
+    - Keeping the knee bent, lift one leg until your thigh is in line with your back.
+    - Squeeze your buttock at the top, without arching your lower back.
+    - Lower the knee back down slowly.
+    - Keep alternating legs.
+
+Groin_and_Back_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hands behind head, curl elbows between knees
+  steps:
+    - Sit on the floor with your knees bent and your feet together.
+    - Interlace your fingers behind your head, keeping the hold light.
+    - Curl down slowly, reaching your elbows towards the insides of your knees until you feel the stretch.
+    - Pause briefly, then sit back up tall with your head up.
+
+Groiners:
+  # Override: "Groiners" is jargon and plural; Plank Jump-In says what the
+  # move is.
+  name: Plank Jump-In
+  # Override: the source category is "stretching", but both feet jump forward
+  # and back from a push-up position: a plyometric move, like Mountain Climber.
+  exerciseType: Plyometric
+  difficulty: Intermediate
+  position: Floor
+  energetic: true
+  dose:
+    reps: 10
+  cue: Hop feet to hands, land softly, head up
+  steps:
+    - Start in a push-up position on the floor, hands under your shoulders and body straight.
+    - Jump both feet forward, landing softly beside your hands.
+    - Keep your head up and your hands planted.
+    - Jump your feet back to the push-up position, landing softly.
+
+Hamstring_Stretch:
+  # Override: "Hamstring Stretch" would be confused with the several other
+  # hamstring stretches; the strap is what sets this one apart.
+  name: Strap Hamstring Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Strap round foot, leg straight, pull gently
+  steps:
+    - Lie on your back on the floor with both legs straight.
+    - Loop a belt, towel or band round the ball of one foot.
+    - Raise that leg towards the ceiling, keeping your other leg flat on the floor.
+    - Pull gently on the strap, drawing the leg towards you until you feel the stretch in the back of your thigh.
+    - Lower the leg slowly, then switch sides.
+
+Hip_Circles_prone:
+  # Override: "Hip Circles (prone)" is plural, bracketed, and "prone" is both
+  # jargon and wrong (the move is on all fours, not face down).
+  name: All Fours Hip Circle
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Knee off the floor, draw big slow circles
+  steps:
+    - Kneel on the floor on your hands and knees.
+    - Lift one knee slightly off the floor, keeping it bent.
+    - Draw a big, slow circle with that knee, keeping your back still.
+    - Reverse the direction halfway and finish your reps, then switch sides.
+
+Hug_Knees_To_Chest:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Hold behind knees, pull them in gently
+  steps:
+    - Lie on your back on the floor.
+    - Bring both knees up towards your chest.
+    - Hold your legs behind the knees, not over them.
+    - Gently pull your knees towards your shoulders and relax your back.
+    - Release slowly and lower your feet to the floor.
+
+Inchworm:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Walk hands out, walk feet in, hips level
+  steps:
+    - Stand with your feet together.
+    - Bend forward and put your hands on the floor, bending your knees as much as you need.
+    - Walk your hands forward slowly until your body is straight, as in a push-up.
+    - Keep your hands still and walk your feet in with small steps, legs as straight as is comfortable.
+    - Walk your hands out again from there, and roll up to standing at the end.
+
+Iron_Crosses_stretch:
+  # Override: "Iron Crosses (stretch)" is plural and bracketed, and an iron
+  # cross is also a gym ring move; Scorpion Stretch is the common name.
+  name: Scorpion Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Shoulders down, foot slowly across to other hand
+  steps:
+    - Lie face down on the floor with your arms straight out to the sides, palms down.
+    - Bend one knee and slowly lift that leg across the back of your body.
+    - Reach your foot towards the floor near your opposite hand until you feel the stretch.
+    - Keep both shoulders on the floor.
+    - Bring the leg back slowly and keep alternating sides.
+
+Isometric_Wipers:
+  # Override: "Isometric" is jargon, and wrong here: the body moves side to
+  # side. The new name says what the move does.
+  name: Side-to-Side Push-Up
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Shift side to side, body stays straight
+  steps:
+    - Kneel on the floor and place your hands wider than your shoulders.
+    - Step your feet back one at a time, resting on your toes.
+    - Shift your weight to one side, bending that elbow to lower your chest towards that hand.
+    - Push back to the centre, then shift to the other side.
+    - Keep alternating sides.
+
+Jackknife_Sit-Up:
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Lift arms and straight legs to meet
+  steps:
+    - Lie on your back on the floor with your legs straight and your arms stretched out behind your head.
+    - Breathe out and lift your straight legs and your upper body at the same time.
+    - Reach your hands towards your shins as they meet.
+    - Lower your arms and legs back down slowly.
+
+Janda_Sit-Up:
+  # Override: "Janda" is a person's name, which tells the user nothing; the
+  # slow pace is what sets this sit-up apart.
+  name: Slow Sit-Up
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Squeeze your bottom, rise very slowly
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Cross your arms over your chest.
+    - Squeeze your bottom and the backs of your legs firmly.
+    - Breathe out as you sit up very slowly, keeping the squeeze.
+    - Breathe in as you lower back down slowly.
+
+Knee_Across_The_Body:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Knee across, shoulders stay down, head turns away
+  steps:
+    - Lie on your back on the floor with your legs straight.
+    - Bend one knee and lower it across your body towards the floor.
+    - Hold that knee down gently with your opposite hand; it needn't touch the floor.
+    - Rest your other arm out to the side and turn your head towards it.
+    - Release slowly, then switch sides.
+
+Kneeling_Forearm_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Fingers towards knees, palms flat, lean back
+  steps:
+    - Kneel on the floor and place your palms flat in front of your knees.
+    - Turn your hands so your fingers point back towards your knees.
+    - Keeping your palms flat, lean back slowly until you feel the stretch in your forearms.
+    - Come forward again slowly to release.
+
+Kneeling_Hip_Flexor:
+  # Override: "Hip Flexor" is anatomy jargon; the name describes the shape.
+  name: Kneeling Lunge Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Chest up, shift hips forward, don't arch
+  steps:
+    - Kneel on the floor, then step one foot forward so that knee is bent at a right angle.
+    - Rest the top of your back foot on the floor and your hands on your hips.
+    - Keep your chest up and tuck your hips under slightly.
+    - Shift your weight forward until you feel the stretch at the front of your back hip.
+    - Release slowly, then switch sides.
+
+Leg-Up_Hamstring_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Hold the thigh, straighten the knee, ease in
+  steps:
+    - Lie on your back on the floor, bend one knee and put that foot flat.
+    - Raise your other leg and hold the back of the thigh with both hands.
+    - Straighten that knee as far as is comfortable, sole towards the ceiling.
+    - Gently pull the leg towards you until you feel the stretch in the back of your thigh.
+    - Release slowly, then switch sides.
+
+Leg_Pull-In:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Pull knees to chest, shins stay level
+  steps:
+    - Lie on your back on the floor with your legs straight and your hands by your sides.
+    - Bend your knees and pull your thighs in until your knees are over your chest.
+    - Keep your shins level with the floor as they come in.
+    - Pause briefly at the top.
+    - Straighten your legs back out slowly.
+
+Looking_At_Ceiling:
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Hands on heels, hips forward, look up
+  steps:
+    - Kneel on the floor with your knees hip-width apart and your toes tucked under.
+    - Reach back towards your heels with both hands, one at a time, and hold them if you can.
+    - Push your hips gently forward and lift your chest.
+    - Tip your head back slowly to look at the ceiling.
+    - Let go one hand at a time and come back up slowly.
+
+Lower_Back_Curl:
+  # Override: "Curl" suggests bending forward, but the move lifts the chest
+  # backwards; the name says what it does.
+  name: Face-Down Chest Lift
+  # Override: the source category is "stretching", but this is a repeated
+  # lift with the back muscles: a strength move.
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Lift chest without pushing on hands
+  steps:
+    - Lie face down on the floor with your arms by your sides.
+    - Lift your chest off the floor, keeping your hips down.
+    - Keep your head in line and don't push up with your hands.
+    - Lower your chest back down slowly.
+
+Lying_Crossover:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Press knee into hand, then ease it down
+  steps:
+    - Lie on your back on the floor with your legs straight and your arms out to the sides.
+    - Bend one knee and cross it over your body towards the floor.
+    - Hold that knee with your opposite hand, keeping both shoulders down.
+    - Press the knee up into your hand for a few seconds, without letting it move.
+    - Relax the leg and let your hand ease the knee a little closer to the floor.
+    - Release slowly, then switch sides.
+
+Lying_Glute:
+  # Override: "Lying Glute" is a bare body part; adding "Stretch" is the
+  # smallest fix, as with Seated Glute Stretch.
+  name: Lying Glute Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Press leg into hands, then pull it in
+  steps:
+    - Lie on your back on the floor with your legs straight.
+    - Bend one knee and lift it, turning the leg out so the foot crosses over your other hip.
+    - Hold the knee with one hand and the ankle with the other.
+    - Push the leg away into your hands for a few seconds, without letting it move.
+    - Relax, then gently pull the knee and ankle towards your chest.
+    - Release slowly, then switch sides.
+
+Lying_Prone_Quadriceps:
+  # Override: "Prone" and "Quadriceps" are anatomy jargon.
+  name: Face-Down Quad Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Press foot into hand, then heel to bottom
+  steps:
+    - Lie face down on the floor, resting your forehead on one forearm.
+    - Bend one knee and reach back with the hand on that side to hold the ankle.
+    - Push your foot back into your hand for a few seconds, without letting it move.
+    - Relax, then gently pull the heel towards your bottom.
+    - Release slowly, then switch sides.
+
+Mountain_Climbers:
+  # Override: "Mountain Climbers" is plural, which reads oddly as one Exercise.
+  name: Mountain Climber
+  difficulty: Intermediate
+  position: Floor
+  energetic: true
+  dose:
+    reps: 10
+  cue: Hips level, drive knees in, swap quickly
+  steps:
+    - Start in a push-up position on the floor, hands under your shoulders.
+    - Bring one knee in under your chest, resting on the ball of that foot.
+    - Swap legs quickly, driving the other knee in as the first goes back.
+    - Keep your hips level and your hands planted.
+    - Keep alternating legs.
+
+Oblique_Crunches:
+  # Override: "Oblique" is anatomy jargon and the source name is plural; the
+  # raised feet set this one apart.
+  name: Feet-Up Twist Crunch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Feet up on chair, elbow to opposite knee
+  steps:
+    - Lie on your back on the floor and rest your feet on a chair seat, knees bent.
+    - Place one hand beside your head and rest the other arm on the floor.
+    - Curl up, lifting the shoulder of the raised hand.
+    - Bring that elbow towards the opposite knee.
+    - Lower back down slowly and finish your reps, then switch sides.
+
+Oblique_Crunches_-_On_The_Floor:
+  # Override: "Oblique" is anatomy jargon and the source name is plural; lying
+  # on your side is what sets this one apart.
+  name: Side-Lying Crunch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: On your side, lift elbow towards hip
+  steps:
+    - Lie on one side on the floor with your legs stacked and your knees slightly bent.
+    - Place your top hand behind your head.
+    - Lift your top elbow and shoulder up towards your hip.
+    - Pause briefly at the top.
+    - Lower back down slowly and finish your reps, then switch sides.
+
+On_Your_Side_Quad_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hold top foot, push hip forward gently
+  steps:
+    - Lie on your side on the floor and rest your head on your lower arm.
+    - Bend your lower knee in front of you to steady yourself.
+    - Bend your top knee and hold that foot behind you with your top hand.
+    - Press your top hip forward as you push your foot back into your hand.
+    - Release slowly, then switch sides.
+
+One_Half_Locust:
+  # Override: drafted from the photos (a side-lying foot pull), not the
+  # face-down locust the source text describes, so the name keeps the
+  # recognisable part and says how it is done.
+  name: Side-Lying Half Locust
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Pull top foot back, chest lifts
+  steps:
+    - Lie on your side on the floor, propped up on your lower forearm.
+    - Keep your lower leg straight along the floor.
+    - Bend your top knee and reach back with your top hand to hold that foot.
+    - Lift your chest and gently pull the foot back until you feel the stretch in the front of your thigh.
+    - Release slowly, then switch sides.
+
+One_Knee_To_Chest:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Pull one knee in, other leg stays long
+  steps:
+    - Lie on your back on the floor with both legs straight.
+    - Bend one knee and hold the back of that thigh, just under the knee.
+    - Gently pull the knee towards your chest.
+    - Keep your other leg straight and resting on the floor.
+    - Release slowly, then switch sides.
+
+Pelvic_Tilt_Into_Bridge:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Tilt hips first, then peel the back up
+  steps:
+    - Lie on your back on the floor with your knees bent and your heels under your knees.
+    - Pull your belly in and tilt your tailbone up, flattening your lower back.
+    - Keep lifting, raising your back off the floor bit by bit into a bridge.
+    - Keep your head and shoulders on the floor.
+    - Lower your back down slowly, one part at a time.
+
+Plyo_Push-up:
+  difficulty: Expert
+  position: Floor
+  energetic: true
+  dose:
+    reps: 10
+  cue: Push up briskly, hands lift, land softly
+  steps:
+    - Kneel on the floor and place your hands under your shoulders.
+    - Step your feet back one at a time, resting on your toes.
+    - Keeping your body straight, lower your chest towards the floor.
+    - Push up briskly so your hands leave the floor just a little.
+    - Land softly on your hands with your elbows slightly bent.
+    - Lower your knees to the floor to finish.
+
+Prone_Manual_Hamstring:
+  # Override: "Prone" and "Manual" are jargon, and "Hamstring" is a bare body
+  # part; the name says how the solo version works.
+  name: Crossed-Ankle Leg Curl
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Curl heel up, other leg pushes against it
+  steps:
+    - Lie face down on the floor, resting your head on your forearms.
+    - Cross your ankles, with the other leg's ankle resting on the back of the working one.
+    - Bend the working knee to lift that foot towards your bottom, pushing down against it with the top leg.
+    - Lower it slowly, still resisting, and finish your reps, then switch sides.
+
+Push-Up_Wide:
+  # Override: "Push-Up Wide" reads in an odd word order.
+  name: Wide Push-Up
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hands wide, body straight, hips don't sag
+  steps:
+    - Kneel on the floor and place your hands wider than your shoulders.
+    - Step your feet back one at a time, resting on your toes.
+    - Keeping your body straight, bend your elbows to lower your chest towards the floor.
+    - Push back up until your arms are straight.
+    - Lower your knees to the floor to finish.
+
+Push-Ups_-_Close_Triceps_Position:
+  # Override: the source name is plural, long and names a body part; the
+  # hand position is what sets this push-up apart.
+  name: Close-Hand Push-Up
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hands close, elbows tuck in by your sides
+  steps:
+    - Kneel on the floor and place your hands close together under your chest.
+    - Step your feet back one at a time, resting on your toes.
+    - Keeping your body straight, bend your elbows to lower your chest towards your hands.
+    - Keep your elbows close to your sides as you push back up.
+    - Lower your knees to the floor to finish.
+
+Push_Up_to_Side_Plank:
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Push up, then turn and reach up
+  steps:
+    - Kneel on the floor and place your hands just wider than your shoulders.
+    - Step your feet back one at a time, resting on your toes.
+    - Keeping your body straight, lower your chest towards the floor, then push back up.
+    - Turn onto one hand and the sides of your feet, reaching your other arm up.
+    - Bring that hand back down, do another push-up and turn to the other side.
+    - Keep alternating sides.
+
+Pushups:
+  # Override: "Pushups" is plural, which reads oddly as one Exercise; spelt
+  # Push-Up to match the other push-up variants.
+  name: Push-Up
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Body straight, chest towards the floor
+  steps:
+    - Kneel on the floor and place your hands under your shoulders.
+    - Step your feet back one at a time, resting on your toes.
+    - Keeping your body straight, bend your elbows to lower your chest towards the floor.
+    - Push back up until your arms are straight.
+    - Lower your knees to the floor to finish.
+
+Pushups_Close_and_Wide_Hand_Positions:
+  # Override: the source name is plural and long; this one switches hand
+  # width, which separates it from Wide Push-Up and Close-Hand Push-Up.
+  name: Close and Wide Push-Up
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Switch hands between close and wide each rep
+  steps:
+    - Kneel on the floor and place your hands close together under your chest.
+    - Step your feet back one at a time, resting on your toes, body straight.
+    - Bend your elbows to lower your chest towards the floor, then push back up.
+    - Walk your hands out wider than your shoulders and do the next push-up.
+    - Keep alternating between close and wide hands.
+    - Lower your knees to the floor to finish.
+
+Rear_Leg_Raises:
+  # Override: "Rear Leg Raises" is plural, which reads oddly as one Exercise.
+  name: Rear Leg Raise
+  # Override: the source category is "stretching", but lifting the straight
+  # leg against gravity is a strength move, like Glute Kickback.
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Leg straight back and up, back flat
+  steps:
+    - Kneel on the floor on your hands and knees, hands under your shoulders.
+    - Straighten one leg and lift it up behind you until it's in line with your back.
+    - Keep your back flat; don't arch to lift the leg higher.
+    - Lower the knee back down slowly and finish your reps, then switch sides.
+
+Reverse_Crunch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Roll hips up, arms stay flat
+  steps:
+    - Lie on your back on the floor with your arms by your sides, palms down.
+    - Lift your legs so your thighs point up and your shins are level.
+    - Roll your hips up off the floor, bringing your knees towards your chest.
+    - Pause briefly, then lower your hips back down slowly.
+
+Scissor_Kick:
+  # Override: the source category is "stretching", but this is a repeated leg
+  # lift held off the floor: a strength move.
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Lower back down, legs switch up and down
+  steps:
+    - Lie on your back on the floor with your arms out to your sides, palms down.
+    - Lift your heels just off the floor, knees slightly bent.
+    - Raise one leg higher while the other stays just above the floor.
+    - Switch legs, keeping your lower back pressed down.
+    - Keep alternating legs, breathing steadily.
+
+Seated_Calf_Stretch:
+  # Override: "Seated" contradicts the drafted Position (Floor) and would read
+  # as a chair stretch.
+  name: Floor Calf Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Toes pulled back, reach forward, back long
+  steps:
+    - Sit tall on the floor with your legs straight out in front.
+    - Bend one knee and put that foot flat on the floor.
+    - Pull the toes of your straight leg up towards you.
+    - Reach towards those toes with both hands until you feel the stretch in your calf; a belt or towel round the foot helps if they're out of reach.
+    - Release slowly, then switch sides.
+
+Seated_Floor_Hamstring_Stretch:
+  # Override: "Seated" contradicts the drafted Position (Floor), and the name
+  # must stand apart from the other floor hamstring stretches.
+  name: One-Leg Floor Hamstring Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Lean from the hips, reach towards your ankle
+  steps:
+    - Sit on the floor with one leg straight out in front.
+    - Bend your other knee and rest that foot against the inside of your straight thigh.
+    - Sit tall, then lean forward from your hips.
+    - Reach towards the ankle of the straight leg until you feel the stretch in the back of your thigh.
+    - Release slowly, then switch sides.
+
+Seated_Hamstring:
+  # Override: "Seated Hamstring" is a bare body part and "Seated" contradicts
+  # the drafted Position (Floor); the name says it adds the press, as with
+  # Triceps Press and Stretch.
+  name: Floor Hamstring Press and Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+  cue: Push back into your grip, then lean further
+  steps:
+    - Sit on the floor with both legs straight out in front.
+    - Lean forward from your hips and hold your shins wherever you can reach.
+    - Try to sit back up against your grip for a few seconds, without letting your body move.
+    - Relax, then lean a little further forward until you feel the stretch in the back of your thighs.
+    - Let go and sit up slowly.
+
+Seated_Overhead_Stretch:
+  # Override: "Seated" is a Position that contradicts Floor, and "Overhead"
+  # would be confused with Side Stretch; the soles-together sit sets it apart.
+  name: Butterfly Side Stretch
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Elbow up to ceiling, lean sideways
+  steps:
+    - Sit tall on the floor with the soles of your feet together in front of you.
+    - Place one hand on the floor beside you.
+    - Put your other hand behind your head.
+    - Lift that elbow towards the ceiling as you lean towards the hand on the floor.
+    - Come back up slowly, then switch sides.
+
+Side-Lying_Floor_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hold top wrist, pull gently, lengthen your side
+  steps:
+    - Lie on one side on the floor and bend your lower knee in front of you.
+    - Straighten your top leg and rest that foot on the floor behind you.
+    - Reach both arms over your head and hold your top wrist with your lower hand.
+    - Pull the wrist gently until you feel the stretch along your top side.
+    - Release slowly, then switch sides.
+
+Side_Bridge:
+  # Override: "Bridge" would be confused with the lying bridge (Pelvic Tilt
+  # Into Bridge); "Side Plank" is the common name and pairs with Plank.
+  name: Side Plank
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hips lifted, body straight, don't drop
+  steps:
+    - Lie on one side on the floor, resting on your forearm with your elbow under your shoulder.
+    - Stack your legs and put your top hand on your hip.
+    - Lift your hips until your body is straight from head to feet.
+    - Keep your hips up and breathe.
+    - Lower your hips to the floor, then switch sides.
+
+Side_Jackknife:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Top leg and elbow lift to meet
+  steps:
+    - Lie on one side on the floor, legs straight, resting on your lower arm.
+    - Place your top hand behind your head.
+    - Lift your top leg as you crunch your elbow towards it.
+    - Lower both back down slowly and finish your reps, then switch sides.
+
+Side_Lying_Groin_Stretch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Top leg up, ease it towards your shoulder
+  steps:
+    - Lie on your side on the floor with your legs straight and your head resting on your lower hand.
+    - Lift your top leg towards the ceiling and hold it behind the knee with your top hand.
+    - Gently pull the leg towards your shoulder until you feel the stretch on the inside of your thigh.
+    - Keep your hips stacked; don't roll backwards.
+    - Lower the leg slowly, then switch sides.
+
+Single-Arm_Push-Up:
+  difficulty: Expert
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Feet wide, lower slowly, hips stay level
+  steps:
+    - Kneel on the floor with one hand under your shoulder and the other behind your back.
+    - Step your feet back and wide apart, resting on your toes.
+    - Lower your chest slowly towards the floor, only as far as you can control.
+    - Push back up to a straight arm and finish your reps, then switch sides.
+
+Single_Leg_Glute_Bridge:
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Push through one heel, hips stay level
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Lift one leg and straighten it towards the ceiling.
+    - Push through the heel of your other foot to lift your hips off the floor.
+    - Lift until your body is straight from shoulders to knee, keeping your hips level.
+    - Lower slowly and finish your reps, then switch sides.
+
+Sit-Up:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Hands behind head, don't pull your neck
+  steps:
+    - Lie on your back on the floor with your knees bent and your feet flat.
+    - Tuck your feet under a sofa or heavy chair if you like.
+    - Clasp your fingers lightly behind your head.
+    - Sit up until your body and thighs make a V.
+    - Lower yourself back down slowly.
+
+Spider_Crawl:
+  difficulty: Intermediate
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Low push-up, knee out to elbow
+  steps:
+    - Get into a push-up position on your hands and toes, body straight.
+    - Bend your elbows to lower yourself partway.
+    - Lift one foot and bring that knee out to the side, up towards the same elbow.
+    - Return the foot to the floor.
+    - Keep alternating legs, holding your body low and straight.
+
+Superman:
+  # Override: the source category is "stretching", but this is a repeated lift
+  # with the back muscles: a strength move.
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Lift arms, chest and legs together
+  steps:
+    - Lie face down on the floor with your arms stretched out in front of you.
+    - Lift your arms, chest and legs off the floor at the same time.
+    - Hold briefly at the top.
+    - Lower everything back down slowly.
+
+The_Straddle:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+  cue: Legs wide, walk hands forward, back long
+  steps:
+    - Sit tall on the floor with your legs straight and wide apart in a V.
+    - Put your hands on the floor in front of you.
+    - Lean forward from your hips, walking your hands forward until you feel the stretch.
+    - Keep your back long and your knees pointing up.
+    - Walk your hands back and sit up slowly.
+
+Toe_Touchers:
+  # Override: "Toe Touchers" is plural, and the move reaches towards the toes
+  # rather than touching them.
+  name: Toe Reach Crunch
+  # Override: the source category is "stretching", but this is a repeated
+  # crunch: a strength move.
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Legs up, reach for toes, back down
+  steps:
+    - Lie on your back on the floor and raise your legs towards the ceiling, knees slightly soft.
+    - Reach your arms up towards your feet.
+    - Keeping your lower back pressed down, curl your shoulders up and reach towards your toes.
+    - Lower your shoulders back down slowly, arms still reaching.
+
+Tuck_Crunch:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Knees up, ankles crossed, curl shoulders up
+  steps:
+    - Lie on your back on the floor.
+    - Cross your ankles and lift your legs until your thighs point up.
+    - Cross your arms over your chest.
+    - Keeping your lower back pressed down, curl your shoulders up.
+    - Lower them back down slowly.
+
+Upper_Back-Leg_Grab:
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    seconds: 30
+  cue: Hug your legs, chest towards knees
+  steps:
+    - Sit on the floor with your legs straight out in front and your knees together.
+    - Lean forward and wrap your arms under your thighs, hugging them.
+    - Bring your chest down towards your knees until you feel the stretch, bending your knees slightly if you need to.
+    - For more stretch in your upper back, gently pull your back away from your knees while holding on.
+    - Let go and sit up slowly.
+
+Windmills:
+  # Override: "Windmills" is plural, and "Lying" sets it apart from standing
+  # windmill moves.
+  name: Lying Windmill
+  difficulty: Beginner
+  position: Floor
+  energetic: false
+  dose:
+    reps: 10
+  cue: Leg across slowly, shoulders stay flat
+  steps:
+    - Lie on your back on the floor with your legs straight and your arms out to the sides.
+    - Lift one leg straight up, then lower it slowly across your body.
+    - Reach your foot towards the floor near your opposite hand until you feel the stretch.
+    - Keep both shoulders on the floor.
+    - Bring the leg back up and down to the start, and keep alternating sides.

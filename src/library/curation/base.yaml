@@ -200,6 +200,799 @@ Standing_Lateral_Stretch:
     - Keep your hips still and your weight even.
     - Come back up slowly, then switch sides.
 
+# #20 CP4: accepted by the owner as drafted, unreviewed, on 2026-11-23 (see DRAFTING.md, Owner corrections).
+
+Arm_Circles:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arms out straight, small slow circles
+  steps:
+    - Sit or stand tall.
+    - Hold your arms straight out to your sides at shoulder height.
+    - Make small, slow circles forwards with both arms.
+    - Then circle them backwards the same number of times.
+
+Bodyweight_Squat:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Sit back, chest up, knees out
+  steps:
+    - Stand with your feet shoulder-width apart and your hands behind your head.
+    - Sit your hips back and bend your knees to squat down.
+    - Keep your chest up and push your knees out over your toes.
+    - Go as low as is comfortable, then stand back up.
+
+Bodyweight_Walking_Lunge:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Long step, back knee down, chest up
+  steps:
+    - Stand with your feet hip-width apart and your hands on your hips.
+    - Step forward with one foot and bend both knees until your back knee is just above the floor.
+    - Keep your chest up and your front knee over your front foot.
+    - Push through your front heel and bring your back foot forward to stand.
+    - Keep alternating legs; after a few steps forward, turn round and come back.
+
+Calf_Stretch_Elbows_Against_Wall:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Forearms on wall, heels stay down
+  steps:
+    - Stand facing a wall, a long step away from it.
+    - Lean in and rest your forearms on the wall above your head.
+    - Keep both heels on the floor and your body straight.
+    - Step further back for a deeper stretch, or closer for a lighter one.
+
+Calf_Stretch_Hands_Against_Wall:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Back heel down, body in one line
+  steps:
+    - Stand facing a wall and step one foot back.
+    - Lean forward and rest your hands on the wall.
+    - Keep your back heel on the floor.
+    - Keep your head, hips and back heel in one straight line.
+    - Release slowly, then switch sides.
+
+Chair_Lower_Back_Stretch:
+  difficulty: Beginner
+  position: Seated
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hold the chair, lean sideways, arm over head
+  steps:
+    - Sit tall near the front of your chair with both feet flat.
+    - Hold the side of the seat with one hand.
+    - Raise your other arm straight up.
+    - Lean towards the hand on the chair, reaching the raised arm over your head, until you feel the stretch.
+    - Come back up slowly, then switch sides.
+
+Crossover_Reverse_Lunge:
+  # Override: the first source muscle is "lower back", but the move is a lunge:
+  # it is felt mostly in the legs and hips, and the twist is the add-on.
+  bodyArea: Hips & Legs
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Step back, sink, twist over front knee
+  steps:
+    - Stand tall with your feet hip-width apart.
+    - Step back with one foot and bend both knees into a lunge.
+    - As you sink, twist your upper body towards your front leg.
+    - Turn back to face forward, then push through your front foot to step back to standing.
+    - Keep alternating legs.
+
+Double_Leg_Butt_Kick:
+  difficulty: Expert
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Jump, heels to bottom, land softly
+  steps:
+    - Stand with your feet hip-width apart and your knees slightly bent.
+    - Dip into a quarter squat, then jump up.
+    - Kick both heels up towards your bottom.
+    - Land softly on the balls of your feet, bending your knees as you land.
+
+Dynamic_Back_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Straight arms swing up smoothly, no jerking
+  steps:
+    - Sit or stand tall with your arms by your sides.
+    - Keeping your arms straight, swing them forward and up above your head.
+    - Keep the swing smooth and controlled, going only as high as is comfortable.
+    - Lower them back down the same way.
+
+Dynamic_Chest_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Straight arms open wide, then back, controlled
+  steps:
+    - Sit or stand tall.
+    - Hold your arms straight out in front of you, hands together.
+    - Keeping your arms straight, open them out wide to your sides at shoulder height.
+    - Stop when you feel a gentle stretch across your chest.
+    - Bring them back together in front of you at a steady, controlled pace.
+
+Elbow_Circles:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Fingers on shoulders, draw slow elbow circles
+  steps:
+    - Sit or stand tall.
+    - Rest your fingertips on your shoulders, elbows out at shoulder height.
+    - Slowly draw big circles forwards with your elbows, breathing steadily.
+    - Then circle them backwards the same number of times.
+
+Elbows_Back:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Hands on lower back, draw elbows together
+  steps:
+    - Sit or stand tall.
+    - Place both hands on your lower back, fingers pointing down and elbows out.
+    - Gently draw your elbows back towards each other until you feel the stretch across your chest.
+    - Keep your chest lifted and your shoulders down.
+    - Release slowly.
+
+Fast_Skipping:
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Quick low skips, stay light on your feet
+  steps:
+    - Stand tall with one foot slightly in front of the other.
+    - Skip on the spot, stepping onto one foot and giving a small hop on it.
+    - Step onto the other foot and hop on that one.
+    - Keep alternating feet with quick, low skips, landing lightly on the balls of your feet.
+
+Freehand_Jump_Squat:
+  # Override: the source category is "strength", but this is a repeated jump,
+  # like Star Jump.
+  exerciseType: Plyometric
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Squat, jump straight up, land softly
+  steps:
+    - Stand with your feet shoulder-width apart and cross your arms over your chest.
+    - Squat down, keeping your chest up and your back straight.
+    - Push through the balls of your feet and jump straight up.
+    - Land softly with bent knees, sinking straight into the next squat.
+
+Frog_Hops:
+  # Override: "Frog Hops" is plural, which reads oddly as one Exercise.
+  name: Frog Hop
+  # Override: the source category is "stretching", but this is a run of squat
+  # jumps forward; nothing is held.
+  exerciseType: Plyometric
+  difficulty: Expert
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Low squat, hop forward, land softly
+  steps:
+    - Stand with your hands resting lightly behind your head.
+    - Squat down, keeping your chest and head up.
+    - Hop forward a short way, staying low rather than jumping high.
+    - Land softly, bending your knees into the squat, and hop again.
+    - After a few hops, turn round and hop back.
+
+Front_Leg_Raises:
+  # Override: "Front Leg Raises" is plural, which reads oddly as one Exercise.
+  name: Front Leg Raise
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Straight leg forward and back, under control
+  steps:
+    - Stand side-on to a chair back or desk and hold it with one hand.
+    - Keeping your outside leg straight, raise it forward under control.
+    - Lower it and let it move back behind you, without flinging it.
+    - Keep your upper body tall throughout.
+    - Keep the movement smooth and finish your reps, then switch sides.
+
+Handstand_Push-Ups:
+  # Override: "Handstand Push-Ups" is plural, which reads oddly as one Exercise
+  # (as with Split Squat).
+  name: Handstand Push-Up
+  difficulty: Expert
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Lower slowly, stop before your head touches
+  steps:
+    - Clear the floor in front of a wall and lay a folded towel just in front of it.
+    - Stand with your back to the wall, bend forward and place your hands on the floor, shoulder-width apart, either side of the towel.
+    - Kick up one leg at a time until your heels rest on the wall, with your arms and body straight.
+    - Bend your elbows slowly to lower your head towards the towel, stopping before it touches.
+    - Push back up slowly until your arms are straight again.
+    - Step your feet down one at a time to finish.
+
+Isometric_Neck_Exercise_-_Front_And_Back:
+  # Override: "Isometric" is jargon (as with Chest Squeeze) and the source name
+  # is long; the name says what you do and in which directions.
+  name: Front and Back Neck Press
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 15
+    eachSide: true
+  cue: Head pushes into hands, head doesn't move
+  steps:
+    - Sit or stand tall, head level and facing forward.
+    - Place both hands on your forehead; for the other side, clasp them behind your head.
+    - Push your head gently into your hands, building the pressure slowly.
+    - Resist with your hands so your head doesn't move, and keep breathing.
+    - Release slowly, then switch sides.
+
+Isometric_Neck_Exercise_-_Sides:
+  # Override: "Isometric" is jargon (as with Chest Squeeze) and the source name
+  # is long; the name pairs with Front and Back Neck Press.
+  name: Side Neck Press
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 15
+    eachSide: true
+  cue: Push head into hand, head stays still
+  steps:
+    - Sit or stand tall, head level and facing forward.
+    - Place one hand on the side of your head, above the ear.
+    - Push your head gently sideways into your hand, building the pressure slowly.
+    - Resist with your hand so your head doesn't move, and keep breathing.
+    - Release slowly, then switch sides.
+
+Knee_Circles:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Feet together, knees soft, circle both knees
+  steps:
+    - Stand with your feet together and your hands on your hips.
+    - Bend your knees slightly.
+    - Circle both knees together in one direction, breathing normally.
+    - Then circle them the other way the same number of times.
+
+Lateral_Bound:
+  difficulty: Expert
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Bound sideways, land softly on one foot
+  steps:
+    - Stand in a half squat with clear space on either side.
+    - Shift your weight onto one leg and push off it, bounding a short way sideways.
+    - Land softly on the other foot, bending that knee as you land.
+    - Push off that foot to bound back the other way.
+    - Keep bounding from side to side, landing softly each time.
+
+Linear_Acceleration_Wall_Drill:
+  # Override: "Linear Acceleration Wall Drill" is sprint-coaching jargon; the
+  # name says what you do.
+  name: Wall Knee Drive
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Lean on the wall, drive knees up
+  steps:
+    - Place your hands on a wall at shoulder height and step your feet back.
+    - Lean into the wall with your body in a straight line, up on the balls of your feet.
+    - Lift one knee up in front of you, then drive that foot back down under your hips.
+    - Switch legs, lifting the other knee.
+    - Keep alternating legs at a quick, steady rhythm.
+
+Middle_Back_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hands on hips, twist, hips face forward
+  steps:
+    - Sit or stand tall with your hands on your hips.
+    - Keeping your hips facing forward, twist your upper body to one side until you feel the stretch.
+    - Keep your back tall and breathe.
+    - Turn back to centre slowly, then switch sides.
+
+One_Arm_Against_Wall:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Elbow high on the wall, lean in gently
+  steps:
+    - Stand facing a wall or doorway, a small step away from it.
+    - Place one forearm on the wall above your head, elbow bent.
+    - Slowly lean your chest towards the wall until you feel the stretch down the side of your back.
+    - Ease back slowly, then switch sides.
+
+Overhead_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Lace fingers, palms up, shoulders stay down
+  steps:
+    - Sit or stand tall.
+    - Lace your fingers together and turn your palms to the ceiling.
+    - Push your hands up overhead, keeping your shoulders down.
+    - Draw your belly in gently and lengthen up through your whole body, without arching your back.
+    - Release slowly and lower your arms.
+
+Rocket_Jump:
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Squat halfway, jump, reach both arms overhead
+  steps:
+    - Stand with your feet shoulder-width apart and your arms close to your sides.
+    - Squat down halfway.
+    - Jump straight up, reaching both arms overhead.
+    - Land softly with bent knees, bringing your arms back down.
+
+Runners_Stretch:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Front toes up, hinge, reach towards foot
+  steps:
+    - Stand tall and step one foot a short way forward.
+    - Rest that heel on the floor with the knee straight and your toes pointing up.
+    - Bend your back knee slightly.
+    - Lean forward from your hips and reach towards your front foot until you feel the stretch.
+    - Come back up slowly, then switch sides.
+
+Scissors_Jump:
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Jump from a lunge, switch legs, land softly
+  steps:
+    - Stand tall, then take a long step forward with one foot.
+    - Bend both knees to lower into a lunge, keeping your chest up.
+    - Swing your arms and jump up off both feet.
+    - Switch your legs in the air and land softly in a lunge with the other foot forward.
+    - Keep alternating legs.
+
+Seated_Biceps:
+  # Override: drafted as Either, so "Seated" would mislead, and "Seated Biceps"
+  # reads as a bare body part; the name says how this biceps stretch is done.
+  name: Behind-the-Back Biceps Stretch
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Arms straight behind, palms in, lift gently
+  steps:
+    - Sit or stand tall; if sitting, move to the front of your chair.
+    - Reach both arms straight behind you, palms facing each other.
+    - Keeping your elbows straight, slowly lift your hands until you feel the stretch in the front of your arms.
+    - For an easier version, rest your hands on the edge of a desk behind you instead.
+    - Release slowly and lower your arms.
+
+Seated_Front_Deltoid:
+  # Override: drafted as Either, so "Seated" would mislead, and "Deltoid" is
+  # anatomy jargon.
+  name: Front Shoulder Stretch
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Straight arms back, chest open, palms down
+  steps:
+    - Sit or stand tall; if sitting, move to the front of your chair.
+    - Hold your arms straight out to your sides, palms facing down.
+    - Keeping your elbows straight, draw your arms back behind you until you feel the stretch across the front of your shoulders.
+    - Keep your chest lifted and your shoulders down.
+    - Release slowly and lower your arms.
+
+Shoulder_Circles:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Roll shoulders slowly, arms stay relaxed
+  steps:
+    - Sit or stand tall with your arms relaxed at your sides.
+    - Slowly roll both shoulders forward, up, back and down in one smooth circle.
+    - Then roll them the other way the same number of times.
+
+Shoulder_Raise:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+  cue: Shoulders up to ears, then fully down
+  steps:
+    - Sit or stand tall with your arms relaxed at your sides.
+    - Lift both shoulders up towards your ears.
+    - Lower them slowly all the way down.
+    - Keep your arms loose and your neck long throughout.
+
+Shoulder_Stretch:
+  # Override: "Shoulder Stretch" would be confused with Front Shoulder Stretch
+  # and the other shoulder stretches; the name says which one it is.
+  name: Cross-Body Shoulder Stretch
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Straight arm across, pull above the elbow
+  steps:
+    - Sit or stand tall.
+    - Reach one arm straight across your body at chest height.
+    - Hold it just above the elbow with your other hand.
+    - Gently pull it towards your chest until you feel the stretch in the back of your shoulder.
+    - Release slowly, then switch sides.
+
+Side_Leg_Raises:
+  # Override: "Side Leg Raises" is plural, which reads oddly as one Exercise.
+  name: Side Leg Raise
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Straight leg out to the side, stay tall
+  steps:
+    - Stand facing a chair back or desk and hold it with both hands.
+    - Shift your weight onto one leg.
+    - Keeping the other leg straight, raise it out to the side under control.
+    - Lower it again, letting it cross slightly in front of your standing leg.
+    - Keep the movement smooth and finish your reps, then switch sides.
+
+Side_Standing_Long_Jump:
+  difficulty: Expert
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Jump sideways off both feet, land softly
+  steps:
+    - Stand with your feet hip-width apart, knees and hips slightly bent, with clear space to one side.
+    - Swing your arms and jump a short way sideways off both feet.
+    - Land softly on both feet, bending your knees as you land.
+    - Jump back the other way to where you started.
+    - Keep jumping from side to side.
+
+Side_Wrist_Pull:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hold wrist, pull across and up gently
+  steps:
+    - Sit or stand tall.
+    - Bring one arm across your body and hold that wrist with your other hand, low by your hip.
+    - Slowly straighten the arm and pull it across and up to shoulder height.
+    - Stop when you feel the stretch across your upper back, without pulling hard on the shoulder.
+    - Release slowly, then switch sides.
+
+Single_Leg_Butt_Kick:
+  difficulty: Expert
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Hop, heel to bottom, land softly
+  steps:
+    - Stand beside a desk or wall and rest one hand on it.
+    - Lift your outside knee and keep it raised.
+    - Dip slightly on your standing leg, then hop up off it.
+    - Kick that heel up towards your bottom as you rise.
+    - Land softly on the same foot with a bent knee and finish your reps, then switch sides.
+
+Sit_Squats:
+  # Override: "Sit Squats" is plural, which reads oddly as one Exercise.
+  name: Sit Squat
+  # Override: the source category is "stretching", but this is a repeated
+  # partial squat: a strength move, like Bodyweight Squat.
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+  cue: Sit back halfway, then stand up
+  steps:
+    - Stand with your feet shoulder-width apart and your arms out in front.
+    - Sit your hips back and bend your knees.
+    - Stop partway down, well above a full squat.
+    - Stand back up smoothly.
+
+Spinal_Stretch:
+  difficulty: Beginner
+  position: Seated
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hands behind head, twist, lean elbow to knee
+  steps:
+    - Sit tall near the front of your chair, feet flat and apart.
+    - Interlace your fingers behind your head, elbows out and chin slightly down.
+    - Twist your upper body to one side.
+    - Lean forward and reach the lower elbow towards the floor inside your knee until you feel the stretch.
+    - Sit back up slowly, then switch sides.
+
+Split_Jump:
+  difficulty: Intermediate
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Jump from a lunge, same foot stays forward
+  steps:
+    - Stand tall, then take a long step forward with one foot.
+    - Bend both knees to lower into a lunge, keeping your chest up.
+    - Swing your arms and jump up off both feet.
+    - Land softly back in the same lunge, bending your knees as you land.
+    - Finish your reps and step your feet together, then switch sides.
+
+Standing_Hip_Circles:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Hold on, draw slow big circles with knee
+  steps:
+    - Stand side-on to a desk or wall and hold it with one hand.
+    - Raise your outside knee in front of you to hip height.
+    - Slowly move that knee out to the side, drawing a big circle with it.
+    - Bring it back round to the front.
+    - Keep the circles slow and finish your reps, then switch sides.
+
+Standing_Hip_Flexors:
+  # Override: "Standing Hip Flexors" is a bare body part.
+  name: Standing Hip Flexor Stretch
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Tuck hips under, press forward, stay tall
+  steps:
+    - Stand tall and take a long step forward with one foot.
+    - Lift your back heel off the floor.
+    - Bend both knees to lower your hips a little.
+    - Tuck your hips under and press them forward until you feel the stretch at the front of your back hip.
+    - Come back up slowly, then switch sides.
+
+Standing_Long_Jump:
+  difficulty: Expert
+  position: Standing
+  energetic: true
+  dose:
+    reps: 10
+  cue: Swing arms, jump forward, land softly
+  steps:
+    - Stand in a partial squat with your feet shoulder-width apart and clear space in front.
+    - Swing your arms back, then swing them forward and jump a short way forward.
+    - Land softly on both feet, bending your knees as you land.
+    - Turn round and jump back to where you started.
+
+Standing_Pelvic_Tilt:
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Knees soft, tuck hips under, back flattens
+  steps:
+    - Stand with your feet hip-width apart and your hands on your hips.
+    - Bend your knees slightly, keeping them soft.
+    - Gently rock your hips forward and back to find the movement.
+    - Then tuck your tailbone under so your lower back flattens, and hold.
+    - Keep breathing, then release slowly.
+
+Standing_Soleus_And_Achilles_Stretch:
+  # Override: "Soleus" and "Achilles" are anatomy jargon; the name says how
+  # this one differs from Standing Calf Stretch.
+  name: Bent-Knee Calf Stretch
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Bend both knees, back heel stays down
+  steps:
+    - Stand with your feet hip-width apart and one foot slightly in front of the other.
+    - Bend both knees, keeping your back heel on the floor.
+    - Sink a little lower until you feel the stretch low in your back calf.
+    - Come back up slowly, then switch sides.
+
+Standing_Toe_Touches:
+  # Override: "Standing Toe Touches" is plural, and the steps don't ask you to
+  # touch your toes (reach towards them until you feel the stretch).
+  name: Standing Toe Reach
+  difficulty: Beginner
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 30
+  cue: Hang forward, legs straight, let your head relax
+  steps:
+    - Stand tall with your feet together.
+    - Bend forward from your hips, keeping your legs straight but not locked.
+    - Let your arms hang and reach towards your toes until you feel the stretch.
+    - Relax your head and neck and breathe.
+    - Roll up slowly to stand.
+
+Standing_Towel_Triceps_Extension:
+  # Override: drafted as Either (arms only), so "Standing" would mislead.
+  name: Towel Triceps Extension
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    reps: 10
+    eachSide: true
+  cue: Elbow stays up, lower hand pulls against you
+  steps:
+    - Sit or stand tall, holding a towel.
+    - Raise one arm and hold the top of the towel, letting it hang down your back.
+    - Reach behind your back with your other hand and grip the lower end.
+    - Bend the top elbow to lower your hand behind your head, keeping the elbow pointing up.
+    - Straighten the arm again while your lower hand pulls the towel down against it.
+    - Finish your reps, then switch sides.
+
+Stomach_Vacuum:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 15
+  cue: Breathe out, pull belly in, keep breathing
+  steps:
+    - Sit or stand tall with your hands on your hips.
+    - Breathe in deeply.
+    - Breathe out fully, pulling your belly button in towards your spine.
+    - Keep your belly drawn in while you take small, normal breaths.
+    - Breathe in and let your belly relax.
+
+Tricep_Side_Stretch:
+  # Override: "Tricep Side Stretch" would be confused with Triceps Stretch and
+  # Triceps Press and Stretch; the name says how this one is done.
+  name: Cross-Body Triceps Stretch
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Arm across, hand over shoulder, ease elbow in
+  steps:
+    - Sit or stand tall.
+    - Bring one arm across your body, bending the elbow so your hand reaches over your other shoulder.
+    - Hold that elbow with your other hand.
+    - Gently pull the elbow towards your other shoulder until you feel the stretch at the back of your arm.
+    - Release slowly, then switch sides.
+
+Triceps_Stretch:
+  # Override: "Triceps Stretch" would be confused with Triceps Press and Stretch
+  # and Cross-Body Triceps Stretch; the name says how this one is done.
+  name: Overhead Triceps Stretch
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Hand behind head, pull elbow gently
+  steps:
+    - Sit or stand tall.
+    - Raise one arm, bend the elbow and reach that hand down behind your head.
+    - Hold the elbow with your other hand.
+    - Gently pull the elbow towards the back of your head until you feel the stretch.
+    - Release slowly, then switch sides.
+
+Upward_Stretch:
+  difficulty: Beginner
+  position: Either
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Palms together, push up and back, back straight
+  steps:
+    - Sit or stand tall.
+    - Raise both arms straight above your head, palms touching.
+    - Slowly push your hands up and slightly back until you feel the stretch.
+    - Keep your back straight, without arching your lower back.
+    - Release slowly and lower your arms.
+
+Worlds_Greatest_Stretch:
+  difficulty: Intermediate
+  position: Standing
+  energetic: false
+  dose:
+    seconds: 30
+    eachSide: true
+  cue: Lunge, elbow to instep, then straighten front leg
+  steps:
+    - Step one foot forward into a long lunge, resting on the toes of your back foot.
+    - Bend your front knee and lower your hips, keeping your chest up.
+    - Place both hands on the floor inside your front foot.
+    - Lower your inside elbow towards your front instep until you feel the stretch.
+    - Move your hands either side of the front foot and straighten that leg, toes up.
+    - Step back up to standing slowly, then switch sides.
+
 # House Exercises: self-authored (custom/ Ids), no photos.
 
 custom/Chin_Tuck:
@@ -219,3 +1012,153 @@ custom/Chin_Tuck:
     - Glide your chin straight back, as if making a double chin.
     - Keep your eyes level; don't tip your head down.
     - Hold briefly, then let your head ease forward again.
+
+custom/Calf_Raise:
+  name: Calf Raise
+  targetMuscles: [calves]
+  bodyArea: Hips & Legs
+  exerciseType: Strength
+  difficulty: Beginner
+  position: Standing
+  equipment: null
+  energetic: false
+  dose:
+    reps: 10
+  cue: Rise onto your toes, lower slowly
+  steps:
+    - Stand tall facing your desk, feet hip-width apart.
+    - Rest one hand on the desk for balance.
+    - Rise slowly onto your toes.
+    - Lower your heels slowly back to the floor.
+
+custom/Finger_Spreads:
+  name: Finger Spread
+  targetMuscles: [forearms]
+  bodyArea: Wrists & Forearms
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    reps: 10
+  cue: Spread fingers wide, hold, then relax
+  steps:
+    - Sit or stand tall.
+    - Hold both hands out in front of you, palms down.
+    - Spread your fingers wide apart.
+    - Hold briefly, then relax your hands.
+
+custom/Fist_Clench_And_Spread:
+  name: Fist Clench and Spread
+  targetMuscles: [forearms]
+  bodyArea: Wrists & Forearms
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    reps: 10
+  cue: Squeeze a tight fist, then spread wide
+  steps:
+    - Sit or stand tall.
+    - Hold both hands out in front of you.
+    - Make a tight fist with each hand.
+    - Open your hands and spread your fingers wide.
+
+custom/Neck_Rotation:
+  name: Neck Rotation
+  targetMuscles: [neck]
+  bodyArea: Neck
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    reps: 10
+  cue: Turn to look over shoulder, shoulders stay still
+  steps:
+    - Sit or stand tall, looking straight ahead.
+    - Slowly turn your head to look over one shoulder.
+    - Come back through the centre and turn to look over the other shoulder.
+    - Keep your shoulders still and your chin level.
+    - Keep alternating sides.
+
+custom/Prayer_Stretch:
+  name: Prayer Stretch
+  targetMuscles: [forearms]
+  bodyArea: Wrists & Forearms
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    seconds: 20
+  cue: Palms together, lower hands, elbows stay out
+  steps:
+    - Sit or stand tall.
+    - Press your palms together in front of your chest, fingers pointing up.
+    - Keeping your palms together, slowly lower your hands towards your waist.
+    - Stop when you feel the stretch in your wrists, elbows out to the sides.
+    - Release slowly and lower your arms.
+
+custom/Seated_Cat_Cow:
+  name: Seated Cat-Cow
+  targetMuscles: [lower back]
+  bodyArea: Core & Lower Back
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Seated
+  equipment: null
+  energetic: false
+  dose:
+    reps: 10
+  cue: Arch and lift chest, then round your back
+  steps:
+    - Sit near the front of your chair, feet flat and hands on your knees.
+    - Breathe in, arch your back and lift your chest, looking slightly up.
+    - Breathe out, round your back and let your chin drop towards your chest.
+    - Move slowly between the two.
+
+custom/Wrist_Extensor_Stretch:
+  name: Palm-Down Wrist Stretch
+  targetMuscles: [forearms]
+  bodyArea: Wrists & Forearms
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Palm down, press hand down, arm straight
+  steps:
+    - Sit or stand tall.
+    - Hold one arm straight out in front of you, palm down.
+    - With your other hand, gently press the back of that hand down towards you.
+    - Stop when you feel the stretch along the top of your forearm.
+    - Release slowly, then switch sides.
+
+custom/Wrist_Flexor_Stretch:
+  name: Palm-Up Wrist Stretch
+  targetMuscles: [forearms]
+  bodyArea: Wrists & Forearms
+  exerciseType: Stretch
+  difficulty: Beginner
+  position: Either
+  equipment: null
+  energetic: false
+  dose:
+    seconds: 20
+    eachSide: true
+  cue: Palm up, pull fingers down, arm straight
+  steps:
+    - Sit or stand tall.
+    - Hold one arm straight out in front of you, palm up.
+    - With your other hand, gently pull the fingers down and back towards you.
+    - Stop when you feel the stretch along the inside of your forearm.
+    - Release slowly, then switch sides.
