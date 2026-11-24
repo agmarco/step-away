@@ -105,6 +105,8 @@ const SUGGESTION: SuggestedExercise[] = [
 const start: CoreState = {
   ...initialState,
   settings: { ...initialState.settings, timeZone: ZONE, exercisesPerSuggestion: 3 },
+  // Already held (#28), so a first Done here unlocks nothing: Badges are not this file's subject.
+  badges: [{ id: 'done-1', unlockedAt: local('2026-10-30', '09:50') }],
 };
 
 const depsAt = (when: number, lib: readonly Exercise[] = library): CoreDeps => ({

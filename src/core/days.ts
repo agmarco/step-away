@@ -33,9 +33,18 @@ export function dailyGoalFor(state: CoreState, date: LocalDate): number {
   return goal;
 }
 
-/** Whether the day's Done Reminders reach that day's Daily Goal. */
+/**
+ * The Goal Day rule, given the day's Done count: `done` reaches that day's
+ * Daily Goal. The one place the rule lives; callers that already counted the
+ * day's Done Reminders pass the count, the rest go through `isGoalDay`.
+ */
+export function reachesDailyGoal(state: CoreState, date: LocalDate, done: number): boolean {
+  return done >= dailyGoalFor(state, date);
+}
+
+/** Whether the day's Done Reminders reach that day's Daily Goal (`reachesDailyGoal`). */
 export function isGoalDay(state: CoreState, date: LocalDate): boolean {
-  return dayTally(state, date).done >= dailyGoalFor(state, date);
+  return reachesDailyGoal(state, date, dayTally(state, date).done);
 }
 
 /** The tally of the Reminders belonging to `date` (see `dayOf`). */
@@ -73,19 +82,32 @@ export function isDayOff(state: CoreState, date: LocalDate): boolean {
  * earliest Reminder's day: before it no day can be a Goal Day.
  */
 export function streak(state: CoreState, now: Instant): number {
-  const { timeZone, activeHours } = state.settings;
+  const { timeZone } = state.settings;
   let earliest = Infinity;
   for (const r of state.reminders) earliest = Math.min(earliest, dateKey(dayOf(r, timeZone)));
-  const counts = (date: LocalDate) => Boolean(activeHours[weekdayOf(date)]) && !isDayOff(state, date);
 
   const today = localDateOf(now, timeZone);
-  let count = counts(today) && isGoalDay(state, today) ? 1 : 0;
+  let count = countsForStreak(state, today) && isGoalDay(state, today) ? 1 : 0;
   for (let date = addDays(today, -1); dateKey(date) >= earliest; date = addDays(date, -1)) {
-    if (!counts(date)) continue;
+    if (!countsForStreak(state, date)) continue;
     if (!isGoalDay(state, date)) break;
     count += 1;
   }
   return count;
+}
+
+/**
+ * Whether `date` counts for a Streak: it has Active Hours (by the current
+ * Settings' weekdays) and isn't a Day Off. A day that doesn't count is
+ * skipped, even one that reached its goal.
+ */
+export function countsForStreak(state: CoreState, date: LocalDate): boolean {
+  return Boolean(state.settings.activeHours[weekdayOf(date)]) && !isDayOff(state, date);
+}
+
+/** The Monday of `date`'s local week (weeks run Monday to Sunday). */
+export function mondayOf(date: LocalDate): LocalDate {
+  return addDays(date, -DAYS_SINCE_MONDAY[weekdayOf(date)]);
 }
 
 /**
@@ -96,7 +118,7 @@ export function streak(state: CoreState, now: Instant): number {
  */
 export function weekMarks(state: CoreState, now: Instant): { date: LocalDate; mark: DayMark }[] {
   const today = localDateOf(now, state.settings.timeZone);
-  const monday = addDays(today, -DAYS_SINCE_MONDAY[weekdayOf(today)]);
+  const monday = mondayOf(today);
   const marks: { date: LocalDate; mark: DayMark }[] = [];
   for (let i = 0; i < 5; i++) {
     const date = addDays(monday, i);

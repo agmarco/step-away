@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   dailyGoalFor,
+  hasNewBadge,
   isDayOff,
   localDateOf,
   settle,
@@ -93,7 +94,7 @@ export default function Today() {
           busy={busy}
           onAction={onHeroAction}
         />
-        <Tiles />
+        <Tiles newBadge={hasNewBadge(state)} />
         <View style={styles.body}>
           {notifications === "blocked" && <NotificationsBanner />}
           <ReminderList

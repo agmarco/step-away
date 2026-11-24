@@ -1,4 +1,6 @@
 export { canSnooze, defaultSettings, initialState, reduce } from './reduce';
+export { BADGES, hasNewBadge, isNewBadge, records } from './achievements';
+export type { Badge, BadgeGroup, Records } from './achievements';
 export { exerciseGroups } from './groups';
 export type { ExerciseGroups } from './groups';
 export { guidedFinish, guidedStart } from './guidedFinish';
@@ -20,6 +22,7 @@ export { effectiveFire, refireScheduled, settle } from './settle';
 export type {
   ActiveWindow,
   AppearanceSetting,
+  BadgeId,
   BodyAreaMode,
   Clock,
   CoreDeps,
@@ -43,6 +46,7 @@ export type {
   Settings,
   SettingsChange,
   SuggestedExercise,
+  UnlockedBadge,
   Weekday,
 } from './types';
 export type {

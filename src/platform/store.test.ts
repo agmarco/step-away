@@ -65,6 +65,8 @@ const state = (reminders: Reminder[]): CoreState => ({
   goalChanges: [],
   pauses: [],
   daysOff: [],
+  badges: [],
+  achievementsSeenAt: null,
   reminders,
 });
 
@@ -382,6 +384,51 @@ describe('Pauses and Days Off', () => {
     const loaded = await loadState(d);
     expect(loaded.pauses).toEqual([]);
     expect(loaded.daysOff).toEqual([]);
+  });
+});
+
+describe('Badges and the Achievements visit (#28)', () => {
+  it('round-trips the Badges, in unlock order, and when Achievements was last opened', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    const saved: CoreState = {
+      ...state([]),
+      badges: [
+        { id: 'done-1', unlockedAt: NOW - 600_000 },
+        { id: 'perfect-day', unlockedAt: NOW - 60_000 },
+        { id: 'balance', unlockedAt: NOW - 60_000 },
+      ],
+      achievementsSeenAt: NOW - 300_000,
+    };
+    await saveState(d, saved, NOW);
+    const loaded = await loadState(d);
+    expect(loaded.badges).toEqual([
+      { id: 'done-1', unlockedAt: NOW - 600_000 },
+      { id: 'perfect-day', unlockedAt: NOW - 60_000 },
+      { id: 'balance', unlockedAt: NOW - 60_000 },
+    ]);
+    expect(loaded.achievementsSeenAt).toBe(NOW - 300_000);
+  });
+
+  it('round-trips Achievements never opened', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, { ...state([]), achievementsSeenAt: NOW - 300_000 }, NOW);
+    await saveState(d, { ...state([]), badges: [{ id: 'done-1', unlockedAt: NOW }] }, NOW);
+    const loaded = await loadState(d);
+    expect(loaded.badges).toEqual([{ id: 'done-1', unlockedAt: NOW }]);
+    expect(loaded.achievementsSeenAt).toBeNull();
+  });
+
+  it('reads no Badges and Achievements never opened from a DB stored before #28', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, { ...state([]), badges: [{ id: 'done-1', unlockedAt: NOW }], achievementsSeenAt: NOW }, NOW);
+    // As a pre-#28 DB: neither key was ever written.
+    await d.runAsync(`DELETE FROM meta WHERE key IN ('badges', 'achievements_seen_at')`);
+    const loaded = await loadState(d);
+    expect(loaded.badges).toEqual([]);
+    expect(loaded.achievementsSeenAt).toBeNull();
   });
 });
 

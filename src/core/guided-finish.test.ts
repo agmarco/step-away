@@ -127,16 +127,21 @@ describe('guidedFinish: what finishing the guided screen records', () => {
       did: ['Bodyweight_Squat', 'Side_Neck_Stretch'],
     });
     const result = apply(state, event, AFTER_NEWER);
-    expect(result.intents).toEqual([]);
-    expect(result.state).toStrictEqual(
-      inMadrid(
+    // A late finish celebrates like a normal one (#28): the fixture held no Badge, so done-1 unlocks now.
+    expect(result.intents).toEqual([
+      { type: 'BadgesUnlocked', badges: ['done-1'] },
+      { type: 'CelebrationDue', reminderId: STARTED, goalReached: false, badges: ['done-1'] },
+    ]);
+    expect(result.state).toStrictEqual({
+      ...inMadrid(
         LAST_RESPONSE,
         reminder(MON, '09:45', 'done'),
         reminder(MON, '10:30', 'done', { done: [NECK, SQUAT] }),
         reminder(MON, '11:15', 'scheduled'),
         reminder(MON, '12:00', 'scheduled'),
       ),
-    );
+      badges: [{ id: 'done-1', unlockedAt: AFTER_NEWER }],
+    });
     expect(outstandingReminder(result.state, AFTER_NEWER)?.id).toBe(NEWER);
   });
 
