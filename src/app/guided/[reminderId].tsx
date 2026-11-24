@@ -385,7 +385,8 @@ const styles = StyleSheet.create({
   dose: { fontSize: 44, fontWeight: '800', fontVariant: ['tabular-nums'] },
   cue: { fontSize: 17, fontStyle: 'italic', lineHeight: 24 },
   photos: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  // The source photos are 850×567. The box sets the size: on web an Image's own
+  // The box sets the shape (850:567, most source photos'), and each photo is
+  // cover-fit in it. The box sets the size too: on web an Image's own
   // aspectRatio loses to the asset's intrinsic height.
   photoBox: { flex: 1, aspectRatio: 850 / 567, borderRadius: 8, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },

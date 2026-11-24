@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   bannerText: { fontSize: 15, fontWeight: '600', lineHeight: 21 },
   card: { borderWidth: 1, borderRadius: 16, padding: 16, gap: 8 },
   photos: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  // The source photos are 850×567; the box sets the size (see app/guided/[reminderId].tsx).
+  // The box sets the shape (850:567) and the size, and each photo is cover-fit in it (see app/guided/[reminderId].tsx).
   photoBox: { flex: 1, aspectRatio: 850 / 567, borderRadius: 8, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
   bodyArea: { fontSize: 12, fontWeight: '700', letterSpacing: 1 },
