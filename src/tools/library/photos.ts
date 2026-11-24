@@ -4,23 +4,10 @@
  * A photo key (`<id>/0.jpg`, `<id>/1.jpg`) is the source's own image path: it
  * names the file in the free-exercise-db download URL, in the source data and
  * in `library.json`. The bundled file is a compressed WebP beside it, so only
- * the extension changes: key `Plank/0.jpg` is file `library/photos/Plank/0.webp`.
+ * the extension changes: key `Plank/0.jpg` is file `library/photos/Plank/0.webp`
+ * (`photoFile` in `mapping.ts`, kept there so the build never loads native sharp).
  */
 import sharp from 'sharp';
-
-/** The bundled file of a photo key, relative to the photo folder: `Plank/0.jpg` → `Plank/0.webp`. */
-export function photoFile(key: string): string {
-  return key.replace(/\.jpg$/, '.webp');
-}
-
-/**
- * The photo keys `library:photos` still has to download and compress, in their
- * order: those whose bundled file is not there yet. A present `.webp` is never
- * redone, so a rerun downloads nothing.
- */
-export function missingPhotos(keys: readonly string[], exists: (key: string) => boolean): string[] {
-  return keys.filter((key) => !exists(key));
-}
 
 /**
  * The box every photo is shrunk to cover: 440 px wide, at the screens' 850:567

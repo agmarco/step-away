@@ -23,8 +23,8 @@ import {
   SOURCE_COMMIT,
   SOURCE_REPO,
 } from './files';
-import { isLibraryGroup, LIBRARY_GROUPS, photoKeys } from './mapping';
-import { compressPhoto, missingPhotos, photoFile } from './photos';
+import { isLibraryGroup, LIBRARY_GROUPS, missingPhotos, photoFile, photoKeys } from './mapping';
+import { compressPhoto } from './photos';
 
 function build() {
   const { exercises, photoIndex, warnings } = buildLibrary(readBuildInput());

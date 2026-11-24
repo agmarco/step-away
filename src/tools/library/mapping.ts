@@ -83,6 +83,20 @@ export function photoKeys(exercises: readonly Exercise[]): string[] {
   return exercises.flatMap((e) => (e.photos ? [e.photos.start, e.photos.end] : []));
 }
 
+/** The bundled file of a photo key, relative to the photo folder: `Plank/0.jpg` → `Plank/0.webp`. */
+export function photoFile(key: string): string {
+  return key.replace(/\.jpg$/, '.webp');
+}
+
+/**
+ * The photo keys `library:photos` still has to download and compress, in their
+ * order: those whose bundled file is not there yet. A present `.webp` is never
+ * redone, so a rerun downloads nothing.
+ */
+export function missingPhotos(keys: readonly string[], exists: (key: string) => boolean): string[] {
+  return keys.filter((key) => !exists(key));
+}
+
 /** A stable sort key: plain code-unit order, the same on every machine. */
 export function byId<T extends { id: string }>(a: T, b: T): number {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;

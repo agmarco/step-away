@@ -6,7 +6,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type BuildInput, LibraryBuildError } from './build';
-import { photoFile } from './photos';
+import { photoFile } from './mapping';
 import type { LibraryGroup, SourceExercise } from './types';
 
 /** The free-exercise-db commit `library/source/exercises.json` was fetched at. SOURCE.md records the same SHA. */

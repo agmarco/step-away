@@ -21,9 +21,9 @@ import {
   isLibraryGroup,
   LIBRARY_GROUPS,
   mapEquipment,
+  photoFile,
   photoKeys,
 } from './mapping';
-import { photoFile } from './photos';
 import type { LibraryGroup, SourceExercise } from './types';
 
 /** A fatal problem in the source or the curation files. The build stops. */

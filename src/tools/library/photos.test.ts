@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { photoExists } from './files';
 import sharp from 'sharp';
-import { compressPhoto, missingPhotos, photoFile } from './photos';
+import { missingPhotos, photoFile } from './mapping';
+import { compressPhoto } from './photos';
 
 /** A source JPEG from `__fixtures__/photos/`: two real free-exercise-db photos and one small one made from a third. */
 const sourcePhoto = (name: string) => readFileSync(new URL(`./__fixtures__/photos/${name}`, import.meta.url));
