@@ -7,6 +7,7 @@
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initialState, reduce, seededRandom, type CoreState, type Exercise } from '../core';
+import { hasNewBadge } from '../core';
 import type { Db } from './db';
 import { migrate } from './migrations';
 
@@ -77,7 +78,9 @@ vi.mock('expo-notifications', () => ({
 
 const Notifications = await import('expo-notifications');
 const { deviceTimeZone, rearmOnOpen, respond } = await import('./handler');
+const { correct, finishGuided, openAchievements } = await import('./handler');
 const { saveState } = await import('./store');
+const { loadState } = await import('./store');
 
 /** The chain a Rearm at `at` stores, in the device's time zone (as the handler reads it). */
 async function storedChain(at: number): Promise<CoreState> {
@@ -166,5 +169,117 @@ describe('the shade after a slow write (#39)', () => {
     // UPDATE and the save's upsert.
     expect(stored.reminders).toHaveLength(55);
     expect(await rowWrites()).toBe(2);
+  });
+});
+
+describe('the celebration after a guided finish (#28)', () => {
+  const before = Date.parse('2026-11-02T06:00:00Z');
+  const did = ['Side_Neck_Stretch'];
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.mocked(Notifications.scheduleNotificationAsync).mockClear();
+    shade = [];
+    conn.d = fakeDb();
+    await migrate(conn.d);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('carries the Badges a Done on the outstanding Reminder unlocks, and stores them', async () => {
+    const [outstanding] = (await storedChain(before)).reminders;
+    vi.setSystemTime(outstanding.firesAt);
+
+    expect(await finishGuided(outstanding.id, did)).toEqual({
+      recorded: true,
+      celebration: { goalReached: false, badges: ['done-1'] },
+    });
+    expect((await loadState(conn.d)).badges.map((b) => b.id)).toEqual(['done-1']);
+  });
+
+  it('carries the Daily Goal reached, with the Badges it brings', async () => {
+    const stored = await storedChain(before);
+    // A Daily Goal of 1 since the week before: the first Done of the day reaches it.
+    await saveState(conn.d, { ...stored, goalChanges: [{ from: { year: 2026, month: 10, day: 26 }, goal: 1 }] }, before);
+    const [outstanding] = stored.reminders;
+    vi.setSystemTime(outstanding.firesAt);
+
+    expect(await finishGuided(outstanding.id, did)).toEqual({
+      recorded: true,
+      celebration: { goalReached: true, badges: ['done-1', 'perfect-day'] },
+    });
+  });
+
+  it('carries the celebration of a late finish, saved as a correction', async () => {
+    const [replaced, newer] = (await storedChain(before)).reminders;
+    // The newer Reminder fired while the guided screen was open on the first one.
+    vi.setSystemTime(newer.firesAt + 1_000);
+
+    expect(await finishGuided(replaced.id, did)).toEqual({
+      recorded: true,
+      celebration: { goalReached: false, badges: ['done-1'] },
+    });
+    expect((await loadState(conn.d)).badges.map((b) => b.id)).toEqual(['done-1']);
+  });
+
+  it('carries no celebration for a Skip', async () => {
+    const [outstanding] = (await storedChain(before)).reminders;
+    vi.setSystemTime(outstanding.firesAt);
+
+    expect(await finishGuided(outstanding.id, [])).toEqual({ recorded: true });
+  });
+
+  it('carries no celebration when nothing was recorded', async () => {
+    const [, ahead] = (await storedChain(before)).reminders;
+    vi.setSystemTime(before);
+
+    expect(await finishGuided(ahead.id, did)).toEqual({ recorded: false });
+  });
+
+  it('carries no celebration for a Done that reaches no goal and unlocks nothing', async () => {
+    const stored = await storedChain(before);
+    await saveState(conn.d, { ...stored, badges: [{ id: 'done-1', unlockedAt: before }] }, before);
+    const [outstanding] = stored.reminders;
+    vi.setSystemTime(outstanding.firesAt);
+
+    expect(await finishGuided(outstanding.id, did)).toEqual({ recorded: true });
+  });
+
+  it('posts no notification for a Badge or the goal: everything scheduled is a Reminder', async () => {
+    const stored = await storedChain(before);
+    const [outstanding] = stored.reminders;
+    vi.setSystemTime(outstanding.firesAt);
+
+    await finishGuided(outstanding.id, did);
+
+    const ids = new Set((await loadState(conn.d)).reminders.map((r) => r.id));
+    const scheduled = vi.mocked(Notifications.scheduleNotificationAsync).mock.calls.map(([request]) => request.identifier);
+    expect(scheduled.length).toBeGreaterThan(0);
+    expect(scheduled.filter((id) => !ids.has(id as string))).toEqual([]);
+  });
+
+  it("stores the Badges a correction from Today's sheet unlocks, and still answers only whether it was accepted", async () => {
+    const [first, newer] = (await storedChain(before)).reminders;
+    vi.setSystemTime(newer.firesAt + 1_000);
+
+    expect(await correct(first.id, 'Done', did)).toBe(true);
+    const loaded = await loadState(conn.d);
+    expect(loaded.badges.map((b) => b.id)).toEqual(['done-1']);
+    expect(hasNewBadge(loaded)).toBe(true);
+  });
+
+  it('records the Achievements visit, which clears the new-Badge dot', async () => {
+    const [outstanding] = (await storedChain(before)).reminders;
+    vi.setSystemTime(outstanding.firesAt);
+    await finishGuided(outstanding.id, did);
+    const openedAt = Date.now();
+
+    expect(await openAchievements()).toBe(true);
+    const loaded = await loadState(conn.d);
+    expect(loaded.achievementsSeenAt).toBe(openedAt);
+    expect(hasNewBadge(loaded)).toBe(false);
   });
 });
