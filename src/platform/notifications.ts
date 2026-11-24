@@ -23,7 +23,6 @@ import {
   type NotificationAction,
   type ScheduledNotification,
 } from '../core';
-import { clockTime, trace, type Span } from './trace';
 
 export const CHANNEL = 'reminders';
 /** Start, Snooze and Skip. */
@@ -89,16 +88,12 @@ function categoryOf(n: ScheduledNotification): string {
  * A failing cancel throws and rolls the transaction back; one Reminder that
  * can't be scheduled is only logged, so it can't cost the user a Skip.
  */
-async function scheduleChain(reminders: ScheduledNotification[], span?: Span) {
+async function scheduleChain(reminders: ScheduledNotification[]) {
   // Cancels scheduled (future) notifications only; presented ones stay in the shade.
   await Notifications.cancelAllScheduledNotificationsAsync();
-  span?.step('cancelAll');
   const now = Date.now();
   // A DATE trigger in the past is never armed, so skip any that slipped behind now.
-  const ahead = reminders.filter((r) => r.at > now);
-  const armed = ahead.slice(0, MAX_SCHEDULED);
-  let failed = 0;
-  for (const n of armed) {
+  for (const n of reminders.filter((r) => r.at > now).slice(0, MAX_SCHEDULED)) {
     try {
       await Notifications.scheduleNotificationAsync({
         identifier: n.reminderId,
@@ -112,14 +107,9 @@ async function scheduleChain(reminders: ScheduledNotification[], span?: Span) {
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: CHANNEL },
       });
     } catch (e) {
-      failed += 1;
       console.warn(`[notifications] could not schedule ${n.reminderId}: ${e}`);
     }
   }
-  span?.step(
-    'schedule',
-    `${armed.length - failed} scheduled (${failed} failed) of ${reminders.length} in the chain, ${ahead.length} ahead, cap ${MAX_SCHEDULED}; first ${armed[0] ? `${armed[0].reminderId} at ${clockTime(armed[0].at)}` : 'none'}`,
-  );
 }
 
 /**
@@ -128,11 +118,10 @@ async function scheduleChain(reminders: ScheduledNotification[], span?: Span) {
  * critical section, or two writers can commit in one order and arm their
  * chains in the other, leaving a stale chain in the OS.
  */
-export async function scheduleChains(intents: Intent[], span?: Span) {
+export async function scheduleChains(intents: Intent[]) {
   for (const intent of intents) {
-    if (intent.type === 'ScheduleChain') await scheduleChain(intent.reminders, span);
+    if (intent.type === 'ScheduleChain') await scheduleChain(intent.reminders);
   }
-  if (!intents.some((i) => i.type === 'ScheduleChain')) span?.step('schedule', 'no chain');
 }
 
 /**
@@ -158,25 +147,14 @@ export async function dismissNotifications(intents: Intent[]) {
   }
 }
 
-/**
- * Removes every Reminder notification in the shade except the outstanding one.
- * Traces (#39) what it kept, what was presented and what it dismissed.
- */
-export async function dismissStale(state: CoreState, now: Instant, span?: Span) {
+/** Removes every Reminder notification in the shade except the outstanding one. */
+export async function dismissStale(state: CoreState, now: Instant) {
   const keep = outstandingReminder(state, now)?.id;
   const presented = await Notifications.getPresentedNotificationsAsync();
-  const dismissed: string[] = [];
   for (const n of presented) {
     const id = n.request.identifier;
     if (isReminderId(id) && id !== keep) {
-      dismissed.push(id);
       await Notifications.dismissNotificationAsync(id).catch(() => {});
     }
   }
-  const detail =
-    `keep=${keep ?? 'none'} as of ${clockTime(now)} (${Date.now() - now}ms ago);` +
-    ` presented=[${presented.map((n) => `${n.request.identifier}@${n.date ? clockTime(n.date) : '?'}`).join(', ')}];` +
-    ` dismissed=[${dismissed.join(', ')}]`;
-  if (span) span.step('dismissStale', detail);
-  else trace.line(`dismissStale ${detail}`);
 }
