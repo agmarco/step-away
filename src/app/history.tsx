@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  addMonths,
   historyRange,
   isDayOff,
   localDateOf,
+  monthBefore,
   monthMarks,
   settle,
   type LocalDate,
@@ -16,7 +18,7 @@ import { ActionSheet } from '../screens/ActionSheet';
 import { Calendar } from '../screens/history/Calendar';
 import { DayPanel } from '../screens/history/DayPanel';
 import { longDayOf } from '../screens/history/format';
-import { dayKindOf, monthBefore, selectionAfterStep, shiftMonth } from '../screens/history/month';
+import { dayKindOf, selectionAfterStep } from '../screens/history/month';
 import { PageHeader } from '../screens/settings/parts';
 import { StatusBarBackdrop } from '../screens/StatusBarBackdrop';
 import { useOneChange } from '../screens/useOneChange';
@@ -41,20 +43,41 @@ function confirmOf(day: LocalDate, isToday: boolean, off: boolean) {
 }
 
 /**
+ * History's page around its content, the same whether or not the state could
+ * be read: a scroll view inside the safe area, the header, then `children`,
+ * with the status bar backdrop over it.
+ */
+function Page({ children }: { children: ReactNode }) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  return (
+    <>
+      <ScrollView
+        style={{ backgroundColor: colors.background.screen }}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
+      >
+        <PageHeader title="History" />
+        {children}
+      </ScrollView>
+      <StatusBarBackdrop />
+    </>
+  );
+}
+
+/**
  * History (#27), pushed from Today's History tile and week panel: a month
  * calendar (`Calendar`, by `monthMarks`) that opens on the current month and
  * steps month by month within `historyRange`, and the selected day under it
- * (`DayPanel`), today at first. Stepping to another month selects today in
- * today's month and no day elsewhere (`selectionAfterStep`), where the panel
- * just asks for a tap. A past day is read only. Today and a day
- * ahead have Mark as Day Off / Undo Day Off, confirmed in an `ActionSheet`,
- * then `setDayOff`; the calendar redraws when the write lands (`useCoreState`
- * re-reads after every write). The stored state is settled at `now` first, as
- * on Today.
+ * (`DayPanel`, given whether it is a Day Off), today at first. Stepping to
+ * another month selects today in today's month and no day elsewhere
+ * (`selectionAfterStep`), where the panel just asks for a tap. A past day is
+ * read only. Today and a day ahead (the core's `canSetDayOff`) have Mark as
+ * Day Off / Undo Day Off, confirmed in an `ActionSheet`, then `setDayOff`;
+ * the calendar redraws when the write lands (`useCoreState` re-reads after
+ * every write). The stored state is settled at `now` first, as on Today.
  */
 export default function History() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const { state: stored, now, failed } = useCoreState();
   const [shown, setShown] = useState<YearMonth | null>(null);
   // `undefined` until the first tap or step (today), `null` for no day.
@@ -65,18 +88,11 @@ export default function History() {
 
   if (!state) {
     return (
-      <>
-        <ScrollView
-          style={{ backgroundColor: colors.background.screen }}
-          contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
-        >
-          <PageHeader title="History" />
-          {failed && (
-            <Text style={[styles.note, { color: colors.text.secondary }]}>{"History can't be read right now."}</Text>
-          )}
-        </ScrollView>
-        <StatusBarBackdrop />
-      </>
+      <Page>
+        {failed && (
+          <Text style={[styles.note, { color: colors.text.secondary }]}>{"History can't be read right now."}</Text>
+        )}
+      </Page>
     );
   }
 
@@ -90,11 +106,7 @@ export default function History() {
 
   return (
     <>
-      <ScrollView
-        style={{ backgroundColor: colors.background.screen }}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
-      >
-        <PageHeader title="History" />
+      <Page>
         <Calendar
           month={month}
           marks={monthMarks(state, month, now)}
@@ -102,19 +114,26 @@ export default function History() {
           canGoBack={monthBefore(first, month)}
           canGoForward={monthBefore(month, last)}
           onStep={(by) => {
-            const next = shiftMonth(month, by);
+            const next = addMonths(month, by);
             setShown(next);
             setSelected(selectionAfterStep(next, today));
           }}
           onSelect={setSelected}
         />
         {day && kind ? (
-          <DayPanel state={state} now={now} date={day} kind={kind} busy={busy} onDayOff={() => setConfirming(true)} />
+          <DayPanel
+            state={state}
+            now={now}
+            date={day}
+            kind={kind}
+            off={off}
+            busy={busy}
+            onDayOff={() => setConfirming(true)}
+          />
         ) : (
           <Text style={[styles.note, { color: colors.text.secondary }]}>Tap a day to see it.</Text>
         )}
-      </ScrollView>
-      <StatusBarBackdrop />
+      </Page>
       <ActionSheet
         visible={confirming && confirm !== null}
         title={confirm?.title ?? ''}

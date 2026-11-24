@@ -1,5 +1,5 @@
-import type { DayMark } from '../../core';
-import type { Palette } from '../../theme';
+import type { DayMark } from '../core';
+import type { Palette } from '../theme';
 
 /** How a day's mark reads aloud, in the week panel and the History calendar. */
 export const MARK_LABEL: Record<DayMark, string> = {

@@ -2,7 +2,7 @@ import { useOpenPage } from './useOpenPage';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { weekMarks, type CoreState } from '../../core';
 import { type Palette, useColors } from '../../theme';
-import { MARK_LABEL, markStyle } from './dayMarks';
+import { MARK_LABEL, markStyle } from '../dayMarks';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
