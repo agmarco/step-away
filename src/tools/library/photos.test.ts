@@ -33,6 +33,12 @@ describe('photoFile', () => {
   it('only rewrites the extension at the end of the key', () => {
     expect(photoFile('3_4_Sit-Up.jpg_x/0.jpg')).toBe('3_4_Sit-Up.jpg_x/0.webp');
   });
+
+  it('rejects a key that is not a .jpg, naming it, so no WebP is written under another extension', () => {
+    expect(() => photoFile('Plank/0.png')).toThrow('Plank/0.png');
+    expect(() => photoFile('Plank/0.JPG')).toThrow('Plank/0.JPG');
+    expect(() => photoFile('Plank/0')).toThrow('Plank/0');
+  });
 });
 
 describe('photoExists', () => {
