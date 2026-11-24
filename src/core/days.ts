@@ -24,6 +24,12 @@ export interface Tally {
 /** One day of the week panel or the History calendar. */
 export type DayMark = 'goal' | 'missed' | 'off' | 'today' | 'future' | 'dayOff' | 'none';
 
+/** A date with its `DayMark`: one entry of `weekMarks` and `monthMarks`. */
+export interface MarkedDay {
+  date: LocalDate;
+  mark: DayMark;
+}
+
 /** A calendar month: `month` runs 1-12. */
 export interface YearMonth {
   year: number;
@@ -36,14 +42,14 @@ export function addMonths(month: YearMonth, n: number): YearMonth {
   return { year: Math.floor(index / 12), month: (index % 12) + 1 };
 }
 
-/** Not implemented yet (#65 CP2 red). */
-export function monthBefore(_a: YearMonth, _b: YearMonth): boolean {
-  return false;
+/** Whether month `a` comes strictly before month `b`. A `LocalDate` passes as its month. */
+export function monthBefore(a: YearMonth, b: YearMonth): boolean {
+  return a.year < b.year || (a.year === b.year && a.month < b.month);
 }
 
-/** Not implemented yet (#65 CP2 red). */
-export function sameMonth(_a: YearMonth, _b: YearMonth): boolean {
-  return false;
+/** Whether `a` and `b` are the same month. A `LocalDate` passes as its month (`sameMonth(month, today)`). */
+export function sameMonth(a: YearMonth, b: YearMonth): boolean {
+  return a.year === b.year && a.month === b.month;
 }
 
 /**
@@ -101,9 +107,13 @@ export function isDayOff(state: CoreState, date: LocalDate): boolean {
   return state.daysOff.some((d) => dateKey(d) === day);
 }
 
-/** Not implemented yet (#65 CP2 red). */
-export function canSetDayOff(_state: CoreState, _date: LocalDate, _now: Instant): boolean {
-  return false;
+/**
+ * The Day Off date rule: a Day Off can be set or undone for `date` only when
+ * it is today or later (the local date of `now`, Settings' time zone); a day
+ * already past can't be made a Day Off, or stop being one.
+ */
+export function canSetDayOff(state: CoreState, date: LocalDate, now: Instant): boolean {
+  return dateKey(date) >= dateKey(localDateOf(now, state.settings.timeZone));
 }
 
 /**
@@ -152,11 +162,11 @@ export function mondayOf(date: LocalDate): LocalDate {
  * data yet), `off` (no Active Hours by the current Settings), `goal`, else
  * `missed`.
  */
-export function weekMarks(state: CoreState, now: Instant): { date: LocalDate; mark: DayMark }[] {
+export function weekMarks(state: CoreState, now: Instant): MarkedDay[] {
   const today = localDateOf(now, state.settings.timeZone);
   const monday = mondayOf(today);
   const log = logByDay(state);
-  const marks: { date: LocalDate; mark: DayMark }[] = [];
+  const marks: MarkedDay[] = [];
   for (let i = 0; i < 5; i++) {
     const date = addDays(monday, i);
     marks.push({ date, mark: markFor(state, date, today, log) });
@@ -168,10 +178,10 @@ export function weekMarks(state: CoreState, now: Instant): { date: LocalDate; ma
  * Every date of `month`, in order, one mark per day, by the same rule as
  * `weekMarks`. One pass over the Reminders (`logByDay`) plus one step per day.
  */
-export function monthMarks(state: CoreState, month: YearMonth, now: Instant): { date: LocalDate; mark: DayMark }[] {
+export function monthMarks(state: CoreState, month: YearMonth, now: Instant): MarkedDay[] {
   const today = localDateOf(now, state.settings.timeZone);
   const log = logByDay(state);
-  const marks: { date: LocalDate; mark: DayMark }[] = [];
+  const marks: MarkedDay[] = [];
   for (let date = { ...month, day: 1 }; date.month === month.month; date = addDays(date, 1)) {
     marks.push({ date, mark: markFor(state, date, today, log) });
   }

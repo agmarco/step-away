@@ -1,7 +1,7 @@
 import { MAX_SNOOZES, notificationFor, refireNotificationFor } from './notification';
 import { chainTimes, outstandingReminder, reminderId } from './schedule';
 import { badgesToUnlock } from './achievements';
-import { dailyGoalFor, dateKey, dayOf, dayTally, DEFAULT_DAILY_GOAL, isDayOff, sameDate } from './days';
+import { canSetDayOff, dailyGoalFor, dateKey, dayOf, dayTally, DEFAULT_DAILY_GOAL, isDayOff, sameDate } from './days';
 import { addDays, instantAt, localDateOf, MINUTE } from './localTime';
 import { runningPause } from './pause';
 import { refirePending, refireScheduled, settle } from './settle';
@@ -104,11 +104,11 @@ export const initialState: CoreState = {
  * `dropOutstanding`) and records `{ from: now, until }`, `until` being now +
  * 1 or 2 hours or the next local midnight; a Pause already running keeps its
  * `from` and takes the new `until`. Resume, only while a Pause is running,
- * sets its `until` to now. SetDayOff, for today or a later date and only when
- * it changes something, adds or removes the date (`daysOff` stays sorted);
- * taking today off drops the outstanding Reminder. All three rebuild the
- * chain (see `chainTimes`); a rejected one returns the input state with no
- * intents.
+ * sets its `until` to now. SetDayOff, only for a date the Day Off date rule
+ * allows (`canSetDayOff`: today or later) and only when it changes something,
+ * adds or removes the date (`daysOff` stays sorted); taking today off drops
+ * the outstanding Reminder. All three rebuild the chain (see `chainTimes`); a
+ * rejected one returns the input state with no intents.
  *
  * AchievementsOpened settles and sets `achievementsSeenAt` to now, with no
  * intents. No event but an accepted Done or Skip Response or Correct
@@ -233,9 +233,11 @@ export function reduce(state: CoreState, event: CoreEvent, deps: CoreDeps): Core
       return rearm({ ...settled, pauses }, deps);
     }
     case 'SetDayOff': {
+      if (!canSetDayOff(state, event.date, now) || isDayOff(state, event.date) === event.off) {
+        return { state, intents: [] };
+      }
       const day = dateKey(event.date);
       const today = dateKey(localDateOf(now, state.settings.timeZone));
-      if (day < today || isDayOff(state, event.date) === event.off) return { state, intents: [] };
       const settled = settle(state, now);
       // Taking today off drops the waiting Reminder; any other change only moves the chain.
       const { state: dropped, intents } =

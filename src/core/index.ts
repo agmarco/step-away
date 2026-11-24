@@ -23,7 +23,7 @@ export {
   todayTally,
   weekMarks,
 } from './days';
-export type { DayMark, Tally, YearMonth } from './days';
+export type { DayMark, MarkedDay, Tally, YearMonth } from './days';
 export { addDays, localDateOf } from './localTime';
 export type { LocalDate } from './localTime';
 export { doseOf, formatDose, isCustomised, MAX_DOSE_AMOUNT, MIN_DOSE_AMOUNT, sameDose } from './dose';
