@@ -1,5 +1,4 @@
-import { addDays, dailyGoalFor, type CoreState } from '../../core';
-import { localDateIn } from '../today/format';
+import { addDays, dailyGoalFor, localDateOf, type CoreState } from '../../core';
 
 /**
  * The Daily Goal row: today's goal (`dailyGoalFor` today in the Settings'
@@ -7,6 +6,6 @@ import { localDateIn } from '../today/format';
  * applies from tomorrow). They differ when a change starts tomorrow.
  */
 export function dailyGoalRow(state: CoreState, now: number): { today: number; tomorrow: number } {
-  const today = localDateIn(now, state.settings.timeZone);
+  const today = localDateOf(now, state.settings.timeZone);
   return { today: dailyGoalFor(state, today), tomorrow: dailyGoalFor(state, addDays(today, 1)) };
 }

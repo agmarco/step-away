@@ -6,7 +6,8 @@ export type TodayLine = { kind: 'reminder'; reminder: Reminder } | { kind: 'paus
 /**
  * Today's Reminders and Pauses in one list, newest first: a Reminder by when
  * it fired, a Pause by when it started. A Pause started at the same instant a
- * Reminder fired goes above it (it can only have come after).
+ * Reminder fired goes above it (it can only have come after). History's day
+ * panel lists any day's Reminders and Pauses the same way.
  */
 export function todayLines(reminders: Reminder[], pauses: Pause[]): TodayLine[] {
   const at = (line: TodayLine) => (line.kind === 'reminder' ? line.reminder.firesAt : line.pause.from);

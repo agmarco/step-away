@@ -1,7 +1,16 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { canPause, endsAtMidnight, heroStatus, type CoreState, type HeroStatus, type NotificationsState } from '../../core';
+import {
+  canPause,
+  endsAtMidnight,
+  heroStatus,
+  localDateOf,
+  sameDate,
+  type CoreState,
+  type HeroStatus,
+  type NotificationsState,
+} from '../../core';
 import { useColors } from '../../theme';
-import { dateOf, longDateOf, timeOf, weekdayOf } from './format';
+import { longDateOf, timeOf, weekdayOf } from './format';
 
 /** What the status line's action does: Pause (opens the sheet), Resume, or Undo the Day Off. */
 export type HeroAction = 'pause' | 'resume' | 'undoDayOff';
@@ -102,7 +111,7 @@ function statusView(status: HeroStatus, state: CoreState, now: number): StatusVi
       };
     case 'next': {
       const { at, snoozed } = status;
-      const day = dateOf(at, timeZone) === dateOf(now, timeZone) ? '' : `${weekdayOf(at)} `;
+      const day = sameDate(localDateOf(at, timeZone), localDateOf(now, timeZone)) ? '' : `${weekdayOf(at)} `;
       return {
         line: `Next Reminder ${day}${timeOf(at)}${snoozed ? ' (snoozed)' : ''}`,
         action: canPause(state, now, status) ? PAUSE : undefined,

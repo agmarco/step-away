@@ -19,7 +19,6 @@ import { useOnboardingDone } from "../platform/onboarding";
 import { useCoreState } from "../platform/useCoreState";
 import { isDevelopment } from "../platform/variant";
 import { CorrectionSheet } from "../screens/today/CorrectionSheet";
-import { localDateIn } from "../screens/today/format";
 import { Hero, type HeroAction } from "../screens/today/Hero";
 import { NotificationsBanner } from "../screens/today/NotificationsBanner";
 import { PauseSheet } from "../screens/today/PauseSheet";
@@ -68,9 +67,9 @@ export default function Today() {
     );
 
   const tally = todayTally(state, now);
-  const today = localDateIn(now, state.settings.timeZone);
+  const today = localDateOf(now, state.settings.timeZone);
   const goal = dailyGoalFor(state, today);
-  const dayOff = isDayOff(state, localDateOf(now, state.settings.timeZone));
+  const dayOff = isDayOff(state, today);
   const onHeroAction = (action: HeroAction) => {
     if (action === "pause") setPausing(true);
     else if (action === "resume") run("Resume", resume);

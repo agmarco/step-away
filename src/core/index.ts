@@ -13,6 +13,7 @@ export {
   isDayOff,
   isGoalDay,
   monthMarks,
+  sameDate,
   streak,
   todayTally,
   weekMarks,
