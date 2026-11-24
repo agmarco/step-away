@@ -238,15 +238,17 @@ The Exercise Library is bundled app data, built at dev time from a vendored sour
 |---|---|
 | `library/source/exercises.json` | free-exercise-db's `dist/exercises.json`, pinned to one commit and never edited. [`SOURCE.md`](library/source/SOURCE.md) records the commit, date, licence and sha256. |
 | `library/curation/<group>.yaml` | One file per group (`base`, `floor`, and one per Equipment type: `dumbbells`, `resistance-bands`), keyed by frozen Id. Only Exercises with an entry ship. Format: [`library/curation/README.md`](library/curation/README.md). |
-| `library/photos/<id>/{0,1}.jpg` | The start/end photos of the curated source Exercises, fetched from the pinned commit. |
+| `library/photos/<id>/{0,1}.webp` | The start/end photos of the curated source Exercises, fetched from the pinned commit and compressed to WebP. |
 | `library/library.json`, `library/photos.ts` | **Generated** by `npm run library:build`: the `Exercise[]` and the static photo index (one `require` per photo, so photos ship with EAS Update). Committed; never edit by hand. |
-| `tools/library/` | The build (`build.ts`) and draft (`draft.ts`) as pure functions with fixture tests, and the CLI (`cli.ts`, run with `tsx`). |
+| `tools/library/` | The build (`build.ts`), draft (`draft.ts`) and photo step (`photos.ts`) as functions with fixture tests, and the CLI (`cli.ts`, run with `tsx`). |
 
 ```sh
 npm run library:build            # validate the curation, write library.json and photos.ts; fails on any curation error
 npm run library:draft -- <group> # print the uncurated candidates for a group, with the script-filled fields, as YAML
-npm run library:photos           # download missing photos of every curated source Exercise at the pinned commit
+npm run library:photos           # download and compress the missing photos of every curated source Exercise at the pinned commit
 ```
+
+Photos are compressed as they are downloaded (`tools/library/photos.ts`); no source JPEG is written to disk. Each photo is shrunk to just cover a 440×294 box at its own aspect ratio (never enlarged, never cropped) and encoded as lossy WebP at quality 60 and effort 6, with no metadata. The screens show photos cover-fit in an 850:567 box at most about 443 physical px wide (the Exercise card), so this is about 1:1 on screen; the settings were picked in #59 (all 400 photos are about 3 MiB, down from 17.6 MiB). WebP won over JPEG: at the same 440 px width and quality 60, a mozjpeg JPEG came to 3.91 MiB and showed blocking, and Metro and React Native load WebP on Android with no native change. A photo key stays the source path, `<id>/0.jpg`, in `library.json` and the photo index; only its bundled file is `<id>/0.webp` (`photoFile`, in the sharp-free `tools/library/mapping.ts`). `sharp` is pinned to an exact version, and the step is deterministic: the same source gives the same bytes on every run, and `library:photos` skips a photo whose `.webp` is already there. A golden hash in `photos.test.ts` fails if a sharp upgrade changes the output; then redo the photos: delete `library/photos/`, run `npm run library:photos` and `npm run library:build`, update the hash and commit the photos together.
 
 Steps never carry a count or any number: the Dose, which the user can change, carries it ([`DRAFTING.md`](library/curation/DRAFTING.md) section 7). The build fails on a digit in any step, naming the Id and the step.
 

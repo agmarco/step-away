@@ -68,7 +68,10 @@ export interface Dose {
   eachSide: boolean;
 }
 
-/** Start/end photo keys, relative to the library's photo folder (e.g. `Side_Neck_Stretch/0.jpg`). */
+/**
+ * Start/end photo keys: each is the source's own image path (`<id>/0.jpg`, e.g.
+ * `Side_Neck_Stretch/0.jpg`). Its bundled file is the compressed `<id>/0.webp`.
+ */
 export interface ExercisePhotos {
   start: string;
   end: string;

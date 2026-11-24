@@ -218,18 +218,18 @@ describe('buildLibrary: photo index', () => {
 
   it('has exactly one require per photo of each shipped Exercise, in Id order, start before end', () => {
     expect(requires(build().photoIndex)).toEqual([
-      ['Bodyweight_Squat/0.jpg', './photos/Bodyweight_Squat/0.jpg'],
-      ['Bodyweight_Squat/1.jpg', './photos/Bodyweight_Squat/1.jpg'],
-      ['Chair_Upper_Body_Stretch/0.jpg', './photos/Chair_Upper_Body_Stretch/0.jpg'],
-      ['Chair_Upper_Body_Stretch/1.jpg', './photos/Chair_Upper_Body_Stretch/1.jpg'],
-      ['Hammer_Curls/0.jpg', './photos/Hammer_Curls/0.jpg'],
-      ['Hammer_Curls/1.jpg', './photos/Hammer_Curls/1.jpg'],
-      ['Plank/0.jpg', './photos/Plank/0.jpg'],
-      ['Plank/1.jpg', './photos/Plank/1.jpg'],
-      ['Side_Neck_Stretch/0.jpg', './photos/Side_Neck_Stretch/0.jpg'],
-      ['Side_Neck_Stretch/1.jpg', './photos/Side_Neck_Stretch/1.jpg'],
-      ['Star_Jump/0.jpg', './photos/Star_Jump/0.jpg'],
-      ['Star_Jump/1.jpg', './photos/Star_Jump/1.jpg'],
+      ['Bodyweight_Squat/0.jpg', './photos/Bodyweight_Squat/0.webp'],
+      ['Bodyweight_Squat/1.jpg', './photos/Bodyweight_Squat/1.webp'],
+      ['Chair_Upper_Body_Stretch/0.jpg', './photos/Chair_Upper_Body_Stretch/0.webp'],
+      ['Chair_Upper_Body_Stretch/1.jpg', './photos/Chair_Upper_Body_Stretch/1.webp'],
+      ['Hammer_Curls/0.jpg', './photos/Hammer_Curls/0.webp'],
+      ['Hammer_Curls/1.jpg', './photos/Hammer_Curls/1.webp'],
+      ['Plank/0.jpg', './photos/Plank/0.webp'],
+      ['Plank/1.jpg', './photos/Plank/1.webp'],
+      ['Side_Neck_Stretch/0.jpg', './photos/Side_Neck_Stretch/0.webp'],
+      ['Side_Neck_Stretch/1.jpg', './photos/Side_Neck_Stretch/1.webp'],
+      ['Star_Jump/0.jpg', './photos/Star_Jump/0.webp'],
+      ['Star_Jump/1.jpg', './photos/Star_Jump/1.webp'],
     ]);
   });
 
