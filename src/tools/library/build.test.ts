@@ -281,19 +281,14 @@ describe('buildLibrary: validation', () => {
     );
   });
 
-  it('rejects curating an entry whose source Equipment is ineligible', () => {
+  it.each([
+    ['Leg_Extensions', 'machine'],
+    ['Kettlebell_Windmill', 'kettlebells'],
+  ])('rejects curating %s, whose source Equipment "%s" is not v1 Equipment, naming the Id and the source Equipment', (id, equipment) => {
     expectBuildError(
-      () => build({ curation: { ...curation, base: curation.base + entryYaml('Leg_Extensions') } }),
-      'Leg_Extensions',
-      'machine',
-    );
-  });
-
-  it('rejects curating an entry whose source Equipment is not v1 Equipment, naming the Id and the source Equipment', () => {
-    expectBuildError(
-      () => build({ curation: { ...curation, base: curation.base + entryYaml('Kettlebell_Windmill') } }),
-      'Kettlebell_Windmill',
-      '"kettlebells"',
+      () => build({ curation: { ...curation, base: curation.base + entryYaml(id) } }),
+      id,
+      `"${equipment}"`,
       'not v1 Equipment',
     );
   });
@@ -345,7 +340,7 @@ describe('buildLibrary: unknown groups', () => {
   it.each(['kettlebell', 'medicine-ball', 'exercise-ball', 'foam-roller'])(
     'rejects %s.yaml, a group that left v1, as an unknown group',
     (group) => {
-      const withGone: Record<string, string> = { ...curation, [group]: fixture('curation/kettlebell.yaml') };
+      const withGone: Record<string, string> = { ...curation, [group]: fixture('curation/retired-group.yaml') };
 
       expectBuildError(() => build({ curation: withGone as BuildInput['curation'] }), `Unknown curation group ${group}`);
     },

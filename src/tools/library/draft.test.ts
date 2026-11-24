@@ -84,23 +84,14 @@ describe('draftCandidates: which entries are candidates', () => {
     ]);
   });
 
-  it('never offers kettlebells, medicine ball, exercise ball or foam roll, which are not v1 Equipment, in any group', () => {
-    const notV1: SourceExercise[] = (['kettlebells', 'medicine ball', 'exercise ball', 'foam roll'] as const).map((kind) =>
-      entry(`Move_With_${kind.replace(/ /g, '_')}`, { equipment: kind }),
-    );
+  it.each<[string, SourceEquipment[]]>([
+    ['kettlebells, medicine ball, exercise ball or foam roll', ['kettlebells', 'medicine ball', 'exercise ball', 'foam roll']],
+    ['machine, cable, barbell, e-z curl bar or other', ['machine', 'cable', 'barbell', 'e-z curl bar', 'other']],
+  ])('never offers %s, which are not v1 Equipment, in any group', (_, kinds) => {
+    const notV1: SourceExercise[] = kinds.map((kind) => entry(`Move_With_${kind.replace(/[ -]/g, '_')}`, { equipment: kind }));
 
     for (const group of ALL_GROUPS) {
       expect(draftCandidates({ source: notV1, group, curatedIds: none }), group).toEqual([]);
-    }
-  });
-
-  it('never offers machine, cable, barbell, e-z curl bar or other Equipment in any group', () => {
-    const ineligible: SourceExercise[] = (['machine', 'cable', 'barbell', 'e-z curl bar', 'other'] as const).map(
-      (kind) => entry(`Move_With_${kind.replace(/[ -]/g, '_')}`, { equipment: kind }),
-    );
-
-    for (const group of ALL_GROUPS) {
-      expect(draftCandidates({ source: ineligible, group, curatedIds: none }), group).toEqual([]);
     }
   });
 });
