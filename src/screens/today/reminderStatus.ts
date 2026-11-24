@@ -12,12 +12,24 @@ export const DROPPED_LABEL: Record<DropReason, string> = {
 /**
  * One fired Reminder's status line and its colour, from its settled status,
  * on Today's list and History's day panel. `outstandingId` is the outstanding
- * Reminder's Id, if any (only ever today's).
+ * Reminder's Id, if any (only ever today's). A done Reminder reads "Done:
+ * names" unless `plainDone` (History, which lists its Exercises under it),
+ * then just "Done".
  */
-export function statusOf(r: Reminder, state: CoreState, outstandingId: string | undefined, now: number, colors: Palette) {
+export function statusOf(
+  r: Reminder,
+  state: CoreState,
+  outstandingId: string | undefined,
+  now: number,
+  colors: Palette,
+  { plainDone = false }: { plainDone?: boolean } = {},
+) {
   switch (r.status) {
     case 'done':
-      return { label: r.done?.length ? `Done: ${r.done.map((e) => e.name).join(', ')}` : 'Done', color: colors.outcome.done };
+      return {
+        label: !plainDone && r.done?.length ? `Done: ${r.done.map((e) => e.name).join(', ')}` : 'Done',
+        color: colors.outcome.done,
+      };
     case 'skipped':
       return { label: 'Skipped', color: colors.outcome.skip };
     case 'missed':

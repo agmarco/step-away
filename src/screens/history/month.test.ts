@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { leadingBlanks, monthBefore, shiftMonth } from './month';
+import { leadingBlanks, monthBefore, shiftMonth, weeksOf } from './month';
 
 describe("leadingBlanks: the empty cells before a month's first day, weeks starting Monday", () => {
   it('is 0 for a month that starts on a Monday (June 2026)', () => {
@@ -34,5 +34,37 @@ describe('monthBefore: whether one month comes before another', () => {
     expect(monthBefore({ year: 2026, month: 4 }, { year: 2026, month: 4 })).toBe(false);
     expect(monthBefore({ year: 2025, month: 12 }, { year: 2026, month: 1 })).toBe(true);
     expect(monthBefore({ year: 2027, month: 1 }, { year: 2026, month: 12 })).toBe(false);
+  });
+});
+
+describe("weeksOf: a month's days as Monday-first rows of seven, blanks as null", () => {
+  const daysOf = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
+
+  it('starts the first row with the 1st for a month that starts on a Monday (June 2026)', () => {
+    const weeks = weeksOf({ year: 2026, month: 6 }, daysOf(30));
+    expect(weeks[0]).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(weeks).toHaveLength(5);
+    expect(weeks[4]).toEqual([29, 30, null, null, null, null, null]);
+  });
+
+  it('puts the 1st under Sunday after 6 blanks for a month that starts on a Sunday (November 2026)', () => {
+    const weeks = weeksOf({ year: 2026, month: 11 }, daysOf(30));
+    expect(weeks[0]).toEqual([null, null, null, null, null, null, 1]);
+    expect(weeks[4]?.[0]).toBe(23);
+    expect(weeks).toHaveLength(6);
+    expect(weeks[5]).toEqual([30, null, null, null, null, null, null]);
+  });
+
+  it('is exactly 4 full rows for a 28-day February that starts on a Monday (February 2027)', () => {
+    const weeks = weeksOf({ year: 2027, month: 2 }, daysOf(28));
+    expect(weeks).toHaveLength(4);
+    expect(weeks.flat()).toEqual(daysOf(28));
+  });
+
+  it('makes every row seven long, whatever the month', () => {
+    for (let month = 1; month <= 12; month++) {
+      const days = new Date(Date.UTC(2026, month, 0)).getUTCDate();
+      for (const row of weeksOf({ year: 2026, month }, daysOf(days))) expect(row).toHaveLength(7);
+    }
   });
 });

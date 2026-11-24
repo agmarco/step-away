@@ -11,6 +11,19 @@ export function leadingBlanks(month: YearMonth): number {
   return (sundayFirst + 6) % 7;
 }
 
+/**
+ * `days` (the month's days in order, one per day) as Monday-first week rows
+ * of exactly seven: blanks (null) before the 1st, by `leadingBlanks`, and
+ * after the last day to fill the last row.
+ */
+export function weeksOf<T>(month: YearMonth, days: readonly T[]): (T | null)[][] {
+  const cells: (T | null)[] = [...Array.from({ length: leadingBlanks(month) }, () => null), ...days];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (T | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
+
 /** The month `by` months after `month` (before it when `by` is negative). */
 export function shiftMonth(month: YearMonth, by: number): YearMonth {
   const index = month.year * 12 + (month.month - 1) + by;

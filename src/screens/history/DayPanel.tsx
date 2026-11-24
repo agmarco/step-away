@@ -26,7 +26,7 @@ export type DayKind = 'past' | 'today' | 'future';
  *  - a past day or today: the day's tally (`dayTally`) and its Reminders and
  *    Pauses, newest first (`todayLines` of `remindersOn` and `pausesOn`), read
  *    only. A Reminder row has its time, its outcome dot and label (Today's
- *    `statusOf`), "snoozed ×N", and its Exercises with thumbnails
+ *    `statusOf`, a done one plain "Done"), "snoozed ×N", and its Exercises with thumbnails
  *    (`exercisesShown`: the Done list of a done Reminder, else the
  *    Suggestion). A day with nothing recorded says so;
  *  - a day still ahead: whether it is a Day Off.
@@ -87,7 +87,7 @@ export function DayPanel({
                   <ReminderRow
                     key={line.reminder.id}
                     reminder={line.reminder}
-                    status={statusOf(line.reminder, state, outstandingId, now, colors)}
+                    status={statusOf(line.reminder, state, outstandingId, now, colors, { plainDone: true })}
                     shown={exercisesShown(line.reminder, exercises)}
                     divided={i > 0}
                     colors={colors}

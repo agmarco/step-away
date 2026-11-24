@@ -3,7 +3,7 @@ import { sameDate, type DayMark, type LocalDate, type YearMonth } from '../../co
 import { type Palette, useColors } from '../../theme';
 import { MARK_LABEL, markStyle } from '../today/dayMarks';
 import { longDayOf, monthTitleOf } from './format';
-import { leadingBlanks } from './month';
+import { weeksOf } from './month';
 
 const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -33,7 +33,6 @@ export function Calendar({
   onSelect: (date: LocalDate) => void;
 }) {
   const colors = useColors();
-  const blanks = Array.from({ length: leadingBlanks(month) }, (_, i) => i);
   return (
     <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
       <View style={styles.header}>
@@ -43,42 +42,47 @@ export function Calendar({
         </Text>
         <Arrow label="Next month" glyph="›" enabled={canGoForward} onPress={() => onStep(1)} colors={colors} />
       </View>
-      <View style={styles.grid}>
-        {WEEKDAY_LETTERS.map((letter, i) => (
-          <View key={`w${i}`} style={styles.slot} importantForAccessibility="no-hide-descendants">
-            <Text style={[styles.weekday, { color: colors.text.secondary }]}>{letter}</Text>
+      <View>
+        <View style={styles.row} importantForAccessibility="no-hide-descendants">
+          {WEEKDAY_LETTERS.map((letter, i) => (
+            <View key={`w${i}`} style={styles.slot}>
+              <Text style={[styles.weekday, { color: colors.text.secondary }]}>{letter}</Text>
+            </View>
+          ))}
+        </View>
+        {weeksOf(month, marks).map((week, w) => (
+          <View key={`r${w}`} style={styles.row}>
+            {week.map((entry, i) => {
+              if (!entry) return <View key={`b${i}`} style={styles.slot} />;
+              const { date, mark } = entry;
+              const isSelected = sameDate(date, selected);
+              const blank = mark === 'none';
+              return (
+                <View key={date.day} style={styles.slot}>
+                  <Pressable
+                    onPress={() => onSelect(date)}
+                    disabled={blank}
+                    accessibilityRole={blank ? undefined : 'button'}
+                    accessibilityLabel={`${longDayOf(date)}, ${MARK_LABEL[mark]}`}
+                    accessibilityState={blank ? undefined : { selected: isSelected }}
+                    style={[styles.day, { borderColor: isSelected ? colors.text.primary : 'transparent' }]}
+                  >
+                    <View style={[styles.cell, markStyle(mark, colors)]} />
+                    <Text
+                      style={[
+                        styles.number,
+                        { color: blank ? colors.text.secondary : colors.text.primary },
+                        isSelected && styles.numberSelected,
+                      ]}
+                    >
+                      {date.day}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}
           </View>
         ))}
-        {blanks.map((i) => (
-          <View key={`b${i}`} style={styles.slot} />
-        ))}
-        {marks.map(({ date, mark }) => {
-          const isSelected = sameDate(date, selected);
-          const blank = mark === 'none';
-          return (
-            <View key={date.day} style={styles.slot}>
-              <Pressable
-                onPress={() => onSelect(date)}
-                disabled={blank}
-                accessibilityRole={blank ? undefined : 'button'}
-                accessibilityLabel={`${longDayOf(date)}, ${MARK_LABEL[mark]}`}
-                accessibilityState={blank ? undefined : { selected: isSelected }}
-                style={[styles.day, { borderColor: isSelected ? colors.text.primary : 'transparent' }]}
-              >
-                <View style={[styles.cell, markStyle(mark, colors)]} />
-                <Text
-                  style={[
-                    styles.number,
-                    { color: blank ? colors.text.secondary : colors.text.primary },
-                    isSelected && styles.numberSelected,
-                  ]}
-                >
-                  {date.day}
-                </Text>
-              </Pressable>
-            </View>
-          );
-        })}
       </View>
       <View style={styles.legend}>
         <Legend color={colors.day.goalDay} label="Goal Day" colors={colors} />
@@ -134,9 +138,10 @@ const styles = StyleSheet.create({
   arrow: { paddingHorizontal: 12 },
   arrowText: { fontSize: 26 },
   disabled: { opacity: 0.3 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  // Seven to a row.
-  slot: { width: `${100 / 7}%`, padding: 2, alignItems: 'stretch' },
+  // Each week (and the weekday letters) is its own row of exactly seven
+  // equal slots: `flex: 1` shares the row's width, so nothing can wrap.
+  row: { flexDirection: 'row' },
+  slot: { flex: 1, padding: 2, alignItems: 'stretch' },
   weekday: { textAlign: 'center', fontSize: 12, fontWeight: '600' },
   day: { borderWidth: 2, borderRadius: 10, padding: 3, gap: 2, alignItems: 'center' },
   cell: { height: 22, alignSelf: 'stretch', borderRadius: 6 },
