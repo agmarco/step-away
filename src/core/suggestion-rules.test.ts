@@ -449,7 +449,7 @@ describe('the fallback (empty pool)', () => {
   const library = [...baseSet, ...notBase];
   const empty = cfg({ difficulty: 'Beginner', excluded: ['Base_Excluded'], exercisesPerSuggestion: 3 });
 
-  it('gives every Reminder exactly 1 base-set Exercise, ignoring Exclusions, the ceiling and Energetic, flagged as fallback', () => {
+  it('gives every Reminder exactly 1 gentle base-set Exercise (Beginner, not Energetic), ignoring Exclusions, flagged as fallback', () => {
     const { reminders } = rearm(empty, at('08:00'), library).state;
 
     expect(reminders.length).toBeGreaterThan(50);
@@ -457,7 +457,7 @@ describe('the fallback (empty pool)', () => {
       expect(r.suggestion).toHaveLength(1);
       expect(r.fallback).toBe(true);
     }
-    expect(new Set(reminders.flatMap(idsOf))).toEqual(new Set(baseSet.map((e) => e.id)));
+    expect(new Set(reminders.flatMap(idsOf))).toEqual(new Set(['Base_Excluded']));
   });
 
   it('ends a fallback notification with the line "No Exercises match your settings"', () => {
@@ -488,6 +488,44 @@ describe('the fallback (empty pool)', () => {
     expect(ahead.length).toBeGreaterThan(40);
     for (const r of ahead) expect(r).not.toHaveProperty('fallback');
     for (const n of chainOf(result)) expect(n.body).not.toContain('No Exercises match your settings');
+  });
+
+  it('never falls back to an Intermediate, Expert or Energetic base Exercise while a Beginner, non-Energetic one exists', () => {
+    const gentle = [
+      exercise('Gentle_Neck', 'Neck', { position: 'Seated' }),
+      exercise('Gentle_Hips', 'Hips & Legs', { position: 'Standing' }),
+    ];
+    const hard = [
+      exercise('Beginner_Energetic', 'Chest & Arms', { energetic: true }),
+      exercise('Intermediate_Calm', 'Wrists & Forearms', { difficulty: 'Intermediate' }),
+      exercise('Expert_Calm', 'Core & Lower Back', { difficulty: 'Expert' }),
+    ];
+    const lib = [...hard, ...gentle];
+    // The gentle ones are Excluded and the others above the settings: the pool is empty.
+    const settings = cfg({ difficulty: 'Beginner', excluded: gentle.map((e) => e.id), exercisesPerSuggestion: 3 });
+
+    const { reminders } = rearm(settings, at('08:00'), lib).state;
+
+    expect(reminders.length).toBeGreaterThan(50);
+    for (const r of reminders) expect(r.fallback).toBe(true);
+    expect(new Set(reminders.flatMap(idsOf))).toEqual(new Set(['Gentle_Neck', 'Gentle_Hips']));
+  });
+
+  it('with only Intermediate, Expert or Energetic base Exercises, still falls back to one of them', () => {
+    const hard = [
+      exercise('Beginner_Energetic', 'Chest & Arms', { energetic: true }),
+      exercise('Intermediate_Calm', 'Wrists & Forearms', { difficulty: 'Intermediate' }),
+    ];
+    const lib = [...hard, ...notBase];
+
+    const { reminders } = rearm(cfg({ difficulty: 'Beginner' }), at('08:00'), lib).state;
+
+    expect(reminders.length).toBeGreaterThan(50);
+    for (const r of reminders) {
+      expect(r.suggestion).toHaveLength(1);
+      expect(r.fallback).toBe(true);
+    }
+    expect(new Set(reminders.flatMap(idsOf))).toEqual(new Set(['Beginner_Energetic', 'Intermediate_Calm']));
   });
 
   it('schedules nothing when there is no fallback candidate either', () => {
