@@ -45,7 +45,15 @@
  * finish records is the core's `guidedFinish`. The fallback ("isn't waiting
  * any more") shows when `guidedStart` refused the Reminder at open (already
  * answered, from another day, or unknown), when its Suggestion is empty, or
- * when a Snooze wasn't accepted. The celebration card (#28) isn't here yet.
+ * when a Snooze wasn't accepted.
+ *
+ * The celebration card (#28): when a finish (the last card, End here, or back
+ * once a card is answered) carried the core's `CelebrationDue` for this
+ * Reminder, from the Done or the late path, the screen shows the card instead
+ * of going straight to Today: "Daily Goal reached" when `goalReached`, and the
+ * Badges unlocked by label. Its one action, Back to Today, leaves as a normal
+ * finish does. With no celebration the flow ends as before. A Skip and a
+ * Snooze never celebrate, and nothing is posted to the shade.
  */
 import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -53,10 +61,11 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FALLBACK_LINE, canSnooze, formatDose, guidedStart, isOutstanding, outstandingReminder, type Reminder, type SuggestedExercise } from '../../core';
 import { exercises, photoSource } from '../../library';
-import { finishGuided, respond, startGuided, swap } from '../../platform/handler';
+import { finishGuided, respond, startGuided, swap, type Celebration } from '../../platform/handler';
 import { dismissReminder } from '../../platform/notifications';
 import { useCoreState } from '../../platform/useCoreState';
 import { StatusBarBackdrop } from '../../screens/StatusBarBackdrop';
+import { CelebrationCard } from '../../screens/achievements/CelebrationCard';
 import { type Palette, useColors } from '../../theme';
 
 const backToToday = () => router.dismissTo('/');
@@ -82,6 +91,8 @@ export default function Guided() {
   // A ref, so the back handler sees it in the same tick; `finished` lifts the prevention on render.
   const leaving = useRef<'no' | 'finishing' | 'finished'>('no');
   const [finished, setFinished] = useState(false);
+  // What the finish brought to celebrate: shown instead of going straight back to Today.
+  const [celebration, setCelebration] = useState<Celebration>();
 
   useEffect(() => {
     dismissReminder(reminderId);
@@ -118,18 +129,24 @@ export default function Guided() {
   });
 
   // Recorded or not, back to Today: a finish that records nothing has nothing new to record.
+  // A finish that brought a celebration shows its card first; the card's action goes to Today.
   function finish(didSoFar: string[]) {
     if (leaving.current !== 'no') return;
     leaving.current = 'finishing';
     setBusy(true);
+    let celebrate: Celebration | undefined;
     finishGuided(reminderId, didSoFar)
+      .then((result) => {
+        celebrate = result.celebration;
+      })
       .catch((e) => console.warn(`[guided] finish ${reminderId} failed: ${e}`))
       .finally(() => {
         setBusy(false);
         leaving.current = 'finished';
         setFinished(true);
         allowLeave();
-        backToToday();
+        if (celebrate) setCelebration(celebrate);
+        else backToToday();
       });
   }
 
@@ -164,6 +181,7 @@ export default function Guided() {
   };
 
   const screen = { backgroundColor: colors.background.screen };
+  if (celebration) return <CelebrationCard celebration={celebration} onDismiss={backToToday} />;
   if (reminder === undefined) return <View style={[styles.root, screen]} />;
   if (reminder === null || reminder.suggestion.length === 0) {
     return (

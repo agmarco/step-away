@@ -43,6 +43,13 @@ export interface Palette {
     dayOff: string;
     goalDay: string;
   };
+  /** Achievements (#28). */
+  badge: {
+    /** An unlocked Badge's ring on its tile (a mark). */
+    earned: string;
+    /** New: Today's new-Badge dot (a mark) and a Badge tile's New tag (text, on background.card). */
+    new: string;
+  };
 }
 
 // The outcome and day colours are all distinct from each other, in both palettes.
@@ -63,6 +70,7 @@ export const light: Palette = {
     dayOff: '#0284c7',
     goalDay: '#db2777',
   },
+  badge: { earned: '#a16207', new: '#dc2626' },
 };
 
 export const dark: Palette = {
@@ -79,4 +87,5 @@ export const dark: Palette = {
     dayOff: '#38bdf8',
     goalDay: '#f472b6',
   },
+  badge: { earned: '#facc15', new: '#f87171' },
 };

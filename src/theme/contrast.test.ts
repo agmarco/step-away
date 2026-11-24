@@ -52,6 +52,9 @@ function textPairs(p: Palette): Pair[] {
     ['accent.hero on background.banner', p.accent.hero, p.background.banner],
     ['text.onHero on accent.hero', p.text.onHero, p.accent.hero],
     ['text.onHero on accent.heroPanel', p.text.onHero, p.accent.heroPanel],
+    // Achievements (#28): the New tag on a Badge tile (on the card) and on the page.
+    ['badge.new on background.card', p.badge.new, p.background.card],
+    ['badge.new on background.screen', p.badge.new, p.background.screen],
   ];
 }
 
@@ -70,6 +73,10 @@ function markPairs(p: Palette): Pair[] {
     ...marks.map(([n, c]): Pair => [`${n} on background.card`, c, p.background.card]),
     // The Daily Goal dots in the hero, filled and empty (a ring), drawn in text.onHero.
     ['goal dot (text.onHero) on accent.hero', p.text.onHero, p.accent.hero],
+    // Achievements (#28): Today's new-Badge dot on its tile, and an unlocked Badge's ring on its tile and the page.
+    ['new-Badge dot (badge.new) on background.card', p.badge.new, p.background.card],
+    ['badge.earned on background.card', p.badge.earned, p.background.card],
+    ['badge.earned on background.screen', p.badge.earned, p.background.screen],
   ];
 }
 
