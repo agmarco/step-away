@@ -8,7 +8,7 @@ import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { describe, expect, it, vi } from 'vitest';
 import { defaultSettings, type CoreState, type Reminder, type SuggestedExercise } from '../core';
 import type { Db } from './db';
-import { MIGRATIONS, migrate, SCHEMA_VERSION } from './migrations';
+import { migrate } from './migrations';
 
 vi.mock('expo-sqlite', () => ({}));
 // The bundled library pulls in photos; the backfill only needs Ids, and every snapshot here has its Body Area.
@@ -45,8 +45,6 @@ function fakeDb(): Db {
 }
 
 const userVersion = async (d: Db) => (await d.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-const columnsOf = async (d: Db, table: string) =>
-  (await d.getAllAsync<{ name: string; dflt_value: string | null; notnull: number }>(`PRAGMA table_info(${table})`));
 
 const exercise = (id: string): SuggestedExercise => ({
   id,
@@ -70,98 +68,198 @@ const state = (reminders: Reminder[]): CoreState => ({
   reminders,
 });
 
-describe('migrations', () => {
-  it('v3 -> v4 adds fallback, swapped_out and rotation to an existing DB and keeps its rows', async () => {
-    const d = fakeDb();
-    // A DB as #23 left it: the first three steps, at user_version 3, with history.
-    for (const step of MIGRATIONS.slice(0, 3)) await step(d);
-    await d.execAsync('PRAGMA user_version = 3');
-    await d.runAsync(
-      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, done_exercises) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      'r1',
-      NOW - 1,
-      JSON.stringify([exercise('A')]),
-      'done',
-      1,
-      null,
-      JSON.stringify([{ id: 'A', name: 'A', bodyArea: 'Neck' }]),
+describe('the v5 baseline (#68)', () => {
+  type Column = { name: string; type: string; notnull: number; dflt_value: string | null; pk: number };
+  const col = (name: string, type: string, notnull: 0 | 1, dflt_value: string | null = null, pk: 0 | 1 = 0): Column => ({
+    name,
+    type,
+    notnull,
+    dflt_value,
+    pk,
+  });
+
+  /**
+   * The v5 schema as the five steps of #21-#26 left it on the owner's phone:
+   * written from the schema those steps produced and verified against them in
+   * #68 CP1. Literal on purpose: it must not follow the baseline in migrations.ts.
+   * `reminders` lists its columns in ALTER order, the phone's order.
+   */
+  const V5_SCHEMA = {
+    objects: [
+      { type: 'index', name: 'reminders_fires_at', tbl_name: 'reminders' },
+      { type: 'index', name: 'sqlite_autoindex_meta_1', tbl_name: 'meta' },
+      { type: 'index', name: 'sqlite_autoindex_reminders_1', tbl_name: 'reminders' },
+      { type: 'table', name: 'meta', tbl_name: 'meta' },
+      { type: 'table', name: 'reminders', tbl_name: 'reminders' },
+      { type: 'table', name: 'responses', tbl_name: 'responses' },
+      // AUTOINCREMENT on responses.id.
+      { type: 'table', name: 'sqlite_sequence', tbl_name: 'sqlite_sequence' },
+    ],
+    reminders: [
+      col('id', 'TEXT', 0, null, 1),
+      col('fires_at', 'INTEGER', 1),
+      col('suggestion', 'TEXT', 1),
+      col('status', 'TEXT', 1),
+      col('snoozes', 'INTEGER', 1, '0'),
+      col('refires_at', 'INTEGER', 0),
+      col('done_exercises', 'TEXT', 0),
+      col('fallback', 'INTEGER', 1, '0'),
+      col('swapped_out', 'TEXT', 0),
+      col('rotation', 'INTEGER', 0),
+      col('dropped_by', 'TEXT', 0),
+    ],
+    meta: [col('key', 'TEXT', 0, null, 1), col('value', 'TEXT', 1)],
+    responses: [
+      col('id', 'INTEGER', 0, null, 1),
+      col('reminder_id', 'TEXT', 1),
+      col('kind', 'TEXT', 1),
+      col('source', 'TEXT', 1),
+      col('at', 'INTEGER', 1),
+    ],
+    remindersIndexes: [
+      { name: 'reminders_fires_at', unique: 0, origin: 'c', partial: 0, columns: ['fires_at'] },
+      { name: 'sqlite_autoindex_reminders_1', unique: 1, origin: 'pk', partial: 0, columns: ['id'] },
+    ],
+  };
+
+  /**
+   * The phone's schema at each version, as literal SQL: the #21 tables, then
+   * each ALTER the steps of #22-#26 ran. Literal on purpose, like V5_SCHEMA.
+   */
+  const PHONE_SQL_BY_VERSION = [
+    `CREATE TABLE reminders (
+       id TEXT PRIMARY KEY,
+       fires_at INTEGER NOT NULL,
+       suggestion TEXT NOT NULL,
+       status TEXT NOT NULL);
+     CREATE INDEX reminders_fires_at ON reminders (fires_at);
+     CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+     CREATE TABLE responses (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       reminder_id TEXT NOT NULL,
+       kind TEXT NOT NULL,
+       source TEXT NOT NULL,
+       at INTEGER NOT NULL);`,
+    `ALTER TABLE reminders ADD COLUMN snoozes INTEGER NOT NULL DEFAULT 0;
+     ALTER TABLE reminders ADD COLUMN refires_at INTEGER NULL;`,
+    'ALTER TABLE reminders ADD COLUMN done_exercises TEXT NULL;',
+    `ALTER TABLE reminders ADD COLUMN fallback INTEGER NOT NULL DEFAULT 0;
+     ALTER TABLE reminders ADD COLUMN swapped_out TEXT NULL;
+     ALTER TABLE reminders ADD COLUMN rotation INTEGER NULL;`,
+    'ALTER TABLE reminders ADD COLUMN dropped_by TEXT NULL;',
+  ];
+
+  /** A DB built the way the phone's was, stopped at `version`. */
+  async function phoneDbAt(d: Db, version: number) {
+    for (const sql of PHONE_SQL_BY_VERSION.slice(0, version)) await d.execAsync(sql);
+    await d.execAsync(`PRAGMA user_version = ${version}`);
+  }
+
+  /** The live schema, in V5_SCHEMA's shape. */
+  async function schemaOf(d: Db) {
+    const columns = (table: string) =>
+      d.getAllAsync<Column>(`SELECT name, type, "notnull", dflt_value, pk FROM pragma_table_info('${table}')`);
+    const indexes = await d.getAllAsync<{ name: string; unique: number; origin: string; partial: number }>(
+      `SELECT name, "unique", origin, partial FROM pragma_index_list('reminders') ORDER BY name`,
     );
-    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('r1', 'Done', 'app', 1)`);
+    return {
+      objects: await d.getAllAsync('SELECT type, name, tbl_name FROM sqlite_master ORDER BY type, name'),
+      reminders: await columns('reminders'),
+      meta: await columns('meta'),
+      responses: await columns('responses'),
+      remindersIndexes: await Promise.all(
+        indexes.map(async (i) => ({
+          ...i,
+          columns: (await d.getAllAsync<{ name: string }>(`SELECT name FROM pragma_index_info('${i.name}') ORDER BY seqno`)).map(
+            (c) => c.name,
+          ),
+        })),
+      ),
+    };
+  }
 
-    await migrate(d);
-
-    expect(await userVersion(d)).toBe(SCHEMA_VERSION);
-    const columns = await columnsOf(d, 'reminders');
-    expect(columns.find((c) => c.name === 'fallback')).toMatchObject({ dflt_value: '0', notnull: 1 });
-    expect(columns.find((c) => c.name === 'swapped_out')).toMatchObject({ dflt_value: null, notnull: 0 });
-    expect(columns.find((c) => c.name === 'rotation')).toMatchObject({ dflt_value: null, notnull: 0 });
-    expect(await d.getAllAsync('SELECT id, status, snoozes, fallback, swapped_out, rotation FROM reminders')).toEqual([
-      { id: 'r1', status: 'done', snoozes: 1, fallback: 0, swapped_out: null, rotation: null },
-    ]);
-    expect(await d.getAllAsync('SELECT reminder_id, kind FROM responses')).toEqual([{ reminder_id: 'r1', kind: 'Done' }]);
-    // The existing Reminder loads with none of the new keys.
-    expect((await loadState(d)).reminders[0]).not.toHaveProperty('fallback');
+  const rowsOf = async (d: Db) => ({
+    reminders: await d.getAllAsync('SELECT * FROM reminders ORDER BY rowid'),
+    meta: await d.getAllAsync('SELECT * FROM meta ORDER BY key'),
+    responses: await d.getAllAsync('SELECT * FROM responses ORDER BY id'),
+    sequence: await d.getAllAsync('SELECT * FROM sqlite_sequence ORDER BY name'),
   });
 
-  it('v3 -> v4 adds only the columns that are missing', async () => {
+  /** fakeDb that counts the transactions opened on it. */
+  function countingDb() {
     const d = fakeDb();
-    for (const step of MIGRATIONS.slice(0, 3)) await step(d);
-    await d.execAsync('PRAGMA user_version = 3');
-    await d.execAsync('ALTER TABLE reminders ADD COLUMN fallback INTEGER NOT NULL DEFAULT 0');
+    const counter = { begins: 0 };
+    const execAsync = d.execAsync.bind(d);
+    d.execAsync = async (sql: string) => {
+      if (/^\s*BEGIN IMMEDIATE\b/i.test(sql)) counter.begins += 1;
+      return execAsync(sql);
+    };
+    return { d, counter };
+  }
 
-    await migrate(d);
-
-    expect(await userVersion(d)).toBe(SCHEMA_VERSION);
-    const names = (await columnsOf(d, 'reminders')).map((c) => c.name);
-    expect(names.filter((n) => n === 'fallback')).toHaveLength(1);
-    expect(names).toEqual(expect.arrayContaining(['swapped_out', 'rotation']));
-  });
-
-  it('v4 -> v5 adds dropped_by to an existing DB and keeps its rows', async () => {
+  it('creates the v5 schema on a fresh DB, columns in the phone order', async () => {
     const d = fakeDb();
-    // A DB as #24 left it: the first four steps, at user_version 4, with history.
-    for (const step of MIGRATIONS.slice(0, 4)) await step(d);
-    await d.execAsync('PRAGMA user_version = 4');
-    await d.runAsync(
-      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, fallback, swapped_out, rotation)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      'r1',
-      NOW - 1,
-      JSON.stringify([exercise('A')]),
-      'dropped',
-      1,
-      NOW + 1,
-      0,
-      JSON.stringify(['B']),
-      2,
-    );
-    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('r1', 'Snooze', 'app', 1)`);
-
-    await migrate(d);
-
-    expect(SCHEMA_VERSION).toBe(5);
-    expect(await userVersion(d)).toBe(5);
-    const columns = await columnsOf(d, 'reminders');
-    expect(columns.find((c) => c.name === 'dropped_by')).toMatchObject({ dflt_value: null, notnull: 0 });
-    expect(await d.getAllAsync('SELECT id, status, snoozes, swapped_out, rotation, dropped_by FROM reminders')).toEqual([
-      { id: 'r1', status: 'dropped', snoozes: 1, swapped_out: '["B"]', rotation: 2, dropped_by: null },
-    ]);
-    expect(await d.getAllAsync('SELECT reminder_id, kind FROM responses')).toEqual([{ reminder_id: 'r1', kind: 'Snooze' }]);
-    // The existing dropped Reminder loads with no stored reason (read as closing).
-    expect((await loadState(d)).reminders[0]).not.toHaveProperty('droppedBy');
-  });
-
-  it('v4 -> v5 adds dropped_by only if it is missing', async () => {
-    const d = fakeDb();
-    for (const step of MIGRATIONS.slice(0, 4)) await step(d);
-    await d.execAsync('PRAGMA user_version = 4');
-    await d.execAsync('ALTER TABLE reminders ADD COLUMN dropped_by TEXT NULL');
 
     await migrate(d);
 
     expect(await userVersion(d)).toBe(5);
-    const names = (await columnsOf(d, 'reminders')).map((c) => c.name);
-    expect(names.filter((n) => n === 'dropped_by')).toHaveLength(1);
+    expect(await schemaOf(d)).toEqual(V5_SCHEMA);
+  });
+
+  it('leaves a v5 DB with history as it is', async () => {
+    const d = fakeDb();
+    await phoneDbAt(d, 5);
+    const insert = `INSERT INTO reminders
+       (id, fires_at, suggestion, status, snoozes, refires_at, done_exercises, fallback, swapped_out, rotation, dropped_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const done = [{ id: 'A', name: 'A', bodyArea: 'Neck' }];
+    await d.runAsync(insert, 'done', NOW - 3, JSON.stringify([exercise('A')]), 'done', 1, null, JSON.stringify(done), 0, null, 3);
+    await d.runAsync(insert, 'dropped', NOW - 2, JSON.stringify([exercise('B')]), 'dropped', 2, NOW - 1, null, 1, '["C"]', null, 'pause');
+    await d.runAsync(insert, 'missed', NOW - 1, JSON.stringify([exercise('D')]), 'missed', 0, null, null, 0, null, null, null);
+    await d.runAsync(insert, 'ahead', NOW + 1, JSON.stringify([exercise('E')]), 'scheduled', 0, null, null, 0, null, 4, null);
+    await d.runAsync(`INSERT INTO meta (key, value) VALUES ('settings', ?)`, JSON.stringify(defaultSettings));
+    await d.runAsync(`INSERT INTO meta (key, value) VALUES ('last_response_at', ?)`, String(NOW - 3));
+    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('done', 'Done', 'app', ?)`, NOW - 3);
+    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('dropped', 'Snooze', 'bg-task', ?)`, NOW - 2);
+    const schema = await schemaOf(d);
+    const rows = await rowsOf(d);
+
+    await migrate(d);
+
+    expect(await userVersion(d)).toBe(5);
+    expect(await schemaOf(d)).toEqual(schema);
+    expect(await rowsOf(d)).toEqual(rows);
+    const loaded = await loadState(d);
+    expect(loaded.settings).toEqual(defaultSettings);
+    expect(loaded.reminders.map((r) => [r.id, r.status])).toEqual([
+      ['done', 'done'],
+      ['dropped', 'dropped'],
+      ['missed', 'missed'],
+      ['ahead', 'scheduled'],
+    ]);
+    expect(loaded.reminders[1]).toMatchObject({ snoozes: 2, refiresAt: NOW - 1, fallback: true, swappedOut: ['C'], droppedBy: 'pause' });
+    expect(loaded.reminders[0]).toMatchObject({ done, rotation: 3 });
+  });
+
+  it('brings a fresh DB to v5 in one step', async () => {
+    const { d, counter } = countingDb();
+
+    await migrate(d);
+
+    expect(await userVersion(d)).toBe(5);
+    expect(counter.begins).toBe(1);
+  });
+
+  it.each([1, 2, 3, 4])('rejects a DB at user_version %i as unsupported and leaves it as it is', async (version) => {
+    const d = fakeDb();
+    // No such DB exists any more: the phone is at v5. One would be a dev DB left behind.
+    await phoneDbAt(d, version);
+    const schema = await schemaOf(d);
+
+    await expect(migrate(d)).rejects.toThrow(new RegExp(`user_version ${version}.*unsupported`, 'i'));
+
+    expect(await userVersion(d)).toBe(version);
+    expect(await schemaOf(d)).toEqual(schema);
   });
 });
 
