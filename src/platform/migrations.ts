@@ -1,20 +1,27 @@
 /**
- * The schema, as versioned migrations keyed by SQLite's `PRAGMA user_version`.
+ * The schema, versioned by SQLite's `PRAGMA user_version`.
  * `db()` runs `migrate` once per connection, right after opening it.
+ *
+ * The baseline: a fresh DB (version 0) gets the whole v5 schema in one step.
+ * The five steps of #21-#26 that built it on the owner's phone were folded
+ * into it before release (#68); a DB at version 1-4 no longer exists and is
+ * rejected, left as it is. A DB at 5 or later is never recreated.
  *
  * Rules:
  * - Never drop or recreate a table: the owner's device holds real data.
  * - Each step runs inside one BEGIN IMMEDIATE transaction together with the
- *   `user_version` bump, so a step is applied entirely or not at all, and a
- *   second JS context opening at the same moment waits (busy_timeout) and then
- *   sees the new version instead of applying the step twice.
+ *   `user_version` bump, so a step is applied entirely or not at all.
+ * - The version is re-read inside the transaction, so a second JS context
+ *   opening at the same moment waits (busy_timeout) and then sees the new
+ *   version instead of applying the step twice.
  *
  * How to add the next migration (v5 -> v6):
- * 1. Append one function to MIGRATIONS. Its index + 1 is the version it
- *    produces; never edit or reorder a step that has shipped to a device.
- * 2. Make it safe on any DB at the previous version: ADD COLUMN, CREATE TABLE
- *    IF NOT EXISTS, CREATE INDEX IF NOT EXISTS, UPDATE to backfill. No DROP,
- *    no table rebuild. Use `addColumnIfMissing` for columns.
+ * 1. Append one function to MIGRATIONS. The step at index i produces version
+ *    BASELINE_VERSION + i + 1; never edit or reorder a step that has shipped
+ *    to a device, and never edit the baseline once v6 exists.
+ * 2. Make it safe on any DB at the previous version: ALTER TABLE ... ADD
+ *    COLUMN, CREATE TABLE IF NOT EXISTS, CREATE INDEX IF NOT EXISTS, UPDATE to
+ *    backfill. No DROP, no table rebuild.
  * 3. Don't issue BEGIN/COMMIT or touch user_version in the step: `migrate`
  *    does both.
  * 4. Update the row mapping in store.ts and the schema line in src/README.md.
@@ -29,79 +36,81 @@ export interface MigrationDb {
 
 type Migration = (d: MigrationDb) => Promise<void>;
 
-async function addColumnIfMissing(d: MigrationDb, table: string, column: string, definition: string) {
-  const columns = await d.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
-  if (!columns.some((c) => c.name === column)) await d.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
-}
+/** The version the baseline produces. */
+export const BASELINE_VERSION = 5;
 
-export const MIGRATIONS: readonly Migration[] = [
-  // v0 -> v1: the #21 schema. A DB created by #21 is at user_version 0 but
-  // already has these tables, so every statement is IF NOT EXISTS.
-  (d) =>
-    d.execAsync(`
-      CREATE TABLE IF NOT EXISTS reminders (
-        id TEXT PRIMARY KEY,
-        fires_at INTEGER NOT NULL,
-        suggestion TEXT NOT NULL,
-        status TEXT NOT NULL);
-      CREATE INDEX IF NOT EXISTS reminders_fires_at ON reminders (fires_at);
-      CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS responses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        reminder_id TEXT NOT NULL,
-        kind TEXT NOT NULL,
-        source TEXT NOT NULL,
-        at INTEGER NOT NULL);
-    `),
-  // v1 -> v2 (#22): Snooze. Existing rows get snoozes 0 and no re-fire. The
-  // statuses `missed` and `dropped` are plain TEXT values: no change needed.
-  async (d) => {
-    await addColumnIfMissing(d, 'reminders', 'snoozes', 'INTEGER NOT NULL DEFAULT 0');
-    await addColumnIfMissing(d, 'reminders', 'refires_at', 'INTEGER NULL');
-  },
-  // v2 -> v3 (#23): the guided Done. The Exercises done, as a JSON array of
-  // `{ id, name, bodyArea }`; NULL for every Reminder that isn't `done`, which
-  // is every existing row (the status `done` is a plain TEXT value).
-  (d) => addColumnIfMissing(d, 'reminders', 'done_exercises', 'TEXT NULL'),
-  // v3 -> v4 (#24): Suggestion rules and Swap. `fallback` 1 on a Reminder whose
-  // Suggestion is a fallback (nothing matched the settings); `swapped_out`, the
-  // Ids swapped out as a JSON array; `rotation`, the Strict rotation index. Every
-  // existing row gets 0, NULL and NULL: not a fallback, nothing swapped, no rotation.
-  async (d) => {
-    await addColumnIfMissing(d, 'reminders', 'fallback', 'INTEGER NOT NULL DEFAULT 0');
-    await addColumnIfMissing(d, 'reminders', 'swapped_out', 'TEXT NULL');
-    await addColumnIfMissing(d, 'reminders', 'rotation', 'INTEGER NULL');
-  },
-  // v4 -> v5 (#26): what dropped a Reminder, `closing`, `pause` or `dayOff`;
-  // NULL unless `dropped`. Every existing row gets NULL, read as `closing`:
-  // every Reminder dropped before v5 was a Snooze re-fire past closing.
-  (d) => addColumnIfMissing(d, 'reminders', 'dropped_by', 'TEXT NULL'),
-];
+/**
+ * v0 -> v5: the whole schema. `reminders` keeps the column order the phone's
+ * ALTERs left (#22 snoozes, refires_at; #23 done_exercises; #24 fallback,
+ * swapped_out, rotation; #26 dropped_by). `done_exercises` and `swapped_out`
+ * are JSON; `dropped_by` is `closing`, `pause` or `dayOff`, NULL unless
+ * `dropped` (NULL on a dropped row reads as `closing`).
+ */
+const baseline: Migration = (d) =>
+  d.execAsync(`
+    CREATE TABLE reminders (
+      id TEXT PRIMARY KEY,
+      fires_at INTEGER NOT NULL,
+      suggestion TEXT NOT NULL,
+      status TEXT NOT NULL,
+      snoozes INTEGER NOT NULL DEFAULT 0,
+      refires_at INTEGER NULL,
+      done_exercises TEXT NULL,
+      fallback INTEGER NOT NULL DEFAULT 0,
+      swapped_out TEXT NULL,
+      rotation INTEGER NULL,
+      dropped_by TEXT NULL);
+    CREATE INDEX reminders_fires_at ON reminders (fires_at);
+    CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    CREATE TABLE responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      reminder_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      source TEXT NOT NULL,
+      at INTEGER NOT NULL);
+  `);
 
-export const SCHEMA_VERSION = MIGRATIONS.length;
+/** The steps after the baseline: index i takes BASELINE_VERSION + i to BASELINE_VERSION + i + 1. */
+export const MIGRATIONS: readonly Migration[] = [];
+
+export const SCHEMA_VERSION = BASELINE_VERSION + MIGRATIONS.length;
 
 const versionOf = async (d: MigrationDb) =>
   (await d.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version ?? 0;
 
+function assertSupported(version: number) {
+  if (version > 0 && version < BASELINE_VERSION) {
+    throw new Error(
+      `Unsupported schema: user_version ${version} is unsupported; only 0 (fresh) or ${BASELINE_VERSION} and later is supported`,
+    );
+  }
+}
+
 /**
- * Brings the DB to SCHEMA_VERSION, one transaction per step. An up-to-date DB
- * costs one read and takes no lock. The version is re-read inside each
- * transaction, so a step another JS context applied meanwhile is not re-run.
+ * Brings the DB to SCHEMA_VERSION, one transaction per step, and returns after
+ * the last one. An up-to-date DB costs one read and takes no lock. The version
+ * is re-read inside each transaction, so a step another JS context applied
+ * meanwhile is not re-run. A DB at version 1-4 is rejected, untouched.
  */
 export async function migrate(d: MigrationDb): Promise<void> {
-  if ((await versionOf(d)) >= SCHEMA_VERSION) return;
+  const current = await versionOf(d);
+  if (current >= SCHEMA_VERSION) return;
+  assertSupported(current);
   for (;;) {
     await d.execAsync('BEGIN IMMEDIATE');
     try {
       const version = await versionOf(d);
+      assertSupported(version);
       if (version >= SCHEMA_VERSION) {
         await d.execAsync('COMMIT');
         return;
       }
-      await MIGRATIONS[version](d);
-      // PRAGMA takes no bound parameters; `version + 1` is an integer we computed.
-      await d.execAsync(`PRAGMA user_version = ${version + 1}`);
+      const next = version === 0 ? BASELINE_VERSION : version + 1;
+      await (version === 0 ? baseline : MIGRATIONS[version - BASELINE_VERSION])(d);
+      // PRAGMA takes no bound parameters; `next` is an integer we computed.
+      await d.execAsync(`PRAGMA user_version = ${next}`);
       await d.execAsync('COMMIT');
+      if (next >= SCHEMA_VERSION) return;
     } catch (e) {
       await d.execAsync('ROLLBACK').catch(() => {});
       throw e;

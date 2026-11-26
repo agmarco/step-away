@@ -8,7 +8,7 @@ import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { describe, expect, it, vi } from 'vitest';
 import { defaultSettings, type CoreState, type Reminder, type SuggestedExercise } from '../core';
 import type { Db } from './db';
-import { MIGRATIONS, migrate, SCHEMA_VERSION } from './migrations';
+import { migrate } from './migrations';
 
 vi.mock('expo-sqlite', () => ({}));
 // The bundled library pulls in photos; the backfill only needs Ids, and every snapshot here has its Body Area.
@@ -45,8 +45,6 @@ function fakeDb(): Db {
 }
 
 const userVersion = async (d: Db) => (await d.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-const columnsOf = async (d: Db, table: string) =>
-  (await d.getAllAsync<{ name: string; dflt_value: string | null; notnull: number }>(`PRAGMA table_info(${table})`));
 
 const exercise = (id: string): SuggestedExercise => ({
   id,
@@ -68,101 +66,6 @@ const state = (reminders: Reminder[]): CoreState => ({
   badges: [],
   achievementsSeenAt: null,
   reminders,
-});
-
-describe('migrations', () => {
-  it('v3 -> v4 adds fallback, swapped_out and rotation to an existing DB and keeps its rows', async () => {
-    const d = fakeDb();
-    // A DB as #23 left it: the first three steps, at user_version 3, with history.
-    for (const step of MIGRATIONS.slice(0, 3)) await step(d);
-    await d.execAsync('PRAGMA user_version = 3');
-    await d.runAsync(
-      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, done_exercises) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      'r1',
-      NOW - 1,
-      JSON.stringify([exercise('A')]),
-      'done',
-      1,
-      null,
-      JSON.stringify([{ id: 'A', name: 'A', bodyArea: 'Neck' }]),
-    );
-    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('r1', 'Done', 'app', 1)`);
-
-    await migrate(d);
-
-    expect(await userVersion(d)).toBe(SCHEMA_VERSION);
-    const columns = await columnsOf(d, 'reminders');
-    expect(columns.find((c) => c.name === 'fallback')).toMatchObject({ dflt_value: '0', notnull: 1 });
-    expect(columns.find((c) => c.name === 'swapped_out')).toMatchObject({ dflt_value: null, notnull: 0 });
-    expect(columns.find((c) => c.name === 'rotation')).toMatchObject({ dflt_value: null, notnull: 0 });
-    expect(await d.getAllAsync('SELECT id, status, snoozes, fallback, swapped_out, rotation FROM reminders')).toEqual([
-      { id: 'r1', status: 'done', snoozes: 1, fallback: 0, swapped_out: null, rotation: null },
-    ]);
-    expect(await d.getAllAsync('SELECT reminder_id, kind FROM responses')).toEqual([{ reminder_id: 'r1', kind: 'Done' }]);
-    // The existing Reminder loads with none of the new keys.
-    expect((await loadState(d)).reminders[0]).not.toHaveProperty('fallback');
-  });
-
-  it('v3 -> v4 adds only the columns that are missing', async () => {
-    const d = fakeDb();
-    for (const step of MIGRATIONS.slice(0, 3)) await step(d);
-    await d.execAsync('PRAGMA user_version = 3');
-    await d.execAsync('ALTER TABLE reminders ADD COLUMN fallback INTEGER NOT NULL DEFAULT 0');
-
-    await migrate(d);
-
-    expect(await userVersion(d)).toBe(SCHEMA_VERSION);
-    const names = (await columnsOf(d, 'reminders')).map((c) => c.name);
-    expect(names.filter((n) => n === 'fallback')).toHaveLength(1);
-    expect(names).toEqual(expect.arrayContaining(['swapped_out', 'rotation']));
-  });
-
-  it('v4 -> v5 adds dropped_by to an existing DB and keeps its rows', async () => {
-    const d = fakeDb();
-    // A DB as #24 left it: the first four steps, at user_version 4, with history.
-    for (const step of MIGRATIONS.slice(0, 4)) await step(d);
-    await d.execAsync('PRAGMA user_version = 4');
-    await d.runAsync(
-      `INSERT INTO reminders (id, fires_at, suggestion, status, snoozes, refires_at, fallback, swapped_out, rotation)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      'r1',
-      NOW - 1,
-      JSON.stringify([exercise('A')]),
-      'dropped',
-      1,
-      NOW + 1,
-      0,
-      JSON.stringify(['B']),
-      2,
-    );
-    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('r1', 'Snooze', 'app', 1)`);
-
-    await migrate(d);
-
-    expect(SCHEMA_VERSION).toBe(5);
-    expect(await userVersion(d)).toBe(5);
-    const columns = await columnsOf(d, 'reminders');
-    expect(columns.find((c) => c.name === 'dropped_by')).toMatchObject({ dflt_value: null, notnull: 0 });
-    expect(await d.getAllAsync('SELECT id, status, snoozes, swapped_out, rotation, dropped_by FROM reminders')).toEqual([
-      { id: 'r1', status: 'dropped', snoozes: 1, swapped_out: '["B"]', rotation: 2, dropped_by: null },
-    ]);
-    expect(await d.getAllAsync('SELECT reminder_id, kind FROM responses')).toEqual([{ reminder_id: 'r1', kind: 'Snooze' }]);
-    // The existing dropped Reminder loads with no stored reason (read as closing).
-    expect((await loadState(d)).reminders[0]).not.toHaveProperty('droppedBy');
-  });
-
-  it('v4 -> v5 adds dropped_by only if it is missing', async () => {
-    const d = fakeDb();
-    for (const step of MIGRATIONS.slice(0, 4)) await step(d);
-    await d.execAsync('PRAGMA user_version = 4');
-    await d.execAsync('ALTER TABLE reminders ADD COLUMN dropped_by TEXT NULL');
-
-    await migrate(d);
-
-    expect(await userVersion(d)).toBe(5);
-    const names = (await columnsOf(d, 'reminders')).map((c) => c.name);
-    expect(names.filter((n) => n === 'dropped_by')).toHaveLength(1);
-  });
 });
 
 describe('the v5 baseline (#68)', () => {
