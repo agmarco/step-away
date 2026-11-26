@@ -153,7 +153,7 @@ describe('Done: the guided flow’s result becomes a Response', () => {
     const first = reminderAt(state, at('09:45'));
     const now = at('10:00');
 
-    // Did it on the 3rd and 1st cards, given out of order; Not this one on the 2nd.
+    // Did it on the 3rd and 1st cards, given out of order; the 2nd answered without Did it.
     const result = done(state, first.id, ['Wrist_Circles', 'Side_Neck_Stretch'], now);
 
     expect(reminderAt(result.state, at('09:45'))).toStrictEqual({
@@ -174,7 +174,7 @@ describe('Done: the guided flow’s result becomes a Response', () => {
     expect(result.state.reminders.filter((r) => r.firesAt > now).map((r) => r.firesAt)).toEqual(timesOf(result));
   });
 
-  it('counts as a Skip when every card was Not this one: skipped, with no list, still a final Response', () => {
+  it('counts as a Skip when no card was marked Did it: skipped, with no list, still a final Response', () => {
     const state = morning();
     const first = reminderAt(state, at('09:45'));
     const now = at('10:00');

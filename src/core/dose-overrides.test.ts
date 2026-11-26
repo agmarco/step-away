@@ -277,7 +277,7 @@ describe('Dose overrides: ResetSettings', () => {
     const result = resetSettings(overridden, at('10:05'), PAIR);
 
     expect(result.state.settings.doseOverrides).toEqual({});
-    // Reset is back to 1 Exercise per Suggestion: each one is one of the pair, with its library Dose.
+    // Reset is back to the default of 2 Exercises per Suggestion: each is one of the pair, with its library Dose.
     for (const r of aheadOf(result.state, at('10:05'))) {
       for (const e of r.suggestion) expect(e).toStrictEqual(snapshot(e.id === 'Neck_Turn' ? NECK_TURN : SHOULDER_ROLL));
     }

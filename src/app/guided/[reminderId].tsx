@@ -3,9 +3,9 @@
  * the Reminder's Suggestion, opened by Start or a tap on the notification (or
  * Start on Today). Each card is answered Did it, or Next exercise → (not
  * done), shown only when another card follows (`showsNext`, #72): on a
- * one-Exercise Reminder Skip covers it, on the last card End here. A card can
- * be swapped for another Exercise first (#24). Opening the
- * screen cancels a pending Snooze re-fire (the core's GuidedStarted, through
+ * one-Exercise Reminder Skip and Swap cover it, on the last card End here. A
+ * card can be swapped for another Exercise first (#24). Opening the screen
+ * cancels a pending Snooze re-fire (the core's GuidedStarted, through
  * the handler), so it can't arrive mid-flow.
  *
  * The screen opens on the outstanding Reminder, and also on one of today's
@@ -175,7 +175,7 @@ export default function Guided() {
     setNothingToSwap(false);
     const exercise = reminder.suggestion[step];
     const next = done ? [...did, exercise.id] : did;
-    if (step + 1 < reminder.suggestion.length) {
+    if (showsNext(step, reminder.suggestion.length)) {
       setDid(next);
       setStep(step + 1);
     } else {

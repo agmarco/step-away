@@ -326,7 +326,7 @@ describe('Badges: Balance', () => {
       { badges: holding('done-1') },
     );
 
-    // Hips & Legs is suggested but Not this one.
+    // Hips & Legs is suggested but not done.
     const result = doneResponse(state, idAt(MON, '10:30'), [WRISTS.id, CORE.id], local(MON, '10:35'));
 
     expect(result.state.badges).toStrictEqual(holding('done-1'));
