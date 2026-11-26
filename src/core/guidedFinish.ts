@@ -20,7 +20,7 @@ export type GuidedFinishEvent =
 
 /**
  * What finishing the guided screen on `reminderId` records, with `did` the Ids marked Did it
- * (empty for all Not this one, or End here before any Did it). null when nothing is recorded.
+ * (empty when no card was marked Did it: Skip, or End here before any Did it). null when nothing is recorded.
  */
 export function guidedFinish(
   state: CoreState,

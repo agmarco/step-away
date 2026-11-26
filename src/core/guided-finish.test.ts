@@ -105,7 +105,7 @@ describe('guidedFinish: what finishing the guided screen records', () => {
     });
   });
 
-  it('on the outstanding Reminder with no Did its (End here, or all Not this one): a Done Response the core records as a Skip', () => {
+  it('on the outstanding Reminder with no Did its (End here, or every card answered without Did it): a Done Response the core records as a Skip', () => {
     const state = withStarted('scheduled');
 
     const event = guidedFinish(state, STARTED, [], DURING);

@@ -56,9 +56,10 @@ const perArea = (n: number): Exercise[] =>
 
 const snapshot = ({ id, name, dose, cue, bodyArea }: Exercise): SuggestedExercise => ({ id, name, dose, cue, bodyArea });
 
+// 1 Exercise per Suggestion unless a test says otherwise, pinned: it was the default when these were written (#72).
 const cfg = (settings: Partial<Settings> = {}, reminders: Reminder[] = []): CoreState => ({
   ...initialState,
-  settings: { ...initialState.settings, timeZone: ZONE, ...settings },
+  settings: { ...initialState.settings, timeZone: ZONE, exercisesPerSuggestion: 1, ...settings },
   reminders,
 });
 

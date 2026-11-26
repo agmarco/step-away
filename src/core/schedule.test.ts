@@ -52,7 +52,8 @@ const squat = exercise({
   cue: 'Sit back, chest up, knees over toes',
 });
 
-const start: CoreState = { ...initialState, settings: { ...initialState.settings, timeZone: ZONE } };
+// 1 Exercise per Suggestion, pinned: these tests were written when it was the default (#72).
+const start: CoreState = { ...initialState, settings: { ...initialState.settings, timeZone: ZONE, exercisesPerSuggestion: 1 } };
 
 const depsAt = (when: number, library: Exercise[] = [neckStretch], seed = 7): CoreDeps => ({
   clock: { now: () => when },
