@@ -22,7 +22,7 @@ It's built with Expo (React Native and TypeScript), Android-first.
 
 There's no Play Store listing; the app is shared as an APK on this repo's [Releases](https://github.com/agmarco/step-away/releases).
 
-**Recommended, with updates: [Obtainium](https://github.com/ImranR98/Obtainium).** Install Obtainium (from its Releases page or F-Droid), tap **Add App**, paste `https://github.com/agmarco/step-away`, and install. Obtainium tells you when a new APK is out.
+**Recommended, with updates: [Obtainium](https://github.com/ImranR98/Obtainium).** Install Obtainium (from its Releases page or F-Droid), tap **Add App**, paste `https://github.com/agmarco/step-away`, **turn on "Include prereleases"** (releases are marked as release candidates for now, and Obtainium skips pre-releases by default), and install. Obtainium tells you when a new APK is out.
 
 **Or directly:** download the `.apk` from the [latest release](https://github.com/agmarco/step-away/releases/latest) on the phone and open it.
 
