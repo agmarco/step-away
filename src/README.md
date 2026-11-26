@@ -8,7 +8,7 @@ The app. This folder is the Expo project root (SDK 58, TypeScript, Expo Router):
 | `index.ts` | The app entry: imports `platform/task.ts` first (the background notification task must be defined at module scope before the app registers), then `expo-router/entry`. |
 | `app.config.ts` | Expo app config; picks the app variant from `APP_VARIANT` (see below), holds the exact-alarm switch and adds the config plugins (Expo's and `plugins/withPauseShortcuts`). |
 | `plugins/` | Local config plugins, run by `expo prebuild` (and so by EAS builds). `withPauseShortcuts.ts` adds the launcher's Pause shortcuts (see [Launcher shortcuts](#launcher-shortcuts)); its pure XML-building parts are tested in `withPauseShortcuts.test.ts`. |
-| `eas.json` | EAS build profiles; `preview` builds on the EAS Update channel `preview`. |
+| `eas.json` | EAS build profiles; `preview` builds on the EAS Update channel `preview`, with `autoIncrement` so each build gets a higher Android `versionCode` (EAS keeps the number: `appVersionSource: remote`), which Obtainium and Android need to see a new APK as newer. |
 | `tsconfig.json`, `eslint.config.js`, `vitest.config.ts` | TypeScript, ESLint and Vitest config. |
 | `assets/` | App icon, Android adaptive-icon layers, notification icon and web favicon, rendered from the SVG sources in [`assets/icon/`](assets/icon/README.md) by `npm run icons:render`. |
 | `tools/` | Project tooling. `tools/eslint/no-literal-colors.js` is the local ESLint rule; `tools/library/` is the Exercise Library build step (see below); `tools/icons/` renders the app icon's PNGs (`npm run icons:render`, see [`assets/icon/README.md`](assets/icon/README.md)). |
@@ -27,7 +27,7 @@ npm test             # Vitest: **/*.test.ts in Node (the domain core, the librar
 npm run typecheck    # tsc --noEmit
 npm run lint         # ESLint: Expo rules, the core import rule, the no-literal-colours rule
 npm run icons:render # render the app icon PNGs in assets/ from assets/icon/*.svg
-APP_VARIANT=development npx expo start   # dev server; open it in the "Activity Reminder (dev)" app
+APP_VARIANT=development npx expo start   # dev server; open it in the "Step Away (dev)" app
 npm run web          # web: currently does not bundle (see below)
 ```
 
@@ -249,10 +249,10 @@ Identifiers use US "color" (`useColors`, `backgroundColor`, `no-literal-colors`)
 
 | EAS profile | `APP_VARIANT` | App name | Android package | Build |
 |---|---|---|---|---|
-| `preview` | `preview` (also the default when unset) | Activity Reminder | `com.agmarco.activityreminder` | standalone APK, internal distribution |
-| `development` | `development` | Activity Reminder (dev) | `com.agmarco.activityreminder.dev` | dev client APK, internal distribution |
+| `preview` | `preview` (also the default when unset) | Step Away | `com.agmarco.activityreminder` | standalone APK, internal distribution |
+| `development` | `development` | Step Away (dev) | `com.agmarco.activityreminder.dev` | dev client APK, internal distribution |
 
-The dev app's launcher icon has a plain amber background (the daily app has the dark gradient), so the two are easy to tell apart. Each variant has its own package, so each has its own database.
+The dev app's launcher icon has a plain amber background (the daily app has the dark gradient), so the two are easy to tell apart. Each variant has its own package, so each has its own database. The app was called Activity Reminder until v1.0.0-rc.1: the package, the `activityreminder` scheme, the EAS `slug` (`activity-reminder`) and the database file (`activity-reminder.db`) keep that name on purpose, since changing them would install a separate app, lose its data and detach it from the EAS project and its updates.
 
 The two packages differ, so both apps install side by side. Both set `android.allowBackup: true` and `runtimeVersion: { policy: "fingerprint" }`. Check a variant's resolved config with `APP_VARIANT=development npx expo config --type public`.
 

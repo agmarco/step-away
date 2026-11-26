@@ -23,11 +23,14 @@ const BASE_ADAPTIVE_ICON = {
 
 /**
  * Two apps side by side on the phone, chosen by APP_VARIANT (set per EAS
- * build profile in eas.json). Unset means preview.
+ * build profile in eas.json). Unset means preview. The app is called Step Away
+ * (it was Activity Reminder); the package, scheme, slug and database file keep
+ * the old name, because changing them would make Android treat it as a new
+ * app, lose its data and detach it from the EAS project and its updates.
  */
 const VARIANTS = {
   preview: {
-    name: 'Activity Reminder',
+    name: 'Step Away',
     package: 'com.agmarco.activityreminder',
     scheme: 'activityreminder',
     adaptiveIcon: {
@@ -40,7 +43,7 @@ const VARIANTS = {
     updates: true,
   },
   development: {
-    name: 'Activity Reminder (dev)',
+    name: 'Step Away (dev)',
     package: 'com.agmarco.activityreminder.dev',
     scheme: 'activityreminder-dev',
     // A plain amber background instead of the dark gradient, so the dev app

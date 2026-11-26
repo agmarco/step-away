@@ -25,10 +25,10 @@ There is no JS code for re-arming: `expo-notifications` reschedules its stored R
    APP_VARIANT=preview npx expo-updates fingerprint:generate --platform android | node -p 'JSON.parse(require("fs").readFileSync(0)).hash'
    ```
    **Result:** EAS build fingerprint `________________`, same as the local one: yes / no
-3. Open **Activity Reminder** (not "(dev)") and go through onboarding; **Allow notifications** on the Permissions step.
+3. Open **Step Away** (called Activity Reminder at the time; not "(dev)") and go through onboarding; **Allow notifications** on the Permissions step.
 4. Settings: Active Hours covering the whole test session (today on, e.g. 00:00–24:00 or a window spanning it), **Interval 15 min** (the shortest outside the dev build's Test mode), **Snooze delay 5 min**, Appearance **System**.
-5. Keep the dev app quiet so its Reminders don't mix in: in **Activity Reminder (dev)**, take today off (or Pause for the rest of today).
-6. Allow **Activity Reminder** in any launcher or app that filters notifications (e.g. the notification filter of the `com.beforesoft.launcher` launcher). Symptom when it isn't allowed: the Reminder is posted and removed within a second, and the app logs nothing about it.
+5. Keep the dev app quiet so its Reminders don't mix in: in **Step Away (dev)** (then Activity Reminder (dev)), take today off (or Pause for the rest of today).
+6. Allow **Step Away** (then Activity Reminder) in any launcher or app that filters notifications (e.g. the notification filter of the `com.beforesoft.launcher` launcher). Symptom when it isn't allowed: the Reminder is posted and removed within a second, and the app logs nothing about it.
 7. adb over Wi-Fi: Developer options › Wireless debugging › Pair with code, then `adb pair <ip:port> <code>` and `adb connect <ip:port>`. After a reboot (check D) wireless debugging needs reconnecting; a USB cable avoids that.
 8. Leave a log running for the whole session (Metro isn't connected to this build, so `console.log` goes to logcat):
    ```sh
@@ -186,7 +186,7 @@ Pass: both directions re-theme without a restart.
 
 ### H. Launcher shortcuts (#45)
 
-1. Long-press the Activity Reminder icon.
+1. Long-press the Step Away icon (then Activity Reminder).
    Pass: three shortcuts, **Pause 1 h**, **Pause 2 h**, **Pause today** (long labels "Pause for 1 hour", "Pause for 2 hours", "Pause for the rest of today").
 2. **Warm.** With the app in the background, tap each shortcut in turn; tap **Resume** on Today between them.
    Pass: each opens Today showing "Paused until HH:MM" (1 h / 2 h from now), or "Paused for the rest of today"; log `[handler] Pause …: accepted`.
