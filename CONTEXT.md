@@ -9,7 +9,7 @@ A scheduled nudge telling the user it's time to move, fired on a user-configured
 _Avoid_: alert, notification (the notification is just how a Reminder is delivered)
 
 **Suggestion**:
-The set of 1–3 Exercises offered alongside a Reminder. How many is a user setting (default 1) that applies to every Reminder.
+The set of 1–3 Exercises offered alongside a Reminder. How many is a user setting (default 2) that applies to every Reminder.
 _Avoid_: recommendation, workout
 
 **Exercise**:

@@ -1,8 +1,10 @@
 /**
  * The guided Response flow (#23, #41): one full-screen card per Exercise of
  * the Reminder's Suggestion, opened by Start or a tap on the notification (or
- * Start on Today). Each card is answered Did it or Not this one, and can be
- * swapped for another Exercise first (#24). Opening the
+ * Start on Today). Each card is answered Did it, or Next exercise → (not
+ * done), shown only when another card follows (`showsNext`, #72): on a
+ * one-Exercise Reminder Skip covers it, on the last card End here. A card can
+ * be swapped for another Exercise first (#24). Opening the
  * screen cancels a pending Snooze re-fire (the core's GuidedStarted, through
  * the handler), so it can't arrive mid-flow.
  *
@@ -66,6 +68,7 @@ import { dismissReminder } from '../../platform/notifications';
 import { useCoreState } from '../../platform/useCoreState';
 import { StatusBarBackdrop } from '../../screens/StatusBarBackdrop';
 import { CelebrationCard } from '../../screens/achievements/CelebrationCard';
+import { showsNext } from '../../screens/guided/nextExercise';
 import { type Palette, useColors } from '../../theme';
 
 const backToToday = () => router.dismissTo('/');
@@ -241,14 +244,16 @@ export default function Guided() {
           {nothingToSwap && (
             <Text style={[styles.body, styles.centered, { color: colors.text.secondary }]}>Nothing else fits your settings</Text>
           )}
-          <Pressable
-            onPress={() => answer(false)}
-            disabled={busy}
-            accessibilityRole="button"
-            style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
-          >
-            <Text style={[styles.buttonText, { color: colors.text.primary }]}>Not this one</Text>
-          </Pressable>
+          {showsNext(step, total) && (
+            <Pressable
+              onPress={() => answer(false)}
+              disabled={busy}
+              accessibilityRole="button"
+              style={[styles.button, styles.outline, { borderColor: colors.line.divider, opacity: busy ? 0.5 : 1 }]}
+            >
+              <Text style={[styles.buttonText, { color: colors.text.primary }]}>Next exercise →</Text>
+            </Pressable>
+          )}
           <Pressable
             onPress={() => answer(true)}
             disabled={busy}
