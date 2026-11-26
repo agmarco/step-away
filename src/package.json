@@ -10,6 +10,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "icons:render": "tsx tools/icons/cli.ts",
     "library:build": "tsx tools/library/cli.ts build",
     "library:draft": "tsx tools/library/cli.ts draft",
     "library:photos": "tsx tools/library/cli.ts photos"
