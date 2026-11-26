@@ -79,8 +79,9 @@ describe('the v5 baseline (#68)', () => {
   });
 
   /**
-   * The v5 schema as the five steps of #21-#26 left it on the owner's phone,
-   * captured once from them. Literal on purpose: it must not follow MIGRATIONS.
+   * The v5 schema as the five steps of #21-#26 left it on the owner's phone:
+   * written from the schema those steps produced and verified against them in
+   * #68 CP1. Literal on purpose: it must not follow the baseline in migrations.ts.
    * `reminders` lists its columns in ALTER order, the phone's order.
    */
   const V5_SCHEMA = {
@@ -217,9 +218,9 @@ describe('the v5 baseline (#68)', () => {
     await d.runAsync(insert, 'missed', NOW - 1, JSON.stringify([exercise('D')]), 'missed', 0, null, null, 0, null, null, null);
     await d.runAsync(insert, 'ahead', NOW + 1, JSON.stringify([exercise('E')]), 'scheduled', 0, null, null, 0, null, 4, null);
     await d.runAsync(`INSERT INTO meta (key, value) VALUES ('settings', ?)`, JSON.stringify(defaultSettings));
-    await d.runAsync(`INSERT INTO meta (key, value) VALUES ('lastResponseAt', ?)`, String(NOW - 3));
+    await d.runAsync(`INSERT INTO meta (key, value) VALUES ('last_response_at', ?)`, String(NOW - 3));
     await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('done', 'Done', 'app', ?)`, NOW - 3);
-    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('dropped', 'Snooze', 'notification', ?)`, NOW - 2);
+    await d.runAsync(`INSERT INTO responses (reminder_id, kind, source, at) VALUES ('dropped', 'Snooze', 'bg-task', ?)`, NOW - 2);
     const schema = await schemaOf(d);
     const rows = await rowsOf(d);
 

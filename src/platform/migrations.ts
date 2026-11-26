@@ -18,7 +18,8 @@
  * How to add the next migration (v5 -> v6):
  * 1. Append one function to MIGRATIONS. The step at index i produces version
  *    BASELINE_VERSION + i + 1; never edit or reorder a step that has shipped
- *    to a device, and never edit the baseline once v6 exists.
+ *    to a device, and never edit the baseline: the phone's DBs are already at
+   v5, so editing it would make fresh installs differ from them.
  * 2. Make it safe on any DB at the previous version: ALTER TABLE ... ADD
  *    COLUMN, CREATE TABLE IF NOT EXISTS, CREATE INDEX IF NOT EXISTS, UPDATE to
  *    backfill. No DROP, no table rebuild.
@@ -86,6 +87,12 @@ function assertSupported(version: number) {
   }
 }
 
+/** The step that takes a DB at `version` (0 or BASELINE_VERSION and later) forward, and the version it produces. */
+function stepAt(version: number): { run: Migration; next: number } {
+  if (version === 0) return { run: baseline, next: BASELINE_VERSION };
+  return { run: MIGRATIONS[version - BASELINE_VERSION], next: version + 1 };
+}
+
 /**
  * Brings the DB to SCHEMA_VERSION, one transaction per step, and returns after
  * the last one. An up-to-date DB costs one read and takes no lock. The version
@@ -105,8 +112,8 @@ export async function migrate(d: MigrationDb): Promise<void> {
         await d.execAsync('COMMIT');
         return;
       }
-      const next = version === 0 ? BASELINE_VERSION : version + 1;
-      await (version === 0 ? baseline : MIGRATIONS[version - BASELINE_VERSION])(d);
+      const { run, next } = stepAt(version);
+      await run(d);
       // PRAGMA takes no bound parameters; `next` is an integer we computed.
       await d.execAsync(`PRAGMA user_version = ${next}`);
       await d.execAsync('COMMIT');
