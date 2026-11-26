@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   canPause,
@@ -11,6 +12,10 @@ import {
 } from '../../core';
 import { useColors } from '../../theme';
 import { longDateOf, timeOf, weekdayOf } from '../format';
+import { countdownOf } from './countdown';
+
+/** How often the hero's countdown ("· in 43 min") refreshes on its own. */
+const COUNTDOWN_TICK_MS = 30_000;
 
 /** What the status line's action does: Pause (opens the sheet), Resume, or Undo the Day Off. */
 export type HeroAction = 'pause' | 'resume' | 'undoDayOff';
@@ -47,7 +52,13 @@ export function Hero({
 }) {
   const colors = useColors();
   const onHero = { color: colors.text.onHero };
-  const { line, action } = statusView(heroStatus(state, now, notifications), state, now);
+  // `now` only moves when Today re-reads the state, so the countdown keeps its own clock.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setClock(Date.now()), COUNTDOWN_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+  const { line, action } = statusView(heroStatus(state, now, notifications), state, now, Math.max(clock, now));
   return (
     <View style={[styles.hero, { backgroundColor: colors.accent.hero, paddingTop: topInset + 16 }]}>
       <Text style={[styles.date, onHero]}>{longDateOf(now)}</Text>
@@ -94,12 +105,14 @@ const PAUSE: StatusView['action'] = { action: 'pause', label: 'Pause' };
 /**
  * What the hero shows for a `HeroStatus`: the status line and its action,
  * decided together in one case per kind. The next Reminder (a snoozed one at
- * its re-fire) shows its weekday when its calendar date (in the Settings' time
- * zone) is not today's; Pause, under `next` or `none`, only when the core's
+ * its re-fire) reads "at HH:MM", with the countdown to it (`countdownOf`
+ * against `clock`, the hero's own minute clock) when it is today, and with its
+ * weekday instead when its calendar date (in the Settings' time zone) is not
+ * today's; Pause, under `next` or `none`, only when the core's
  * `canPause` says a Pause would do something; a Pause ending at local midnight
  * is for the rest of today.
  */
-function statusView(status: HeroStatus, state: CoreState, now: number): StatusView {
+function statusView(status: HeroStatus, state: CoreState, now: number, clock: number): StatusView {
   const { timeZone } = state.settings;
   switch (status.kind) {
     case 'dayOff':
@@ -111,9 +124,11 @@ function statusView(status: HeroStatus, state: CoreState, now: number): StatusVi
       };
     case 'next': {
       const { at, snoozed } = status;
-      const day = sameDate(localDateOf(at, timeZone), localDateOf(now, timeZone)) ? '' : `${weekdayOf(at)} `;
+      // "at" so the time can't be read as a countdown; the countdown only for today.
+      const today = sameDate(localDateOf(at, timeZone), localDateOf(now, timeZone));
+      const when = today ? `at ${timeOf(at)}` : `${weekdayOf(at)} at ${timeOf(at)}`;
       return {
-        line: `Next Reminder ${day}${timeOf(at)}${snoozed ? ' (snoozed)' : ''}`,
+        line: `Next Reminder ${when}${snoozed ? ' (snoozed)' : ''}${today ? ` · ${countdownOf(at, clock)}` : ''}`,
         action: canPause(state, now, status) ? PAUSE : undefined,
       };
     }
