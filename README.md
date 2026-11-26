@@ -1,8 +1,25 @@
-# Activity Reminder
+# Step Away
 
-A personal Android app that nudges a desk worker to move on a configurable schedule and suggests quick Exercises to do at the desk. Built with Expo (React Native / TypeScript), Android-first.
+An Android app that nudges you to get up from your desk and move, on a schedule you set, and suggests a quick Exercise to do right there. It counts the Reminders you act on toward a Daily Goal and a Streak. Built with Expo (React Native / TypeScript), Android-first. It was called Activity Reminder until v1.0.0-rc.1.
 
-The v1 spec is being charted as a wayfinder map: [Map: Activity Reminder v1 spec](https://github.com/agmarco/activityReminder/issues/1). Decisions live on its tickets; the map indexes them.
+## Install (Android)
+
+There's no Play Store listing; the app is shared as an APK on this repo's [Releases](https://github.com/agmarco/step-away/releases).
+
+**Recommended, with updates: [Obtainium](https://github.com/ImranR98/Obtainium).** Install Obtainium (from its Releases page or F-Droid), tap **Add App**, paste `https://github.com/agmarco/step-away`, and install. Obtainium tells you when a new APK is out.
+
+**Or directly:** download the `.apk` from the [latest release](https://github.com/agmarco/step-away/releases/latest) on the phone and open it.
+
+Either way, Android will ask you to allow installs from that app ("Install unknown apps"), and Play Protect may warn about an app from an unknown developer: both are normal outside the Play Store. Then:
+
+- Go through the short setup and **allow notifications**: Reminders arrive as notifications.
+- On Samsung, Xiaomi, OnePlus and similar phones, set the app's battery usage to **Unrestricted**, or Reminders may come late.
+- Small fixes arrive by themselves: the app downloads them on one launch and uses them on the next. Bigger changes come as a new APK (Obtainium shows it).
+- Everything stays on the phone: there's no account, sync or backup, so uninstalling or clearing the app's data erases its history.
+
+## Project
+
+v1 was planned as a wayfinder map ([#1](https://github.com/agmarco/step-away/issues/1), spec [#17](https://github.com/agmarco/step-away/issues/17)); every decision lives on its closed ticket, and the map indexes them.
 
 ## Layout
 
@@ -23,8 +40,8 @@ You need only Node and npm on the Mac. There's no Android SDK and no local nativ
 
 | Piece | What it is |
 |---|---|
-| **Activity Reminder (dev)** (amber icon) | A development build: a native shell with no app code of its own. It loads the JavaScript from your Mac's dev server. |
-| **Activity Reminder** | The standalone `preview` build for daily use. Its code is built in, so it needs no Mac. |
+| **Step Away (dev)** (amber icon) | A development build: a native shell with no app code of its own. It loads the JavaScript from your Mac's dev server. |
+| **Step Away** | The standalone `preview` build for daily use. Its code is built in, so it needs no Mac. |
 | Dev server (Metro) | Bundles `src/` and serves it to the dev app over Wi-Fi. Changes appear on the phone in about a second. |
 
 **Daily loop**
@@ -52,3 +69,7 @@ adb logcat ReactNativeJS:V '*:S'    # the app's console output
 ```
 
 If adb says "more than one device", the phone is listed twice. Run `adb disconnect <ip>:<port>` on one of the two entries.
+
+## Licence
+
+[MIT](LICENSE). The Exercise data and photos come from an open dataset released under The Unlicense (public domain); see [`src/library/source/SOURCE.md`](src/library/source/SOURCE.md).

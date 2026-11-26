@@ -1,4 +1,4 @@
-# Activity Reminder
+# Step Away
 
 A personal Android app that nudges a desk worker to move on a configurable schedule and suggests quick exercises to do at the desk.
 
