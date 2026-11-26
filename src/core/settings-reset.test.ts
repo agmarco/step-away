@@ -149,6 +149,10 @@ describe('ResetSettings: every setting back to its default', () => {
     expect(result.state.settings).toEqual({ ...defaultSettings, timeZone: ZONE });
   });
 
+  it('defaults to 2 Exercises per Suggestion', () => {
+    expect(defaultSettings.exercisesPerSuggestion).toBe(2);
+  });
+
   it("clears the Exclusions and sets Appearance back to 'System'", () => {
     const result = reset(before);
 

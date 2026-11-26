@@ -555,6 +555,27 @@ describe('Dose overrides (#30)', () => {
   });
 });
 
+describe('Exercises per Suggestion over the default of 2 (#72)', () => {
+  it('keeps a stored 1 Exercise per Suggestion', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    // As the settings stored while the default was 1.
+    const stored = { ...defaultSettings, exercisesPerSuggestion: 1 };
+    await d.runAsync(`UPDATE meta SET value = ? WHERE key = 'settings'`, JSON.stringify(stored));
+    expect((await loadState(d)).settings.exercisesPerSuggestion).toBe(1);
+  });
+
+  it('reads the default of 2 when the stored settings have none', async () => {
+    const d = fakeDb();
+    await migrate(d);
+    await saveState(d, state([]), NOW);
+    const { exercisesPerSuggestion: _, ...without } = defaultSettings;
+    await d.runAsync(`UPDATE meta SET value = ? WHERE key = 'settings'`, JSON.stringify(without));
+    expect((await loadState(d)).settings.exercisesPerSuggestion).toBe(2);
+  });
+});
+
 describe('Equipment that left v1 (#20)', () => {
   it('drops a stored Equipment that is no longer one of the types, keeping the rest in order', async () => {
     const d = fakeDb();
