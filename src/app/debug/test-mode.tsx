@@ -124,8 +124,8 @@ export default function TestMode() {
           </View>
           <Text style={[styles.body, { color: colors.text.secondary }]}>
             On: Interval 2 min, Snooze delay 1 min, Active Hours 00:00–24:00 every day, 3 Exercises per Suggestion,
-            then a Rearm. Off: those four back to their defaults (Mon–Fri 09:00–18:00, 45 min, 10-min Snooze, 1
-            Exercise); every other setting is kept. Settings sets the schedule too, but only from 15 min.
+            then a Rearm. Off: those four back to their defaults (Mon–Fri 09:00–18:00, 45 min, 10-min Snooze, 2
+            Exercises); every other setting is kept. Settings sets the schedule too, but only from 15 min.
             Development build only.
           </Text>
           <View style={[styles.row, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
@@ -154,7 +154,7 @@ export default function TestMode() {
           </View>
           <Text style={[styles.body, { color: colors.text.secondary }]}>
             How many Exercises each new Suggestion has, for walking the guided flow. Changing it re-picks the
-            Suggestions of every Reminder ahead; fired ones keep theirs. Test mode on sets 3, off sets 1.
+            Suggestions of every Reminder ahead; fired ones keep theirs. Test mode on sets 3, off sets the default, 2.
           </Text>
           <View style={[styles.row, { backgroundColor: colors.background.card, borderColor: colors.line.divider }]}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Empty pool (fallback)</Text>

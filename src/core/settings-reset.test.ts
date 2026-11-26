@@ -22,7 +22,7 @@ import {
 
 // All local times below are Europe/Madrid in October/November 2026: CET, UTC+1.
 // 2 November 2026 is a Monday. Default Settings: Mon-Fri 09:00-18:00, 45-minute
-// Interval, weekends off, 1 Exercise per Suggestion, Weighted.
+// Interval, weekends off, 2 Exercises per Suggestion, Weighted.
 const ZONE = 'Europe/Madrid';
 const local = (date: string, time: string): number => Date.parse(`${date}T${time}:00+01:00`);
 const date = (iso: string): LocalDate => {
@@ -215,19 +215,21 @@ describe('ResetSettings: the chain ahead is rebuilt with the defaults', () => {
     expect(result.state.reminders.filter((r) => r.firesAt > NOW).map((r) => r.firesAt)).toEqual(timesOf(result));
   });
 
-  it('builds the Suggestions ahead under the default rules: 1 plain Exercise each, Weighted', () => {
+  it('builds the Suggestions ahead under the default rules: 2 plain Exercises each, Weighted', () => {
     const result = reset(before);
 
     const rest = result.state.reminders.filter((r) => r.firesAt > NOW);
     expect(rest.length).toBeGreaterThan(0);
     for (const r of rest) {
-      expect(r.suggestion).toHaveLength(1);
+      expect(r.suggestion).toHaveLength(2);
       expect(r.rotation).toBeUndefined();
-      const ex = byId(r.suggestion[0].id);
-      expect(ex.difficulty).not.toBe('Expert');
-      expect(ex.energetic).toBe(false);
-      expect(ex.position).not.toBe('Floor');
-      expect(ex.equipment).toBeNull();
+      for (const item of r.suggestion) {
+        const ex = byId(item.id);
+        expect(ex.difficulty).not.toBe('Expert');
+        expect(ex.energetic).toBe(false);
+        expect(ex.position).not.toBe('Floor');
+        expect(ex.equipment).toBeNull();
+      }
     }
   });
 });
