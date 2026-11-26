@@ -14,6 +14,8 @@ export const EXACT_ALARM_PERMISSION: 'USE_EXACT_ALARM' | 'SCHEDULE_EXACT_ALARM' 
 
 const EAS_PROJECT_ID = 'ad2beed2-abdc-4c1c-ad2b-f761b129a4da';
 
+// The "Walker in the ring" icon (#70): PNGs rendered from assets/icon/*.svg by
+// `npm run icons:render`. Both variants share the foreground and monochrome layers.
 const BASE_ADAPTIVE_ICON = {
   foregroundImage: './assets/android-icon-foreground.png',
   monochromeImage: './assets/android-icon-monochrome.png',
@@ -30,7 +32,8 @@ const VARIANTS = {
     scheme: 'activityreminder',
     adaptiveIcon: {
       ...BASE_ADAPTIVE_ICON,
-      backgroundColor: '#E6F4FE',
+      // The dark gradient, with its top colour behind it.
+      backgroundColor: '#111827',
       backgroundImage: './assets/android-icon-background.png',
     },
     // EAS Update, channel "preview" (set by the eas.json profile).
@@ -40,7 +43,7 @@ const VARIANTS = {
     name: 'Activity Reminder (dev)',
     package: 'com.agmarco.activityreminder.dev',
     scheme: 'activityreminder-dev',
-    // A plain amber background instead of the light-blue grid, so the dev app
+    // A plain amber background instead of the dark gradient, so the dev app
     // is easy to tell apart from the daily app on the launcher.
     adaptiveIcon: { ...BASE_ADAPTIVE_ICON, backgroundColor: '#F59E0B' },
     // The dev client loads JS from the dev server, never from EAS Update.
@@ -93,7 +96,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-router',
       'expo-status-bar',
       'expo-sqlite',
-      'expo-notifications',
+      // The status-bar icon (the walker without the ring; Android uses only its
+      // alpha) and the lime of the goal ring as the notification accent.
+      ['expo-notifications', { icon: './assets/notification-icon.png', color: '#a3e635' }],
       'expo-task-manager',
       'expo-updates',
       // The launcher's Pause shortcuts open this variant's pause deep link.
